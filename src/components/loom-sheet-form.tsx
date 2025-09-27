@@ -107,9 +107,17 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Operator Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., John Smith" {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select an operator" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="a">a</SelectItem>
+                        <SelectItem value="b">b</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

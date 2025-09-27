@@ -1,18 +1,15 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { LoomSheetData, loomSheetSchema } from '@/lib/schemas';
 import { DataTable } from '@/components/data-table';
 import AiSummary from '@/components/ai-summary';
-import { Lock, Unlock, Upload, Download } from 'lucide-react';
+import { Upload, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { z } from 'zod';
-
-const ADMIN_PASSWORD = "admin"; // In a real app, use environment variables
 
 interface AdminSectionProps {
   data: LoomSheetData[];
@@ -20,36 +17,8 @@ interface AdminSectionProps {
 }
 
 export default function AdminSection({ data, onImport }: AdminSectionProps) {
-  const [password, setPassword] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleLogin = () => {
-    if (password === ADMIN_PASSWORD) {
-      setIsAuthenticated(true);
-      toast({
-        title: "Access Granted",
-        description: "Welcome to the admin dashboard.",
-      });
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Access Denied",
-        description: "Incorrect password.",
-      });
-      setPassword('');
-    }
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setPassword('');
-    toast({
-      title: "Logged Out",
-      description: "You have successfully logged out from the admin dashboard.",
-    });
-  }
 
   const handleExport = () => {
     const worksheet = XLSX.utils.json_to_sheet(data);
@@ -140,58 +109,34 @@ export default function AdminSection({ data, onImport }: AdminSectionProps) {
           Admin Dashboard
         </h2>
         <p className="mt-1 text-md text-muted-foreground">
-          View all submitted data and generate AI-powered insights.
+          View all submitted data, import/export, and generate AI-powered insights.
         </p>
       </div>
       
-      {!isAuthenticated ? (
-        <Card className="max-w-md mx-auto shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Lock /> Secure Access</CardTitle>
-            <CardDescription>
-              Please enter the password to access the admin dashboard.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2">
-              <Input
-                type="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-              />
-              <Button onClick={handleLogin}>Login</Button>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-8">
-            <div className="flex justify-between items-center">
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={handleImportClick}>
-                        <Upload className="mr-2 h-4 w-4"/> Import Excel
-                    </Button>
-                    <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".xlsx, .xls" />
-                    <Button variant="outline" onClick={handleExport}>
-                        <Download className="mr-2 h-4 w-4"/> Export Excel
-                    </Button>
-                </div>
-                <Button variant="outline" onClick={handleLogout}><Unlock className="mr-2 h-4 w-4"/>Logout</Button>
-            </div>
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle>Loom Data Entries</CardTitle>
-                <CardDescription>A complete log of all submitted rolls. You can sort by clicking on column headers.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <DataTable data={data} />
-              </CardContent>
-            </Card>
+      <div className="space-y-8">
+          <div className="flex justify-start items-center">
+              <div className="flex gap-2">
+                  <Button variant="outline" onClick={handleImportClick}>
+                      <Upload className="mr-2 h-4 w-4"/> Import Excel
+                  </Button>
+                  <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".xlsx, .xls" />
+                  <Button variant="outline" onClick={handleExport}>
+                      <Download className="mr-2 h-4 w-4"/> Export Excel
+                  </Button>
+              </div>
+          </div>
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle>Loom Data Entries</CardTitle>
+              <CardDescription>A complete log of all submitted rolls. You can sort by clicking on column headers.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DataTable data={data} />
+            </CardContent>
+          </Card>
 
-            <AiSummary data={data} />
-        </div>
-      )}
+          <AiSummary data={data} />
+      </div>
     </section>
   );
 }

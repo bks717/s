@@ -63,13 +63,21 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
 
   const onSubmit = (data: PartialUseFormData) => {
     const { consumedBy, ...consumedPart } = data;
-    // Basic validation to ensure consumed value is not more than original
+    
     if(consumedPart.mtrs > originalRoll.mtrs) {
-        form.setError('mtrs', { type: 'manual', message: 'Cannot consume more than available.' });
+        form.setError('mtrs', { type: 'manual', message: `Cannot consume more than available (${originalRoll.mtrs}).` });
         return;
     }
     if(consumedPart.gw > originalRoll.gw) {
-        form.setError('gw', { type: 'manual', message: 'Cannot consume more than available.' });
+        form.setError('gw', { type: 'manual', message: `Cannot consume more than available (${originalRoll.gw}).` });
+        return;
+    }
+     if(consumedPart.cw > originalRoll.cw) {
+        form.setError('cw', { type: 'manual', message: `Cannot consume more than available (${originalRoll.cw}).` });
+        return;
+    }
+    if(consumedPart.nw > originalRoll.nw) {
+        form.setError('nw', { type: 'manual', message: `Cannot consume more than available (${originalRoll.nw}).` });
         return;
     }
     onConfirm(consumedPart, consumedBy);
@@ -113,7 +121,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
                         <FormItem>
                             <FormLabel>Meters (Mtrs)</FormLabel>
                             <FormControl>
-                            <Input type="number" placeholder="0" {...field} />
+                            <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -126,7 +134,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
                         <FormItem>
                             <FormLabel>Gross Weight (G.W.)</FormLabel>
                             <FormControl>
-                            <Input type="number" placeholder="0" {...field} />
+                            <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -139,7 +147,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
                         <FormItem>
                             <FormLabel>Calc. Weight (C.W.)</FormLabel>
                             <FormControl>
-                            <Input type="number" placeholder="0" {...field} />
+                            <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -152,7 +160,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
                         <FormItem>
                             <FormLabel>Net Weight (N.W.)</FormLabel>
                             <FormControl>
-                            <Input type="number" placeholder="0" {...field} />
+                            <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -165,7 +173,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
                         <FormItem>
                             <FormLabel>Average</FormLabel>
                             <FormControl>
-                            <Input type="number" placeholder="0" {...field} />
+                            <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -178,7 +186,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
                         <FormItem>
                             <FormLabel>Variance</FormLabel>
                             <FormControl>
-                            <Input type="number" placeholder="0" {...field} />
+                            <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>

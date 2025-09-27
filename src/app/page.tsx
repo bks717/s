@@ -36,10 +36,15 @@ export default function Home() {
         ...originalRoll,
         mtrs: originalRoll.mtrs - (consumedPartData.mtrs || 0),
         gw: originalRoll.gw - (consumedPartData.gw || 0),
+        cw: originalRoll.cw - (consumedPartData.cw || 0),
         nw: originalRoll.nw - (consumedPartData.nw || 0),
-        // Recalculate other fields if necessary, for now just subtracting
       };
       
+      // If the roll is fully consumed, remove it from remaining data
+      if (updatedRemainingRoll.mtrs <= 0 && updatedRemainingRoll.gw <=0) {
+        return prevData.filter(item => item.id !== originalId);
+      }
+
       return prevData.map(item => item.id === originalId ? updatedRemainingRoll : item);
     });
     

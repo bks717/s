@@ -20,9 +20,10 @@ export default function Home() {
     setLoomData(prevData => [...prevData, ...newLoomData]);
   };
   
-  const handleMarkAsConsumed = (selectedIds: string[]) => {
+  const handleMarkAsConsumed = (selectedIds: string[], consumedBy: string) => {
     const itemsToMove = loomData.filter(item => selectedIds.includes(item.id!));
-    setConsumedData(prev => [...prev, ...itemsToMove]);
+    const updatedItemsToMove = itemsToMove.map(item => ({...item, consumedBy}));
+    setConsumedData(prev => [...prev, ...updatedItemsToMove]);
     setLoomData(prev => prev.filter(item => !selectedIds.includes(item.id!)));
   };
 

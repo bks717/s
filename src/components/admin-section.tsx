@@ -10,12 +10,13 @@ import AiSummary from '@/components/ai-summary';
 import { Upload, Download, CheckSquare } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { z } from 'zod';
+import { ConsumedByDialog } from './consumed-by-dialog';
 
 interface AdminSectionProps {
   remainingData: LoomSheetData[];
   consumedData: LoomSheetData[];
   onImport: (data: LoomSheetData[]) => void;
-  onMarkAsConsumed: (selectedIds: string[]) => void;
+  onMarkAsConsumed: (selectedIds: string[], consumedBy: string) => void;
 }
 
 type View = 'remaining' | 'consumed';
@@ -25,6 +26,7 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentView, setCurrentView] = useState<View>('remaining');
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
+  const [isDialogVisible, setIsDialogVisible] = useState(false);
   
   const data = currentView === 'remaining' ? remainingData : consumedData;
   const allData = [...remainingData, ...consumedData];
@@ -107,7 +109,7 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
     fileInputRef.current?.click();
   }
 
-  const handleSubmitConsumed = () => {
+  const handleOpenConsumedDialog = () => {
     if (selectedRowIds.length === 0) {
       toast({
         variant: 'destructive',
@@ -116,16 +118,27 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
       });
       return;
     }
-    onMarkAsConsumed(selectedRowIds);
+    setIsDialogVisible(true);
+  };
+
+  const handleConfirmConsumed = (consumedBy: string) => {
+    onMarkAsConsumed(selectedRowIds, consumedBy);
     toast({
       title: 'Success',
-      description: `${selectedRowIds.length} rows marked as consumed.`,
+      description: `${selectedRowIds.length} rows marked as consumed by ${consumedBy}.`,
     });
     setSelectedRowIds([]);
-  };
+    setIsDialogVisible(false);
+  }
 
   return (
     <section id="admin-dashboard">
+       <ConsumedByDialog 
+        isOpen={isDialogVisible}
+        onClose={() => setIsDialogVisible(false)}
+        onConfirm={handleConfirmConsumed}
+        selectedCount={selectedRowIds.length}
+      />
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold tracking-tight text-primary font-headline">
           Admin Dashboard
@@ -164,7 +177,7 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
                 <CardDescription>A log of all {currentView} rolls. You can sort by clicking on column headers.</CardDescription>
               </div>
               {currentView === 'remaining' && (
-                <Button onClick={handleSubmitConsumed} disabled={selectedRowIds.length === 0}>
+                <Button onClick={handleOpenConsumedDialog} disabled={selectedRowIds.length === 0}>
                   <CheckSquare className="mr-2 h-4 w-4" /> Submit Consumed
                 </Button>
               )}
@@ -175,6 +188,7 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
                 selectedRowIds={selectedRowIds}
                 onSelectedRowIdsChange={setSelectedRowIds}
                 showCheckboxes={currentView === 'remaining'}
+                view={currentView}
               />
             </CardContent>
           </Card>

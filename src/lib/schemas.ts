@@ -19,6 +19,7 @@ export const loomSheetSchema = z.object({
   loomNo: z.string().min(1, 'Loom No. is required'),
   productionDate: z.date(),
   variance: z.coerce.number(),
+  consumedBy: z.string().optional(),
 });
 
 export type LoomSheetData = z.infer<typeof loomSheetSchema>;

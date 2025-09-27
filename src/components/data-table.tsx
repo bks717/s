@@ -20,6 +20,7 @@ interface DataTableProps {
   selectedRowIds: string[];
   onSelectedRowIdsChange: (ids: string[]) => void;
   showCheckboxes?: boolean;
+  view?: 'remaining' | 'consumed';
 }
 
 type SortConfig = {
@@ -27,15 +28,15 @@ type SortConfig = {
   direction: 'ascending' | 'descending';
 };
 
-export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCheckboxes = false }: DataTableProps) {
+export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCheckboxes = false, view = 'remaining' }: DataTableProps) {
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'productionDate', direction: 'descending' });
 
   // Reset selection when data changes (e.g., switching views)
   useEffect(() => {
     onSelectedRowIdsChange([]);
-  }, [data]);
+  }, [data, onSelectedRowIdsChange]);
 
-  const columns: { key: keyof LoomSheetData | 'select', label: string }[] = [
+  const baseColumns: { key: keyof LoomSheetData | 'select', label: string }[] = [
     // The 'select' column is conditionally added later
     { key: 'productionDate', label: 'Prod. Date' },
     { key: 'rollNo', label: 'Roll No.' },
@@ -55,6 +56,12 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
     { key: 'variance', label: 'Variance' },
   ];
   
+  let columns = [...baseColumns];
+
+  if (view === 'consumed') {
+    columns.push({ key: 'consumedBy', label: 'Consumed By'});
+  }
+
   if (showCheckboxes) {
     columns.unshift({ key: 'select', label: 'Select' });
   }

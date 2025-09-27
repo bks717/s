@@ -28,6 +28,16 @@ export default function Home() {
   };
 
   const handlePartialConsume = (originalId: string, consumedPartData: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string) => {
+    // This is the new part that goes into the "Consumed" table
+    const newConsumedRoll: LoomSheetData = {
+      ...consumedPartData,
+      id: (Date.now() + Math.random()).toString(),
+      productionDate: new Date(),
+      consumedBy,
+    };
+    setConsumedData(prev => [...prev, newConsumedRoll]);
+
+    // This updates the original roll in the "Remaining" table
     setLoomData(prevData => {
       const originalRoll = prevData.find(item => item.id === originalId);
       if (!originalRoll) return prevData;
@@ -47,15 +57,6 @@ export default function Home() {
 
       return prevData.map(item => item.id === originalId ? updatedRemainingRoll : item);
     });
-    
-    const newConsumedRoll: LoomSheetData = {
-      ...consumedPartData,
-      id: (Date.now() + Math.random()).toString(),
-      productionDate: new Date(),
-      consumedBy,
-    };
-    
-    setConsumedData(prev => [...prev, newConsumedRoll]);
   };
 
 

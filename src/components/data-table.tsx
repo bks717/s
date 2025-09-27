@@ -84,13 +84,13 @@ export function DataTable({ data }: DataTableProps) {
   };
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
             {columns.map(col => (
                 <TableHead key={col.key}>
-                     <Button variant="ghost" onClick={() => requestSort(col.key)} className="px-2">
+                     <Button variant="ghost" onClick={() => requestSort(col.key)} className="px-1 text-xs">
                         {col.label}
                         {getSortIcon(col.key)}
                     </Button>
@@ -103,7 +103,7 @@ export function DataTable({ data }: DataTableProps) {
             sortedData.map((item) => (
               <TableRow key={item.id}>
                 {columns.map(col => (
-                    <TableCell key={`${item.id}-${col.key}`} className="px-3 py-2 whitespace-nowrap">
+                    <TableCell key={`${item.id}-${col.key}`} className="px-2 py-1 text-xs">
                         {col.key === 'productionDate' && item[col.key] ? format(new Date(item[col.key] as Date), 'PP') : String(item[col.key] ?? '')}
                     </TableCell>
                 ))}

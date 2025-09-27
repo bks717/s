@@ -124,7 +124,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                   <FormItem>
                     <FormLabel>Roll No.</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="e.g., 123" {...field} />
+                      <Input type="number" placeholder="0" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -156,7 +156,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                   <FormItem>
                     <FormLabel>Width</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="e.g., 150" {...field} />
+                      <Input type="number" placeholder="0" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -169,7 +169,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                   <FormItem>
                     <FormLabel>Number 1</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="e.g., 10" {...field} />
+                      <Input type="number" placeholder="0" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -182,7 +182,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                   <FormItem>
                     <FormLabel>Number 2</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="e.g., 20" {...field} />
+                      <Input type="number" placeholder="0" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -248,7 +248,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                     <FormItem>
                         <FormLabel>Meters (Mtrs)</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="e.g., 500" {...field} />
+                        <Input type="number" placeholder="0" {...field} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -261,7 +261,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                     <FormItem>
                         <FormLabel>Gross Weight (G.W.)</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="e.g., 550" {...field} />
+                        <Input type="number" placeholder="0" {...field} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -274,7 +274,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                     <FormItem>
                         <FormLabel>Calc. Weight (C.W.)</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="e.g., 540" {...field} />
+                        <Input type="number" placeholder="0" {...field} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -287,7 +287,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                     <FormItem>
                         <FormLabel>Net Weight (N.W.)</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="e.g., 520" {...field} />
+                        <Input type="number" placeholder="0" {...field} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -300,7 +300,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                     <FormItem>
                         <FormLabel>Average</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="e.g., 480" {...field} />
+                        <Input type="number" placeholder="0" {...field} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -313,7 +313,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                     <FormItem>
                         <FormLabel>Variance</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="e.g., -1.5" {...field} />
+                        <Input type="number" placeholder="0" {...field} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>

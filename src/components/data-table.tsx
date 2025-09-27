@@ -78,19 +78,19 @@ export function DataTable({ data }: DataTableProps) {
 
   const getSortIcon = (key: keyof LoomSheetData) => {
     if (sortConfig.key !== key) {
-      return <ArrowUpDown className="ml-2 h-4 w-4 opacity-30" />;
+      return <ArrowUpDown className="ml-2 h-3 w-3 opacity-30" />;
     }
     return sortConfig.direction === 'ascending' ? '🔼' : '🔽';
   };
 
   return (
-    <div className="rounded-md border overflow-x-auto">
+    <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
             {columns.map(col => (
-                <TableHead key={col.key}>
-                     <Button variant="ghost" onClick={() => requestSort(col.key)} className="px-1 text-xs">
+                <TableHead key={col.key} className="p-0">
+                     <Button variant="ghost" onClick={() => requestSort(col.key)} className="px-1 text-[10px] w-full justify-start h-8">
                         {col.label}
                         {getSortIcon(col.key)}
                     </Button>
@@ -103,7 +103,7 @@ export function DataTable({ data }: DataTableProps) {
             sortedData.map((item) => (
               <TableRow key={item.id}>
                 {columns.map(col => (
-                    <TableCell key={`${item.id}-${col.key}`} className="px-2 py-1 text-xs">
+                    <TableCell key={`${item.id}-${col.key}`} className="p-1 text-[10px] whitespace-nowrap">
                         {col.key === 'productionDate' && item[col.key] ? format(new Date(item[col.key] as Date), 'PP') : String(item[col.key] ?? '')}
                     </TableCell>
                 ))}

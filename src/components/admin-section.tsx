@@ -7,26 +7,29 @@ import { useToast } from '@/hooks/use-toast';
 import { LoomSheetData, loomSheetSchema } from '@/lib/schemas';
 import { DataTable } from '@/components/data-table';
 import AiSummary from '@/components/ai-summary';
-import { Upload, Download, CheckSquare } from 'lucide-react';
+import { Upload, Download, CheckSquare, SplitSquareHorizontal } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { z } from 'zod';
 import { ConsumedByDialog } from './consumed-by-dialog';
+import { PartialUseDialog } from './partial-use-dialog';
 
 interface AdminSectionProps {
   remainingData: LoomSheetData[];
   consumedData: LoomSheetData[];
   onImport: (data: LoomSheetData[]) => void;
   onMarkAsConsumed: (selectedIds: string[], consumedBy: string) => void;
+  onPartialConsume: (originalId: string, consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string) => void;
 }
 
 type View = 'remaining' | 'consumed';
 
-export default function AdminSection({ remainingData, consumedData, onImport, onMarkAsConsumed }: AdminSectionProps) {
+export default function AdminSection({ remainingData, consumedData, onImport, onMarkAsConsumed, onPartialConsume }: AdminSectionProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentView, setCurrentView] = useState<View>('remaining');
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
-  const [isDialogVisible, setIsDialogVisible] = useState(false);
+  const [isConsumedDialogVisible, setIsConsumedDialogVisible] = useState(false);
+  const [isPartialUseDialogVisible, setIsPartialUseDialogVisible] = useState(false);
   
   const data = currentView === 'remaining' ? remainingData : consumedData;
   const allData = [...remainingData, ...consumedData];
@@ -57,26 +60,26 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
 
         const importSchema = z.array(loomSheetSchema.omit({id: true}).extend({
             productionDate: z.any().transform((val, ctx) => {
+                if (val instanceof Date) return val;
                 const date = new Date(val);
-                if (isNaN(date.getTime())) {
-                    const excelEpoch = new Date(1899, 11, 30);
-                    const excelDate = new Date(excelEpoch.getTime() + val * 86400000);
-                    if(!isNaN(excelDate.getTime())) return excelDate;
+                if (!isNaN(date.getTime())) return date;
+                
+                const excelEpoch = new Date(1899, 11, 30);
+                const excelDate = new Date(excelEpoch.getTime() + val * 86400000);
+                if(!isNaN(excelDate.getTime())) return excelDate;
 
-                    ctx.addIssue({
-                        code: z.ZodIssueCode.invalid_date,
-                        message: "Invalid date"
-                    });
-                    return z.NEVER;
-                }
-                return date;
+                ctx.addIssue({
+                    code: z.ZodIssueCode.invalid_date,
+                    message: "Invalid date"
+                });
+                return z.NEVER;
             })
         }));
         
         const parsedData = importSchema.safeParse(json);
         
         if (parsedData.success) {
-            onImport(parsedData.data as any[]); // The schema transformation handles it
+            onImport(parsedData.data as any[]);
             toast({
               title: 'Import Successful',
               description: `${parsedData.data.length} rows have been imported into the 'Remaining' table.`,
@@ -118,7 +121,7 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
       });
       return;
     }
-    setIsDialogVisible(true);
+    setIsConsumedDialogVisible(true);
   };
 
   const handleConfirmConsumed = (consumedBy: string) => {
@@ -128,17 +131,50 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
       description: `${selectedRowIds.length} rows marked as consumed by ${consumedBy}.`,
     });
     setSelectedRowIds([]);
-    setIsDialogVisible(false);
+    setIsConsumedDialogVisible(false);
   }
+
+  const handleOpenPartialUseDialog = () => {
+    if (selectedRowIds.length !== 1) {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid Selection',
+        description: 'Please select exactly one row for partial use.',
+      });
+      return;
+    }
+    setIsPartialUseDialogVisible(true);
+  };
+
+  const handleConfirmPartialUse = (consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string) => {
+    const originalId = selectedRowIds[0];
+    onPartialConsume(originalId, consumedPart, consumedBy);
+     toast({
+      title: 'Success',
+      description: `Roll partially consumed by ${consumedBy}. Remaining roll updated.`,
+    });
+    setSelectedRowIds([]);
+    setIsPartialUseDialogVisible(false);
+  };
+
+  const selectedRollForPartialUse = selectedRowIds.length === 1 ? remainingData.find(d => d.id === selectedRowIds[0]) : undefined;
 
   return (
     <section id="admin-dashboard">
        <ConsumedByDialog 
-        isOpen={isDialogVisible}
-        onClose={() => setIsDialogVisible(false)}
+        isOpen={isConsumedDialogVisible}
+        onClose={() => setIsConsumedDialogVisible(false)}
         onConfirm={handleConfirmConsumed}
         selectedCount={selectedRowIds.length}
       />
+      {selectedRollForPartialUse && (
+        <PartialUseDialog
+            isOpen={isPartialUseDialogVisible}
+            onClose={() => setIsPartialUseDialogVisible(false)}
+            onConfirm={handleConfirmPartialUse}
+            originalRoll={selectedRollForPartialUse}
+        />
+      )}
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold tracking-tight text-primary font-headline">
           Admin Dashboard
@@ -177,9 +213,14 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
                 <CardDescription>A log of all {currentView} rolls. You can sort by clicking on column headers.</CardDescription>
               </div>
               {currentView === 'remaining' && (
-                <Button onClick={handleOpenConsumedDialog} disabled={selectedRowIds.length === 0}>
-                  <CheckSquare className="mr-2 h-4 w-4" /> Submit Consumed
-                </Button>
+                 <div className="flex gap-2">
+                    <Button onClick={handleOpenPartialUseDialog} disabled={selectedRowIds.length !== 1}>
+                      <SplitSquareHorizontal className="mr-2 h-4 w-4" /> Partial Use
+                    </Button>
+                    <Button onClick={handleOpenConsumedDialog} disabled={selectedRowIds.length === 0}>
+                      <CheckSquare className="mr-2 h-4 w-4" /> Submit Consumed
+                    </Button>
+                 </div>
               )}
             </CardHeader>
             <CardContent>

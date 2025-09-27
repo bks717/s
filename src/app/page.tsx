@@ -27,6 +27,33 @@ export default function Home() {
     setLoomData(prev => prev.filter(item => !selectedIds.includes(item.id!)));
   };
 
+  const handlePartialConsume = (originalId: string, consumedPartData: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string) => {
+    setLoomData(prevData => {
+      const originalRoll = prevData.find(item => item.id === originalId);
+      if (!originalRoll) return prevData;
+
+      const updatedRemainingRoll: LoomSheetData = {
+        ...originalRoll,
+        mtrs: originalRoll.mtrs - (consumedPartData.mtrs || 0),
+        gw: originalRoll.gw - (consumedPartData.gw || 0),
+        nw: originalRoll.nw - (consumedPartData.nw || 0),
+        // Recalculate other fields if necessary, for now just subtracting
+      };
+      
+      return prevData.map(item => item.id === originalId ? updatedRemainingRoll : item);
+    });
+    
+    const newConsumedRoll: LoomSheetData = {
+      ...consumedPartData,
+      id: (Date.now() + Math.random()).toString(),
+      productionDate: new Date(),
+      consumedBy,
+    };
+    
+    setConsumedData(prev => [...prev, newConsumedRoll]);
+  };
+
+
   return (
     <main className="container mx-auto p-4 md:p-8">
       <div className="flex flex-col items-center text-center mb-8">
@@ -47,6 +74,7 @@ export default function Home() {
         consumedData={consumedData} 
         onImport={handleImportData}
         onMarkAsConsumed={handleMarkAsConsumed}
+        onPartialConsume={handlePartialConsume}
       />
     </main>
   );

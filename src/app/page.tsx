@@ -11,7 +11,12 @@ export default function Home() {
   const [loomData, setLoomData] = useState<LoomSheetData[]>(initialData);
 
   const handleAddData = (newData: LoomSheetData) => {
-    setLoomData(prevData => [...prevData, { ...newData, id: (Date.now()).toString() }]);
+    setLoomData(prevData => [...prevData, { ...newData, id: (Date.now()).toString(), productionDate: new Date() }]);
+  };
+
+  const handleImportData = (importedData: LoomSheetData[]) => {
+    // Basic validation on imported data could be done here if needed
+    setLoomData(prevData => [...prevData, ...importedData]);
   };
 
   return (
@@ -29,7 +34,7 @@ export default function Home() {
 
       <Separator className="my-12" />
 
-      <AdminSection data={loomData} />
+      <AdminSection data={loomData} onImport={handleImportData} />
     </main>
   );
 }

@@ -36,15 +36,15 @@ import React from "react";
 import { Separator } from "./ui/separator";
 
 interface LoomSheetFormProps {
-  onFormSubmit: (data: LoomSheetData) => void;
+  onFormSubmit: (data: Omit<LoomSheetData, 'id' | 'productionDate'>) => void;
 }
 
 export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const form = useForm<LoomSheetData>({
-    resolver: zodResolver(loomSheetSchema),
+  const form = useForm<Omit<LoomSheetData, 'id' | 'productionDate'>>({
+    resolver: zodResolver(loomSheetSchema.omit({ id: true, productionDate: true })),
     defaultValues: {
       primaryColumn: "",
       operatorName: "",
@@ -61,12 +61,11 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
       nw: undefined,
       average: undefined,
       loomNo: "",
-      productionDate: new Date(),
       variance: undefined,
     },
   });
 
-  async function onSubmit(data: LoomSheetData) {
+  async function onSubmit(data: Omit<LoomSheetData, 'id' | 'productionDate'>) {
     setIsSubmitting(true);
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));

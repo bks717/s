@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Table,
   TableHeader,
@@ -17,6 +17,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 interface DataTableProps {
   data: LoomSheetData[];
+  selectedRowIds: string[];
+  onSelectedRowIdsChange: (ids: string[]) => void;
+  showCheckboxes?: boolean;
 }
 
 type SortConfig = {
@@ -24,10 +27,16 @@ type SortConfig = {
   direction: 'ascending' | 'descending';
 };
 
-export function DataTable({ data }: DataTableProps) {
+export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCheckboxes = false }: DataTableProps) {
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'productionDate', direction: 'descending' });
 
+  // Reset selection when data changes (e.g., switching views)
+  useEffect(() => {
+    onSelectedRowIdsChange([]);
+  }, [data]);
+
   const columns: { key: keyof LoomSheetData | 'select', label: string }[] = [
+    // The 'select' column is conditionally added later
     { key: 'productionDate', label: 'Prod. Date' },
     { key: 'rollNo', label: 'Roll No.' },
     { key: 'operatorName', label: 'Operator' },
@@ -44,8 +53,11 @@ export function DataTable({ data }: DataTableProps) {
     { key: 'nw', label: 'N.W.' },
     { key: 'average', label: 'Average' },
     { key: 'variance', label: 'Variance' },
-    { key: 'select', label: 'Select' },
   ];
+  
+  if (showCheckboxes) {
+    columns.unshift({ key: 'select', label: 'Select' });
+  }
 
   const sortedData = useMemo(() => {
     let sortableItems = [...data];
@@ -84,6 +96,20 @@ export function DataTable({ data }: DataTableProps) {
     }
     return sortConfig.direction === 'ascending' ? '🔼' : '🔽';
   };
+  
+  const handleSelectAll = (checked: boolean) => {
+    onSelectedRowIdsChange(checked ? data.map(item => item.id!) : []);
+  };
+  
+  const handleSelectRow = (id: string, checked: boolean) => {
+    if (checked) {
+      onSelectedRowIdsChange([...selectedRowIds, id]);
+    } else {
+      onSelectedRowIdsChange(selectedRowIds.filter(rowId => rowId !== id));
+    }
+  };
+
+  const isAllSelected = data.length > 0 && selectedRowIds.length === data.length;
 
   return (
     <div className="rounded-md border overflow-x-auto">
@@ -92,10 +118,20 @@ export function DataTable({ data }: DataTableProps) {
           <TableRow>
             {columns.map(col => (
                 <TableHead key={col.key} className="p-0">
-                     <Button variant="ghost" onClick={() => requestSort(col.key)} className="px-1 text-[10px] w-full justify-start h-8 whitespace-nowrap" disabled={col.key === 'select'}>
-                        {col.label}
-                        {col.key !== 'select' && getSortIcon(col.key)}
-                    </Button>
+                    {col.key === 'select' ? (
+                        <div className="flex items-center justify-center h-8 w-12">
+                          <Checkbox
+                            checked={isAllSelected}
+                            onCheckedChange={handleSelectAll}
+                            aria-label="Select all"
+                          />
+                        </div>
+                    ) : (
+                      <Button variant="ghost" onClick={() => requestSort(col.key)} className="px-1 text-[10px] w-full justify-start h-8 whitespace-nowrap">
+                          {col.label}
+                          {getSortIcon(col.key)}
+                      </Button>
+                    )}
                 </TableHead>
             ))}
           </TableRow>
@@ -103,12 +139,16 @@ export function DataTable({ data }: DataTableProps) {
         <TableBody>
           {sortedData.length > 0 ? (
             sortedData.map((item) => (
-              <TableRow key={item.id}>
+              <TableRow key={item.id} data-state={selectedRowIds.includes(item.id!) && "selected"}>
                 {columns.map(col => (
                     <TableCell key={`${item.id}-${col.key}`} className="p-1 text-[10px] whitespace-nowrap">
                         {col.key === 'select' ? (
                           <div className="flex items-center justify-center">
-                            <Checkbox id={`select-${item.id}`} />
+                            <Checkbox
+                              checked={selectedRowIds.includes(item.id!)}
+                              onCheckedChange={(checked) => handleSelectRow(item.id!, !!checked)}
+                              aria-label={`Select row ${item.rollNo}`}
+                            />
                           </div>
                         ) : col.key === 'productionDate' && item[col.key] ? format(new Date(item[col.key] as Date), 'PP') : String(item[col.key as keyof LoomSheetData] ?? '')}
                     </TableCell>

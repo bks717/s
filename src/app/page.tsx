@@ -9,14 +9,21 @@ import { Separator } from '@/components/ui/separator';
 
 export default function Home() {
   const [loomData, setLoomData] = useState<LoomSheetData[]>(initialData);
+  const [consumedData, setConsumedData] = useState<LoomSheetData[]>([]);
 
   const handleAddData = (newData: LoomSheetData) => {
     setLoomData(prevData => [...prevData, { ...newData, id: (Date.now()).toString(), productionDate: new Date() }]);
   };
 
   const handleImportData = (importedData: LoomSheetData[]) => {
-    // Basic validation on imported data could be done here if needed
-    setLoomData(prevData => [...prevData, ...importedData]);
+    const newLoomData = importedData.map(d => ({ ...d, id: (Date.now() + Math.random()).toString(), productionDate: new Date() }));
+    setLoomData(prevData => [...prevData, ...newLoomData]);
+  };
+  
+  const handleMarkAsConsumed = (selectedIds: string[]) => {
+    const itemsToMove = loomData.filter(item => selectedIds.includes(item.id!));
+    setConsumedData(prev => [...prev, ...itemsToMove]);
+    setLoomData(prev => prev.filter(item => !selectedIds.includes(item.id!)));
   };
 
   return (
@@ -34,7 +41,12 @@ export default function Home() {
 
       <Separator className="my-12" />
 
-      <AdminSection data={loomData} onImport={handleImportData} />
+      <AdminSection 
+        remainingData={loomData}
+        consumedData={consumedData} 
+        onImport={handleImportData}
+        onMarkAsConsumed={handleMarkAsConsumed}
+      />
     </main>
   );
 }

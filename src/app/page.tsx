@@ -106,10 +106,26 @@ export default function Home() {
       )}
 
       {activeView === 'bags' && (
-        <div className="text-center mt-16">
-          <h2 className="text-3xl font-bold">Bags section is under construction.</h2>
-          <p className="text-muted-foreground mt-2">Check back later!</p>
-        </div>
+        <>
+          <div className="flex flex-col items-center text-center mb-8">
+            <h1 className="text-4xl font-bold tracking-tight text-primary font-headline">
+              LoomSheet - Bags
+            </h1>
+            <p className="mt-2 text-lg text-muted-foreground max-w-2xl">
+              View remaining rolls and manage bag production.
+            </p>
+          </div>
+          
+          <Separator className="my-12" />
+
+          <AdminSection 
+            remainingData={loomData}
+            consumedData={consumedData} 
+            onImport={handleImportData}
+            onMarkAsConsumed={handleMarkAsConsumed}
+            onPartialConsume={handlePartialConsume}
+          />
+        </>
       )}
     </main>
   );

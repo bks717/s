@@ -12,6 +12,7 @@ import * as XLSX from 'xlsx';
 import { z } from 'zod';
 import { ConsumedByDialog } from './consumed-by-dialog';
 import { PartialUseDialog } from './partial-use-dialog';
+import { Separator } from './ui/separator';
 
 interface AdminSectionProps {
   remainingData: LoomSheetData[];
@@ -22,7 +23,7 @@ interface AdminSectionProps {
   activeView: 'rolls' | 'bags';
 }
 
-type View = 'remaining' | 'consumed';
+type View = 'remaining' | 'consumed' | 'laminate';
 
 export default function AdminSection({ remainingData, consumedData, onImport, onMarkAsConsumed, onPartialConsume, activeView }: AdminSectionProps) {
   const { toast } = useToast();
@@ -32,7 +33,6 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
   const [isConsumedDialogVisible, setIsConsumedDialogVisible] = useState(false);
   const [isPartialUseDialogVisible, setIsPartialUseDialogVisible] = useState(false);
   
-  const data = currentView === 'remaining' ? remainingData : consumedData;
   const allData = [...remainingData, ...consumedData];
 
   const handleExport = () => {
@@ -159,6 +159,11 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
   };
 
   const selectedRollForPartialUse = selectedRowIds.length === 1 ? remainingData.find(d => d.id === selectedRowIds[0]) : undefined;
+  
+  const laminatedData = allData.filter(d => d.lamUnlam === 'Laminated');
+  const unlaminatedData = allData.filter(d => d.lamUnlam === 'Unlaminated');
+  const sentForLaminationData = allData.filter(d => d.lamUnlam === 'Sent for lamination');
+
 
   return (
     <section id="admin-dashboard">
@@ -193,6 +198,11 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
                 <Button variant={currentView === 'remaining' ? 'default' : 'outline'} onClick={() => setCurrentView('remaining')}>
                   Remaining ({remainingData.length})
                 </Button>
+                {activeView === 'rolls' && (
+                  <Button variant={currentView === 'laminate' ? 'default' : 'outline'} onClick={() => setCurrentView('laminate')}>
+                    Laminate
+                  </Button>
+                )}
                 <Button variant={currentView === 'consumed' ? 'default' : 'outline'} onClick={() => setCurrentView('consumed')}>
                   Consumed ({consumedData.length})
                 </Button>
@@ -207,37 +217,90 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
                   </Button>
               </div>
           </div>
-          <Card className="shadow-lg">
-            <CardHeader className="flex flex-row justify-between items-center">
-              <div>
-                <CardTitle>
-                  {currentView === 'remaining' ? 'Remaining Rolls' : 'Consumed Rolls'}
-                </CardTitle>
-                <CardDescription>A log of all {currentView} rolls. You can sort by clicking on column headers.</CardDescription>
-              </div>
-              {currentView === 'remaining' && (
-                 <div className="flex gap-2">
-                    {activeView === 'bags' && (
-                      <Button onClick={handleOpenPartialUseDialog} disabled={selectedRowIds.length !== 1}>
-                        <SplitSquareHorizontal className="mr-2 h-4 w-4" /> Partial Use
+
+          {currentView === 'laminate' && activeView === 'rolls' ? (
+             <div className='space-y-8'>
+                <Card className="shadow-lg">
+                  <CardHeader>
+                    <CardTitle>Laminated Rolls</CardTitle>
+                    <CardDescription>A log of all laminated rolls.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <DataTable 
+                      data={laminatedData}
+                      selectedRowIds={selectedRowIds}
+                      onSelectedRowIdsChange={setSelectedRowIds}
+                      showCheckboxes={false}
+                    />
+                  </CardContent>
+                </Card>
+                <Card className="shadow-lg">
+                  <CardHeader>
+                    <CardTitle>Unlaminated Rolls</CardTitle>
+                    <CardDescription>A log of all unlaminated rolls.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <DataTable 
+                      data={unlaminatedData}
+                      selectedRowIds={selectedRowIds}
+                      onSelectedRowIdsChange={setSelectedRowIds}
+                      showCheckboxes={false}
+                    />
+                  </CardContent>
+                </Card>
+                <Card className="shadow-lg">
+                  <CardHeader>
+                    <CardTitle>Rolls Sent for Lamination</CardTitle>
+                    <CardDescription>A log of all rolls sent for lamination.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <DataTable 
+                      data={sentForLaminationData}
+                      selectedRowIds={selectedRowIds}
+                      onSelectedRowIdsChange={setSelectedRowIds}
+                      showCheckboxes={false}
+                    />
+                  </CardContent>
+                </Card>
+             </div>
+          ) : (
+            <Card className="shadow-lg">
+              <CardHeader className="flex flex-row justify-between items-center">
+                <div>
+                  <CardTitle>
+                    {currentView === 'remaining' ? 'Remaining Rolls' : 'Consumed Rolls'}
+                  </CardTitle>
+                  <CardDescription>A log of all {currentView} rolls. You can sort by clicking on column headers.</CardDescription>
+                </div>
+                {currentView === 'remaining' && (
+                   <div className="flex gap-2">
+                      {activeView === 'bags' && (
+                        <Button onClick={handleOpenPartialUseDialog} disabled={selectedRowIds.length !== 1}>
+                          <SplitSquareHorizontal className="mr-2 h-4 w-4" /> Partial Use
+                        </Button>
+                      )}
+                       {activeView === 'rolls' && (
+                        <Button onClick={handleOpenPartialUseDialog} disabled={selectedRowIds.length !== 1}>
+                          <SplitSquareHorizontal className="mr-2 h-4 w-4" /> Partial Use
+                        </Button>
+                      )}
+                      <Button onClick={handleOpenConsumedDialog} disabled={selectedRowIds.length === 0}>
+                        <CheckSquare className="mr-2 h-4 w-4" /> Submit Consumed
                       </Button>
-                    )}
-                    <Button onClick={handleOpenConsumedDialog} disabled={selectedRowIds.length === 0}>
-                      <CheckSquare className="mr-2 h-4 w-4" /> Submit Consumed
-                    </Button>
-                 </div>
-              )}
-            </CardHeader>
-            <CardContent>
-              <DataTable 
-                data={data}
-                selectedRowIds={selectedRowIds}
-                onSelectedRowIdsChange={setSelectedRowIds}
-                showCheckboxes={currentView === 'remaining'}
-                view={currentView}
-              />
-            </CardContent>
-          </Card>
+                   </div>
+                )}
+              </CardHeader>
+              <CardContent>
+                <DataTable 
+                  data={currentView === 'remaining' ? remainingData : consumedData}
+                  selectedRowIds={selectedRowIds}
+                  onSelectedRowIdsChange={setSelectedRowIds}
+                  showCheckboxes={currentView === 'remaining'}
+                  view={currentView}
+                />
+              </CardContent>
+            </Card>
+          )}
 
           <AiSummary data={allData} />
       </div>

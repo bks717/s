@@ -132,7 +132,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                   <FormItem>
                     <FormLabel>Roll No.</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0" {...field} />
+                      <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -164,7 +164,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                   <FormItem>
                     <FormLabel>Width</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0" {...field} />
+                      <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -177,7 +177,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                   <FormItem>
                     <FormLabel>Number 1</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0" {...field} />
+                      <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -190,7 +190,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                   <FormItem>
                     <FormLabel>Number 2</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0" {...field} />
+                      <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -237,6 +237,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                       <SelectContent>
                         <SelectItem value="Laminated">Laminated</SelectItem>
                         <SelectItem value="Unlaminated">Unlaminated</SelectItem>
+                        <SelectItem value="Sent for lamination">Sent for lamination</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -256,7 +257,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                     <FormItem>
                         <FormLabel>Meters (Mtrs)</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="0" {...field} />
+                        <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -269,7 +270,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                     <FormItem>
                         <FormLabel>Gross Weight (G.W.)</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="0" {...field} />
+                        <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -282,7 +283,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                     <FormItem>
                         <FormLabel>Calc. Weight (C.W.)</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="0" {...field} />
+                        <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -295,7 +296,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                     <FormItem>
                         <FormLabel>Net Weight (N.W.)</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="0" {...field} />
+                        <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -308,7 +309,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                     <FormItem>
                         <FormLabel>Average</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="0" {...field} />
+                        <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -321,7 +322,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                     <FormItem>
                         <FormLabel>Variance</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="0" {...field} />
+                        <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>

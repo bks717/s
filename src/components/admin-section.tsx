@@ -228,8 +228,8 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
                   <CardContent>
                     <DataTable 
                       data={laminatedData}
-                      selectedRowIds={selectedRowIds}
-                      onSelectedRowIdsChange={setSelectedRowIds}
+                      selectedRowIds={[]}
+                      onSelectedRowIdsChange={() => {}}
                       showCheckboxes={false}
                     />
                   </CardContent>
@@ -242,8 +242,8 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
                   <CardContent>
                     <DataTable 
                       data={unlaminatedData}
-                      selectedRowIds={selectedRowIds}
-                      onSelectedRowIdsChange={setSelectedRowIds}
+                      selectedRowIds={[]}
+                      onSelectedRowIdsChange={() => {}}
                       showCheckboxes={false}
                     />
                   </CardContent>
@@ -256,8 +256,8 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
                   <CardContent>
                     <DataTable 
                       data={sentForLaminationData}
-                      selectedRowIds={selectedRowIds}
-                      onSelectedRowIdsChange={setSelectedRowIds}
+                      selectedRowIds={[]}
+                      onSelectedRowIdsChange={() => {}}
                       showCheckboxes={false}
                     />
                   </CardContent>

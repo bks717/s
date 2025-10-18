@@ -6,8 +6,12 @@ import AdminSection from '@/components/admin-section';
 import { LoomSheetData } from '@/lib/schemas';
 import { loomDataStore as initialData } from '@/lib/data';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+
+type View = 'rolls' | 'bags';
 
 export default function Home() {
+  const [activeView, setActiveView] = useState<View>('rolls');
   const [loomData, setLoomData] = useState<LoomSheetData[]>(initialData);
   const [consumedData, setConsumedData] = useState<LoomSheetData[]>([]);
 
@@ -28,7 +32,6 @@ export default function Home() {
   };
 
   const handlePartialConsume = (originalId: string, consumedPartData: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string) => {
-    // This is the new part that goes into the "Consumed" table
     const newConsumedRoll: LoomSheetData = {
       ...consumedPartData,
       id: (Date.now() + Math.random()).toString(),
@@ -36,52 +39,78 @@ export default function Home() {
       consumedBy,
     };
     setConsumedData(prev => [...prev, newConsumedRoll]);
-
-    // This updates the original roll in the "Remaining" table
+    
     setLoomData(prevData => {
-      const originalRoll = prevData.find(item => item.id === originalId);
-      if (!originalRoll) return prevData;
+      return prevData.map(item => {
+        if (item.id === originalId) {
+          const updatedRemainingRoll: LoomSheetData = {
+            ...item,
+            mtrs: item.mtrs - (consumedPartData.mtrs || 0),
+            gw: item.gw - (consumedPartData.gw || 0),
+            cw: item.cw - (consumedPartData.cw || 0),
+            nw: item.nw - (consumedPartData.nw || 0),
+          };
 
-      const updatedRemainingRoll: LoomSheetData = {
-        ...originalRoll,
-        mtrs: originalRoll.mtrs - (consumedPartData.mtrs || 0),
-        gw: originalRoll.gw - (consumedPartData.gw || 0),
-        cw: originalRoll.cw - (consumedPartData.cw || 0),
-        nw: originalRoll.nw - (consumedPartData.nw || 0),
-      };
-      
-      // If the roll is fully consumed, remove it from remaining data
-      if (updatedRemainingRoll.mtrs <= 0 && updatedRemainingRoll.gw <=0) {
-        return prevData.filter(item => item.id !== originalId);
-      }
-
-      return prevData.map(item => item.id === originalId ? updatedRemainingRoll : item);
+          if (updatedRemainingRoll.mtrs <= 0 && updatedRemainingRoll.gw <=0) {
+            return null;
+          }
+          return updatedRemainingRoll;
+        }
+        return item;
+      }).filter(Boolean) as LoomSheetData[];
     });
   };
 
-
   return (
     <main className="container mx-auto p-4 md:p-8">
-      <div className="flex flex-col items-center text-center mb-8">
-        <h1 className="text-4xl font-bold tracking-tight text-primary font-headline">
-          LoomSheet
-        </h1>
-        <p className="mt-2 text-lg text-muted-foreground max-w-2xl">
-          Efficiently track and analyze your loom production data. Fill out the form below to log a new roll.
-        </p>
+      <div className="flex justify-center gap-4 mb-8">
+        <Button 
+          variant={activeView === 'bags' ? 'default' : 'outline'} 
+          onClick={() => setActiveView('bags')}
+          className="px-8 py-2 text-lg"
+        >
+          Bags
+        </Button>
+        <Button 
+          variant={activeView === 'rolls' ? 'default' : 'outline'} 
+          onClick={() => setActiveView('rolls')}
+          className="px-8 py-2 text-lg"
+        >
+          Rolls
+        </Button>
       </div>
 
-      <LoomSheetForm onFormSubmit={handleAddData} />
+      {activeView === 'rolls' && (
+        <>
+          <div className="flex flex-col items-center text-center mb-8">
+            <h1 className="text-4xl font-bold tracking-tight text-primary font-headline">
+              LoomSheet - Rolls
+            </h1>
+            <p className="mt-2 text-lg text-muted-foreground max-w-2xl">
+              Efficiently track and analyze your loom production data. Fill out the form below to log a new roll.
+            </p>
+          </div>
 
-      <Separator className="my-12" />
+          <LoomSheetForm onFormSubmit={handleAddData} />
 
-      <AdminSection 
-        remainingData={loomData}
-        consumedData={consumedData} 
-        onImport={handleImportData}
-        onMarkAsConsumed={handleMarkAsConsumed}
-        onPartialConsume={handlePartialConsume}
-      />
+          <Separator className="my-12" />
+
+          <AdminSection 
+            remainingData={loomData}
+            consumedData={consumedData} 
+            onImport={handleImportData}
+            onMarkAsConsumed={handleMarkAsConsumed}
+            onPartialConsume={handlePartialConsume}
+          />
+        </>
+      )}
+
+      {activeView === 'bags' && (
+        <div className="text-center mt-16">
+          <h2 className="text-3xl font-bold">Bags section is under construction.</h2>
+          <p className="text-muted-foreground mt-2">Check back later!</p>
+        </div>
+      )}
     </main>
   );
 }

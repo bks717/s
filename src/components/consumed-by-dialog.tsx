@@ -23,16 +23,16 @@ interface ConsumedByDialogProps {
 
 export function ConsumedByDialog({ isOpen, onClose, onConfirm, selectedCount, activeView }: ConsumedByDialogProps) {
   const [consumedBy, setConsumedBy] = useState('');
-  const [noOfBags, setNoOfBags] = useState<number | undefined>();
-  const [avgBagWeight, setAvgBagWeight] = useState<number | undefined>();
+  const [noOfBags, setNoOfBags] = useState<number | ''>('');
+  const [avgBagWeight, setAvgBagWeight] = useState<number | ''>('');
   const [bagSize, setBagSize] = useState<string>('');
 
 
   useEffect(() => {
     if (isOpen) {
       setConsumedBy('');
-      setNoOfBags(undefined);
-      setAvgBagWeight(undefined);
+      setNoOfBags('');
+      setAvgBagWeight('');
       setBagSize('');
     }
   }, [isOpen]);
@@ -40,7 +40,7 @@ export function ConsumedByDialog({ isOpen, onClose, onConfirm, selectedCount, ac
   const handleConfirm = () => {
     if (consumedBy.trim()) {
         if(activeView === 'bags') {
-            onConfirm(consumedBy.trim(), { noOfBags, avgBagWeight, bagSize });
+            onConfirm(consumedBy.trim(), { noOfBags: noOfBags || undefined, avgBagWeight: avgBagWeight || undefined, bagSize });
         } else {
             onConfirm(consumedBy.trim());
         }
@@ -82,8 +82,8 @@ export function ConsumedByDialog({ isOpen, onClose, onConfirm, selectedCount, ac
                     <Input
                     id="noOfBags"
                     type="number"
-                    value={noOfBags || ''}
-                    onChange={(e) => setNoOfBags(e.target.value ? parseInt(e.target.value) : undefined)}
+                    value={noOfBags}
+                    onChange={(e) => setNoOfBags(e.target.value ? parseInt(e.target.value) : '')}
                     className="col-span-3"
                     placeholder="0"
                     />
@@ -95,8 +95,8 @@ export function ConsumedByDialog({ isOpen, onClose, onConfirm, selectedCount, ac
                     <Input
                     id="avgBagWeight"
                     type="number"
-                    value={avgBagWeight || ''}
-                    onChange={(e) => setAvgBagWeight(e.target.value ? parseFloat(e.target.value) : undefined)}
+                    value={avgBagWeight}
+                    onChange={(e) => setAvgBagWeight(e.target.value ? parseFloat(e.target.value) : '')}
                     className="col-span-3"
                     placeholder="0"
                     />

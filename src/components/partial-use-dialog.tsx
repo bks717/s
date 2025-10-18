@@ -44,8 +44,8 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
       average: 0,
       variance: 0,
       consumedBy: '',
-      noOfBags: undefined,
-      avgBagWeight: undefined,
+      noOfBags: 0,
+      avgBagWeight: 0,
       bagSize: '',
     },
   });
@@ -61,8 +61,8 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
         average: 0,
         variance: 0,
         consumedBy: '',
-        noOfBags: undefined,
-        avgBagWeight: undefined,
+        noOfBags: 0,
+        avgBagWeight: 0,
         bagSize: '',
       });
     }
@@ -137,7 +137,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
                                 <FormItem>
                                     <FormLabel>No. of Bags</FormLabel>
                                     <FormControl>
-                                    <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
+                                    <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : 0)} value={field.value ?? ''} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -150,7 +150,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
                                 <FormItem>
                                     <FormLabel>Avg. Bag Weight</FormLabel>
                                     <FormControl>
-                                    <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} />
+                                    <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)} value={field.value ?? ''}/>
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -163,7 +163,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
                                 <FormItem>
                                     <FormLabel>Bag Size</FormLabel>
                                     <FormControl>
-                                    <Input placeholder="e.g., 24x36" {...field} />
+                                    <Input placeholder="e.g., 24x36" {...field} value={field.value ?? ''} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

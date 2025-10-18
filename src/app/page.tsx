@@ -7,11 +7,12 @@ import { LoomSheetData, BagProductionData } from '@/lib/schemas';
 import { loomDataStore as initialData } from '@/lib/data';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
+import BagsProduced from '@/components/bags-produced';
 
 type View = 'rolls' | 'bags';
 
 export default function Home() {
-  const [activeView, setActiveView] = useState<View>('rolls');
+  const [activeView, setActiveView] = useState<View>('bags');
   const [loomData, setLoomData] = useState<LoomSheetData[]>(initialData);
   const [consumedData, setConsumedData] = useState<LoomSheetData[]>([]);
 
@@ -88,6 +89,8 @@ export default function Home() {
     setConsumedData(updateStatus);
   };
 
+  const bagsProducedData = consumedData.filter(d => d.noOfBags && d.noOfBags > 0);
+
   return (
     <main className="container mx-auto p-4 md:p-8">
       <div className="flex justify-center gap-4 mb-8">
@@ -158,6 +161,10 @@ export default function Home() {
             onSendForLamination={handleSendForLamination}
             onMarkAsReceived={handleMarkAsReceived}
           />
+
+          <Separator className="my-12" />
+          
+          <BagsProduced data={bagsProducedData} />
         </>
       )}
     </main>

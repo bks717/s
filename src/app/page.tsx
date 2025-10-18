@@ -7,7 +7,6 @@ import { LoomSheetData, BagProductionData } from '@/lib/schemas';
 import { loomDataStore as initialData } from '@/lib/data';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import BagsProduced from '@/components/bags-produced';
 
 type View = 'rolls' | 'bags';
 
@@ -129,6 +128,7 @@ export default function Home() {
             activeView={activeView}
             remainingData={loomData}
             consumedData={consumedData} 
+            bagsProducedData={bagsProducedData}
             onImport={handleImportData}
             onMarkAsConsumed={handleMarkAsConsumed}
             onPartialConsume={handlePartialConsume}
@@ -155,16 +155,13 @@ export default function Home() {
             activeView={activeView}
             remainingData={loomData}
             consumedData={consumedData} 
+            bagsProducedData={bagsProducedData}
             onImport={handleImportData}
             onMarkAsConsumed={handleMarkAsConsumed}
             onPartialConsume={handlePartialConsume}
             onSendForLamination={handleSendForLamination}
             onMarkAsReceived={handleMarkAsReceived}
           />
-
-          <Separator className="my-12" />
-          
-          <BagsProduced data={bagsProducedData} />
         </>
       )}
     </main>

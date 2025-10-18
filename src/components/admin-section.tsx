@@ -12,10 +12,13 @@ import * as XLSX from 'xlsx';
 import { z } from 'zod';
 import { ConsumedByDialog } from './consumed-by-dialog';
 import { PartialUseDialog } from './partial-use-dialog';
+import BagsProduced from './bags-produced';
+import { Separator } from './ui/separator';
 
 interface AdminSectionProps {
   remainingData: LoomSheetData[];
   consumedData: LoomSheetData[];
+  bagsProducedData: LoomSheetData[];
   onImport: (data: LoomSheetData[]) => void;
   onMarkAsConsumed: (selectedIds: string[], consumedBy: string, bagData?: BagProductionData) => void;
   onPartialConsume: (originalId: string, consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string, bagData?: BagProductionData) => void;
@@ -26,7 +29,7 @@ interface AdminSectionProps {
 
 type View = 'remaining' | 'consumed' | 'laminate';
 
-export default function AdminSection({ remainingData, consumedData, onImport, onMarkAsConsumed, onPartialConsume, activeView, onSendForLamination, onMarkAsReceived }: AdminSectionProps) {
+export default function AdminSection({ remainingData, consumedData, bagsProducedData, onImport, onMarkAsConsumed, onPartialConsume, activeView, onSendForLamination, onMarkAsReceived }: AdminSectionProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentView, setCurrentView] = useState<View>('remaining');
@@ -336,16 +339,9 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
                 </div>
                 {currentView === 'remaining' && (
                    <div className="flex gap-2">
-                      {activeView === 'bags' && (
-                        <Button onClick={handleOpenPartialUseDialog} disabled={selectedRowIds.length !== 1}>
-                          <SplitSquareHorizontal className="mr-2 h-4 w-4" /> Partial Use
-                        </Button>
-                      )}
-                       {activeView === 'rolls' && (
-                        <Button onClick={handleOpenPartialUseDialog} disabled={selectedRowIds.length !== 1}>
-                          <SplitSquareHorizontal className="mr-2 h-4 w-4" /> Partial Use
-                        </Button>
-                      )}
+                      <Button onClick={handleOpenPartialUseDialog} disabled={selectedRowIds.length !== 1}>
+                        <SplitSquareHorizontal className="mr-2 h-4 w-4" /> Partial Use
+                      </Button>
                       <Button onClick={handleOpenConsumedDialog} disabled={selectedRowIds.length === 0}>
                         <CheckSquare className="mr-2 h-4 w-4" /> Submit Consumed
                       </Button>
@@ -364,6 +360,14 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
             </Card>
           )}
 
+          {activeView === 'bags' && (
+            <>
+              <Separator className="my-12" />
+              <BagsProduced data={bagsProducedData} />
+            </>
+          )}
+
+          <Separator className="my-12" />
           <AiSummary data={allData} />
       </div>
     </section>

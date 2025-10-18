@@ -7,12 +7,11 @@ import { useToast } from '@/hooks/use-toast';
 import { LoomSheetData, loomSheetSchema, BagProductionData } from '@/lib/schemas';
 import { DataTable } from '@/components/data-table';
 import AiSummary from '@/components/ai-summary';
-import { Upload, Download, CheckSquare, SplitSquareHorizontal } from 'lucide-react';
+import { Upload, Download, CheckSquare, SplitSquareHorizontal, Send } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { z } from 'zod';
 import { ConsumedByDialog } from './consumed-by-dialog';
 import { PartialUseDialog } from './partial-use-dialog';
-import { Separator } from './ui/separator';
 
 interface AdminSectionProps {
   remainingData: LoomSheetData[];
@@ -21,15 +20,17 @@ interface AdminSectionProps {
   onMarkAsConsumed: (selectedIds: string[], consumedBy: string, bagData?: BagProductionData) => void;
   onPartialConsume: (originalId: string, consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string, bagData?: BagProductionData) => void;
   activeView: 'rolls' | 'bags';
+  onSendForLamination: (selectedIds: string[]) => void;
 }
 
 type View = 'remaining' | 'consumed' | 'laminate';
 
-export default function AdminSection({ remainingData, consumedData, onImport, onMarkAsConsumed, onPartialConsume, activeView }: AdminSectionProps) {
+export default function AdminSection({ remainingData, consumedData, onImport, onMarkAsConsumed, onPartialConsume, activeView, onSendForLamination }: AdminSectionProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentView, setCurrentView] = useState<View>('remaining');
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
+  const [selectedUnlaminatedRowIds, setSelectedUnlaminatedRowIds] = useState<string[]>([]);
   const [isConsumedDialogVisible, setIsConsumedDialogVisible] = useState(false);
   const [isPartialUseDialogVisible, setIsPartialUseDialogVisible] = useState(false);
   
@@ -158,6 +159,23 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
     setIsPartialUseDialogVisible(false);
   };
 
+  const handleSendForLaminationClick = () => {
+    if (selectedUnlaminatedRowIds.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No Rows Selected',
+        description: 'Please select unlaminated rolls to send for lamination.',
+      });
+      return;
+    }
+    onSendForLamination(selectedUnlaminatedRowIds);
+    toast({
+      title: 'Success',
+      description: `${selectedUnlaminatedRowIds.length} rolls have been sent for lamination.`,
+    });
+    setSelectedUnlaminatedRowIds([]);
+  };
+
   const selectedRollForPartialUse = selectedRowIds.length === 1 ? remainingData.find(d => d.id === selectedRowIds[0]) : undefined;
   
   const laminatedData = allData.filter(d => d.lamUnlam === 'Laminated');
@@ -235,16 +253,21 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
                   </CardContent>
                 </Card>
                 <Card className="shadow-lg">
-                  <CardHeader>
-                    <CardTitle>Unlaminated Rolls</CardTitle>
-                    <CardDescription>A log of all unlaminated rolls.</CardDescription>
+                  <CardHeader className="flex flex-row justify-between items-center">
+                    <div>
+                      <CardTitle>Unlaminated Rolls</CardTitle>
+                      <CardDescription>Select rolls to send for lamination.</CardDescription>
+                    </div>
+                    <Button onClick={handleSendForLaminationClick} disabled={selectedUnlaminatedRowIds.length === 0}>
+                      <Send className="mr-2 h-4 w-4" /> Send for Lamination
+                    </Button>
                   </CardHeader>
                   <CardContent>
                     <DataTable 
                       data={unlaminatedData}
-                      selectedRowIds={[]}
-                      onSelectedRowIdsChange={() => {}}
-                      showCheckboxes={false}
+                      selectedRowIds={selectedUnlaminatedRowIds}
+                      onSelectedRowIdsChange={setSelectedUnlaminatedRowIds}
+                      showCheckboxes={true}
                     />
                   </CardContent>
                 </Card>

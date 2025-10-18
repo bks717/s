@@ -66,6 +66,24 @@ export default function Home() {
     });
   };
 
+  const handleSendForLamination = (selectedIds: string[]) => {
+    const updatedLoomData = loomData.map(item => {
+      if (selectedIds.includes(item.id!)) {
+        return { ...item, lamUnlam: 'Sent for lamination' };
+      }
+      return item;
+    });
+    setLoomData(updatedLoomData);
+
+    const updatedConsumedData = consumedData.map(item => {
+      if (selectedIds.includes(item.id!)) {
+        return { ...item, lamUnlam: 'Sent for lamination' };
+      }
+      return item;
+    });
+    setConsumedData(updatedConsumedData);
+  };
+
   return (
     <main className="container mx-auto p-4 md:p-8">
       <div className="flex justify-center gap-4 mb-8">
@@ -107,6 +125,7 @@ export default function Home() {
             onImport={handleImportData}
             onMarkAsConsumed={handleMarkAsConsumed}
             onPartialConsume={handlePartialConsume}
+            onSendForLamination={handleSendForLamination}
           />
         </>
       )}
@@ -131,6 +150,7 @@ export default function Home() {
             onImport={handleImportData}
             onMarkAsConsumed={handleMarkAsConsumed}
             onPartialConsume={handlePartialConsume}
+            onSendForLamination={handleSendForLamination}
           />
         </>
       )}

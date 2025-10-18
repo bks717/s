@@ -19,11 +19,12 @@ interface AdminSectionProps {
   onImport: (data: LoomSheetData[]) => void;
   onMarkAsConsumed: (selectedIds: string[], consumedBy: string) => void;
   onPartialConsume: (originalId: string, consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string) => void;
+  activeView: 'rolls' | 'bags';
 }
 
 type View = 'remaining' | 'consumed';
 
-export default function AdminSection({ remainingData, consumedData, onImport, onMarkAsConsumed, onPartialConsume }: AdminSectionProps) {
+export default function AdminSection({ remainingData, consumedData, onImport, onMarkAsConsumed, onPartialConsume, activeView }: AdminSectionProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentView, setCurrentView] = useState<View>('remaining');
@@ -214,9 +215,11 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
               </div>
               {currentView === 'remaining' && (
                  <div className="flex gap-2">
-                    <Button onClick={handleOpenPartialUseDialog} disabled={selectedRowIds.length !== 1}>
-                      <SplitSquareHorizontal className="mr-2 h-4 w-4" /> Partial Use
-                    </Button>
+                    {activeView === 'bags' && (
+                      <Button onClick={handleOpenPartialUseDialog} disabled={selectedRowIds.length !== 1}>
+                        <SplitSquareHorizontal className="mr-2 h-4 w-4" /> Partial Use
+                      </Button>
+                    )}
                     <Button onClick={handleOpenConsumedDialog} disabled={selectedRowIds.length === 0}>
                       <CheckSquare className="mr-2 h-4 w-4" /> Submit Consumed
                     </Button>

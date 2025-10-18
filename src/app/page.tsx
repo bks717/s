@@ -96,6 +96,7 @@ export default function Home() {
           <Separator className="my-12" />
 
           <AdminSection 
+            activeView={activeView}
             remainingData={loomData}
             consumedData={consumedData} 
             onImport={handleImportData}
@@ -119,6 +120,7 @@ export default function Home() {
           <Separator className="my-12" />
 
           <AdminSection 
+            activeView={activeView}
             remainingData={loomData}
             consumedData={consumedData} 
             onImport={handleImportData}

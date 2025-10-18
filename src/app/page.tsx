@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import LoomSheetForm from '@/components/loom-sheet-form';
 import AdminSection from '@/components/admin-section';
-import { LoomSheetData } from '@/lib/schemas';
+import { LoomSheetData, BagProductionData } from '@/lib/schemas';
 import { loomDataStore as initialData } from '@/lib/data';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
@@ -24,19 +24,24 @@ export default function Home() {
     setLoomData(prevData => [...prevData, ...newLoomData]);
   };
   
-  const handleMarkAsConsumed = (selectedIds: string[], consumedBy: string) => {
+  const handleMarkAsConsumed = (selectedIds: string[], consumedBy: string, bagData?: BagProductionData) => {
     const itemsToMove = loomData.filter(item => selectedIds.includes(item.id!));
-    const updatedItemsToMove = itemsToMove.map(item => ({...item, consumedBy}));
+    const updatedItemsToMove = itemsToMove.map(item => ({
+      ...item, 
+      consumedBy,
+      ...(activeView === 'bags' && bagData ? bagData : {})
+    }));
     setConsumedData(prev => [...prev, ...updatedItemsToMove]);
     setLoomData(prev => prev.filter(item => !selectedIds.includes(item.id!)));
   };
 
-  const handlePartialConsume = (originalId: string, consumedPartData: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string) => {
+  const handlePartialConsume = (originalId: string, consumedPartData: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string, bagData?: BagProductionData) => {
     const newConsumedRoll: LoomSheetData = {
       ...consumedPartData,
       id: (Date.now() + Math.random()).toString(),
       productionDate: new Date(),
       consumedBy,
+      ...(activeView === 'bags' && bagData ? bagData : {})
     };
     setConsumedData(prev => [...prev, newConsumedRoll]);
     

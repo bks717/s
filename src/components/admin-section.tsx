@@ -4,7 +4,7 @@ import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { LoomSheetData, loomSheetSchema } from '@/lib/schemas';
+import { LoomSheetData, loomSheetSchema, BagProductionData } from '@/lib/schemas';
 import { DataTable } from '@/components/data-table';
 import AiSummary from '@/components/ai-summary';
 import { Upload, Download, CheckSquare, SplitSquareHorizontal } from 'lucide-react';
@@ -17,8 +17,8 @@ interface AdminSectionProps {
   remainingData: LoomSheetData[];
   consumedData: LoomSheetData[];
   onImport: (data: LoomSheetData[]) => void;
-  onMarkAsConsumed: (selectedIds: string[], consumedBy: string) => void;
-  onPartialConsume: (originalId: string, consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string) => void;
+  onMarkAsConsumed: (selectedIds: string[], consumedBy: string, bagData?: BagProductionData) => void;
+  onPartialConsume: (originalId: string, consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string, bagData?: BagProductionData) => void;
   activeView: 'rolls' | 'bags';
 }
 
@@ -125,8 +125,8 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
     setIsConsumedDialogVisible(true);
   };
 
-  const handleConfirmConsumed = (consumedBy: string) => {
-    onMarkAsConsumed(selectedRowIds, consumedBy);
+  const handleConfirmConsumed = (consumedBy: string, bagData?: BagProductionData) => {
+    onMarkAsConsumed(selectedRowIds, consumedBy, bagData);
     toast({
       title: 'Success',
       description: `${selectedRowIds.length} rows marked as consumed by ${consumedBy}.`,
@@ -147,9 +147,9 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
     setIsPartialUseDialogVisible(true);
   };
 
-  const handleConfirmPartialUse = (consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string) => {
+  const handleConfirmPartialUse = (consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string, bagData?: BagProductionData) => {
     const originalId = selectedRowIds[0];
-    onPartialConsume(originalId, consumedPart, consumedBy);
+    onPartialConsume(originalId, consumedPart, consumedBy, bagData);
      toast({
       title: 'Success',
       description: `Roll partially consumed by ${consumedBy}. Remaining roll updated.`,
@@ -167,6 +167,7 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
         onClose={() => setIsConsumedDialogVisible(false)}
         onConfirm={handleConfirmConsumed}
         selectedCount={selectedRowIds.length}
+        activeView={activeView}
       />
       {selectedRollForPartialUse && (
         <PartialUseDialog
@@ -174,6 +175,7 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
             onClose={() => setIsPartialUseDialogVisible(false)}
             onConfirm={handleConfirmPartialUse}
             originalRoll={selectedRollForPartialUse}
+            activeView={activeView}
         />
       )}
       <div className="text-center mb-8">

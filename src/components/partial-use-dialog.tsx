@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { LoomSheetData, loomSheetSchema } from '@/lib/schemas';
+import { LoomSheetData, loomSheetSchema, BagProductionData } from '@/lib/schemas';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
@@ -21,8 +21,9 @@ import { Separator } from './ui/separator';
 interface PartialUseDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string) => void;
+  onConfirm: (consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string, bagData?: BagProductionData) => void;
   originalRoll: LoomSheetData;
+  activeView: 'rolls' | 'bags';
 }
 
 const partialUseSchema = loomSheetSchema.omit({id: true, productionDate: true}).extend({
@@ -31,7 +32,7 @@ const partialUseSchema = loomSheetSchema.omit({id: true, productionDate: true}).
 
 type PartialUseFormData = Omit<LoomSheetData, 'id' | 'productionDate'> & { consumedBy: string };
 
-export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: PartialUseDialogProps) {
+export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, activeView }: PartialUseDialogProps) {
   const form = useForm<PartialUseFormData>({
     resolver: zodResolver(partialUseSchema),
     defaultValues: {
@@ -43,6 +44,9 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
       average: 0,
       variance: 0,
       consumedBy: '',
+      noOfBags: undefined,
+      avgBagWeight: undefined,
+      bagSize: '',
     },
   });
 
@@ -57,12 +61,15 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
         average: 0,
         variance: 0,
         consumedBy: '',
+        noOfBags: undefined,
+        avgBagWeight: undefined,
+        bagSize: '',
       });
     }
   }, [isOpen, originalRoll, form]);
 
   const onSubmit = (data: PartialUseFormData) => {
-    const { consumedBy, ...consumedPart } = data;
+    const { consumedBy, noOfBags, avgBagWeight, bagSize, ...consumedPart } = data;
     
     if(consumedPart.mtrs > originalRoll.mtrs) {
         form.setError('mtrs', { type: 'manual', message: `Cannot consume more than available (${originalRoll.mtrs}).` });
@@ -80,7 +87,12 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
         form.setError('nw', { type: 'manual', message: `Cannot consume more than available (${originalRoll.nw}).` });
         return;
     }
-    onConfirm(consumedPart, consumedBy);
+
+    if (activeView === 'bags') {
+        onConfirm(consumedPart, consumedBy, { noOfBags, avgBagWeight, bagSize });
+    } else {
+        onConfirm(consumedPart, consumedBy);
+    }
   };
   
   return (
@@ -111,6 +123,55 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
                         )}
                     />
                  </div>
+                 {activeView === 'bags' && (
+                    <>
+                        <Separator />
+                        <DialogDescription>
+                            Optionally, enter bag production details.
+                        </DialogDescription>
+                        <div className="grid md:grid-cols-3 gap-8">
+                             <FormField
+                                control={form.control}
+                                name="noOfBags"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>No. of Bags</FormLabel>
+                                    <FormControl>
+                                    <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                             <FormField
+                                control={form.control}
+                                name="avgBagWeight"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Avg. Bag Weight</FormLabel>
+                                    <FormControl>
+                                    <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                             <FormField
+                                control={form.control}
+                                name="bagSize"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Bag Size</FormLabel>
+                                    <FormControl>
+                                    <Input placeholder="e.g., 24x36" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                        </div>
+                    </>
+                 )}
                  <Separator />
                  <h3 className="text-lg font-medium text-foreground">Measurements of Consumed Part</h3>
                  <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-8">

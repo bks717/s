@@ -60,6 +60,9 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
 
   if (view === 'consumed') {
     columns.push({ key: 'consumedBy', label: 'Consumed By'});
+    columns.push({ key: 'noOfBags', label: 'No. of Bags'});
+    columns.push({ key: 'avgBagWeight', label: 'Avg. Bag Wt.'});
+    columns.push({ key: 'bagSize', label: 'Bag Size'});
   }
 
   if (showCheckboxes) {

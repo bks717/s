@@ -20,6 +20,17 @@ export const loomSheetSchema = z.object({
   productionDate: z.date(),
   variance: z.coerce.number(),
   consumedBy: z.string().optional(),
+  noOfBags: z.coerce.number().optional(),
+  avgBagWeight: z.coerce.number().optional(),
+  bagSize: z.string().optional(),
 });
 
 export type LoomSheetData = z.infer<typeof loomSheetSchema>;
+
+export const bagProductionSchema = z.object({
+    noOfBags: z.coerce.number().optional(),
+    avgBagWeight: z.coerce.number().optional(),
+    bagSize: z.string().optional(),
+});
+
+export type BagProductionData = z.infer<typeof bagProductionSchema>;

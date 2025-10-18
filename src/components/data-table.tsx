@@ -48,6 +48,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
     { key: 'number2', label: 'Num 2' },
     { key: 'grSut', label: 'Gr/Sut' },
     { key: 'color', label: 'Color' },
+    { key: 'lamUnlam', label: 'Lamination' },
     { key: 'mtrs', label: 'Mtrs' },
     { key: 'gw', label: 'G.W.' },
     { key: 'cw', label: 'C.W.' },

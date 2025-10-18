@@ -285,6 +285,20 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
                     />
                   </CardContent>
                 </Card>
+                <Card className="shadow-lg">
+                  <CardHeader>
+                    <CardTitle>Received from Lamination</CardTitle>
+                    <CardDescription>A log of all rolls received from lamination.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <DataTable
+                      data={[]}
+                      selectedRowIds={[]}
+                      onSelectedRowIdsChange={() => {}}
+                      showCheckboxes={false}
+                    />
+                  </CardContent>
+                </Card>
              </div>
           ) : (
             <Card className="shadow-lg">

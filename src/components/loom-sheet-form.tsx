@@ -238,6 +238,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                         <SelectItem value="Laminated">Laminated</SelectItem>
                         <SelectItem value="Unlaminated">Unlaminated</SelectItem>
                         <SelectItem value="Sent for lamination">Sent for lamination</SelectItem>
+                        <SelectItem value="revlam">Received from Lamination</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

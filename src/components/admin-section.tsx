@@ -21,16 +21,18 @@ interface AdminSectionProps {
   onPartialConsume: (originalId: string, consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string, bagData?: BagProductionData) => void;
   activeView: 'rolls' | 'bags';
   onSendForLamination: (selectedIds: string[]) => void;
+  onMarkAsReceived: (selectedIds: string[]) => void;
 }
 
 type View = 'remaining' | 'consumed' | 'laminate';
 
-export default function AdminSection({ remainingData, consumedData, onImport, onMarkAsConsumed, onPartialConsume, activeView, onSendForLamination }: AdminSectionProps) {
+export default function AdminSection({ remainingData, consumedData, onImport, onMarkAsConsumed, onPartialConsume, activeView, onSendForLamination, onMarkAsReceived }: AdminSectionProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentView, setCurrentView] = useState<View>('remaining');
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
   const [selectedUnlaminatedRowIds, setSelectedUnlaminatedRowIds] = useState<string[]>([]);
+  const [selectedSentForLaminationIds, setSelectedSentForLaminationIds] = useState<string[]>([]);
   const [isConsumedDialogVisible, setIsConsumedDialogVisible] = useState(false);
   const [isPartialUseDialogVisible, setIsPartialUseDialogVisible] = useState(false);
   
@@ -176,11 +178,29 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
     setSelectedUnlaminatedRowIds([]);
   };
 
+  const handleMarkAsReceivedClick = () => {
+    if (selectedSentForLaminationIds.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No Rows Selected',
+        description: 'Please select rolls that have been received from lamination.',
+      });
+      return;
+    }
+    onMarkAsReceived(selectedSentForLaminationIds);
+    toast({
+      title: 'Success',
+      description: `${selectedSentForLaminationIds.length} rolls have been marked as received.`,
+    });
+    setSelectedSentForLaminationIds([]);
+  };
+
   const selectedRollForPartialUse = selectedRowIds.length === 1 ? remainingData.find(d => d.id === selectedRowIds[0]) : undefined;
   
   const laminatedData = allData.filter(d => d.lamUnlam === 'Laminated');
   const unlaminatedData = allData.filter(d => d.lamUnlam === 'Unlaminated');
   const sentForLaminationData = allData.filter(d => d.lamUnlam === 'Sent for lamination');
+  const receivedFromLaminationData = allData.filter(d => d.lamUnlam === 'revlam');
 
 
   return (
@@ -272,16 +292,21 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
                   </CardContent>
                 </Card>
                 <Card className="shadow-lg">
-                  <CardHeader>
-                    <CardTitle>Rolls Sent for Lamination</CardTitle>
-                    <CardDescription>A log of all rolls sent for lamination.</CardDescription>
+                   <CardHeader className="flex flex-row justify-between items-center">
+                    <div>
+                      <CardTitle>Rolls Sent for Lamination</CardTitle>
+                      <CardDescription>A log of all rolls sent for lamination.</CardDescription>
+                    </div>
+                    <Button onClick={handleMarkAsReceivedClick} disabled={selectedSentForLaminationIds.length === 0}>
+                      <CheckSquare className="mr-2 h-4 w-4" /> Received
+                    </Button>
                   </CardHeader>
                   <CardContent>
                     <DataTable 
                       data={sentForLaminationData}
-                      selectedRowIds={[]}
-                      onSelectedRowIdsChange={() => {}}
-                      showCheckboxes={false}
+                      selectedRowIds={selectedSentForLaminationIds}
+                      onSelectedRowIdsChange={setSelectedSentForLaminationIds}
+                      showCheckboxes={true}
                     />
                   </CardContent>
                 </Card>
@@ -292,7 +317,7 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
                   </CardHeader>
                   <CardContent>
                     <DataTable
-                      data={[]}
+                      data={receivedFromLaminationData}
                       selectedRowIds={[]}
                       onSelectedRowIdsChange={() => {}}
                       showCheckboxes={false}

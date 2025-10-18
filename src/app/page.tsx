@@ -67,21 +67,25 @@ export default function Home() {
   };
 
   const handleSendForLamination = (selectedIds: string[]) => {
-    const updatedLoomData = loomData.map(item => {
+    const updateStatus = (data: LoomSheetData[]) => data.map(item => {
       if (selectedIds.includes(item.id!)) {
         return { ...item, lamUnlam: 'Sent for lamination' };
       }
       return item;
     });
-    setLoomData(updatedLoomData);
-
-    const updatedConsumedData = consumedData.map(item => {
+    setLoomData(updateStatus);
+    setConsumedData(updateStatus);
+  };
+  
+  const handleMarkAsReceived = (selectedIds: string[]) => {
+    const updateStatus = (data: LoomSheetData[]) => data.map(item => {
       if (selectedIds.includes(item.id!)) {
-        return { ...item, lamUnlam: 'Sent for lamination' };
+        return { ...item, lamUnlam: 'revlam' };
       }
       return item;
     });
-    setConsumedData(updatedConsumedData);
+    setLoomData(updateStatus);
+    setConsumedData(updateStatus);
   };
 
   return (
@@ -126,6 +130,7 @@ export default function Home() {
             onMarkAsConsumed={handleMarkAsConsumed}
             onPartialConsume={handlePartialConsume}
             onSendForLamination={handleSendForLamination}
+            onMarkAsReceived={handleMarkAsReceived}
           />
         </>
       )}
@@ -151,6 +156,7 @@ export default function Home() {
             onMarkAsConsumed={handleMarkAsConsumed}
             onPartialConsume={handlePartialConsume}
             onSendForLamination={handleSendForLamination}
+            onMarkAsReceived={handleMarkAsReceived}
           />
         </>
       )}

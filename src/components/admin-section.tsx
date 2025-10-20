@@ -36,7 +36,7 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentView, setCurrentView] = useState<View>('remaining');
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
-  const [selectedUnlaminatedRowIds, setSelectedUnlaminatedRowIds] = useState<string[]>([]);
+  const [selectedReadyForLaminationIds, setSelectedReadyForLaminationIds] = useState<string[]>([]);
   const [selectedSentForLaminationIds, setSelectedSentForLaminationIds] = useState<string[]>([]);
   const [isConsumedDialogVisible, setIsConsumedDialogVisible] = useState(false);
   const [isPartialUseDialogVisible, setIsPartialUseDialogVisible] = useState(false);
@@ -168,20 +168,20 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
   };
 
   const handleSendForLaminationClick = () => {
-    if (selectedUnlaminatedRowIds.length === 0) {
+    if (selectedReadyForLaminationIds.length === 0) {
       toast({
         variant: 'destructive',
         title: 'No Rows Selected',
-        description: 'Please select unlaminated rolls to send for lamination.',
+        description: 'Please select rolls to send for lamination.',
       });
       return;
     }
-    onSendForLamination(selectedUnlaminatedRowIds);
+    onSendForLamination(selectedReadyForLaminationIds);
     toast({
       title: 'Success',
-      description: `${selectedUnlaminatedRowIds.length} rolls have been sent for lamination.`,
+      description: `${selectedReadyForLaminationIds.length} rolls have been sent for lamination.`,
     });
-    setSelectedUnlaminatedRowIds([]);
+    setSelectedReadyForLaminationIds([]);
   };
 
   const handleMarkAsReceivedClick = () => {
@@ -203,6 +203,7 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
 
   const selectedRollForPartialUse = selectedRowIds.length === 1 ? remainingData.find(d => d.id === selectedRowIds[0]) : undefined;
   
+  const readyForLaminationData = allData.filter(d => d.lamUnlam === 'Ready for Lamination');
   const sentForLaminationData = allData.filter(d => d.lamUnlam === 'Sent for Lamination');
   const receivedFromLaminationData = allData.filter(d => d.lamUnlam === 'Received from Lamination');
   
@@ -280,6 +281,25 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
 
           {currentView === 'laminate' && activeView === 'rolls' ? (
              <div className='space-y-8'>
+                <Card className="shadow-lg">
+                  <CardHeader className="flex flex-row justify-between items-center">
+                    <div>
+                      <CardTitle>Ready for Lamination</CardTitle>
+                      <CardDescription>Select rolls to send for lamination.</CardDescription>
+                    </div>
+                    <Button onClick={handleSendForLaminationClick} disabled={selectedReadyForLaminationIds.length === 0}>
+                      <Send className="mr-2 h-4 w-4" /> Send
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    <DataTable
+                      data={readyForLaminationData}
+                      selectedRowIds={selectedReadyForLaminationIds}
+                      onSelectedRowIdsChange={setSelectedReadyForLaminationIds}
+                      showCheckboxes={true}
+                    />
+                  </CardContent>
+                </Card>
                 <Card className="shadow-lg">
                    <CardHeader className="flex flex-row justify-between items-center">
                     <div>

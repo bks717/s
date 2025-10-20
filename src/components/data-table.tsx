@@ -31,11 +31,6 @@ type SortConfig = {
 export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCheckboxes = false, view = 'remaining' }: DataTableProps) {
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'productionDate', direction: 'descending' });
 
-  // Reset selection when the component is re-purposed for different data sets
-  useEffect(() => {
-    onSelectedRowIdsChange([]);
-  }, [onSelectedRowIdsChange, data]);
-
   const baseColumns: { key: keyof LoomSheetData | 'select', label: string }[] = [
     // The 'select' column is conditionally added later
     { key: 'productionDate', label: 'Prod. Date' },

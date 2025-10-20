@@ -215,6 +215,8 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   const filteredRemainingData = filterData(remainingData);
   const filteredConsumedData = filterData(consumedData);
 
+  const availableFilters = statuses.filter(s => s !== 'Active Stock' && s !== 'Consumed');
+
 
   return (
     <section id="admin-dashboard">
@@ -259,7 +261,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                 </Button>
               </div>
               <div className="flex gap-2 items-center">
-                  {currentView !== 'laminate' && (
+                  {currentView === 'remaining' && (
                     <div className="flex items-center gap-2">
                       <Label htmlFor="status-filter">Status</Label>
                       <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -268,7 +270,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All</SelectItem>
-                          {statuses.map(status => (
+                          {availableFilters.map(status => (
                             <SelectItem key={status} value={status}>{status}</SelectItem>
                           ))}
                         </SelectContent>

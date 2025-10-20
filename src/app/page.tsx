@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 type View = 'rolls' | 'bags';
 
 export default function Home() {
-  const [activeView, setActiveView] = useState<View>('bags');
+  const [activeView, setActiveView] = useState<View>('rolls');
   const [allData, setAllData] = useState<LoomSheetData[]>(initialData);
 
   const handleAddData = (newData: LoomSheetData) => {

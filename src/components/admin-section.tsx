@@ -245,15 +245,14 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   
   const filterData = (data: LoomSheetData[]) => {
     if (statusFilter === 'all') {
-      return data.filter(d => d.status === 'Active Stock');
+      return data;
     }
     return data.filter(d => d.status === statusFilter);
   };
 
   const filteredRemainingData = filterData(remainingData);
-  const filteredConsumedData = filterData(consumedData);
 
-  const availableFilters = statuses.filter(s => s !== 'Active Stock' && s !== 'Consumed');
+  const availableFilters = statuses.filter(s => s !== 'Consumed');
 
   return (
     <section id="admin-dashboard">
@@ -313,7 +312,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                           <SelectValue placeholder="Filter by status" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">Active Stock</SelectItem>
+                          <SelectItem value="all">All</SelectItem>
                           {availableFilters.map(status => (
                             <SelectItem key={status} value={status}>{status}</SelectItem>
                           ))}
@@ -413,7 +412,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
               </CardHeader>
               <CardContent>
                 <DataTable 
-                  data={currentView === 'remaining' ? filteredRemainingData : filteredConsumedData}
+                  data={currentView === 'remaining' ? filteredRemainingData : consumedData}
                   selectedRowIds={selectedRowIds}
                   onSelectedRowIdsChange={onSetSelectedRowIds}
                   showCheckboxes={currentView === 'remaining'}

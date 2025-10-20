@@ -26,11 +26,12 @@ interface AdminSectionProps {
   activeView: 'rolls' | 'bags';
   onSendForLamination: (selectedIds: string[]) => void;
   onMarkAsReceived: (selectedIds: string[]) => void;
+  bagsProducedData: LoomSheetData[];
 }
 
 type View = 'remaining' | 'consumed' | 'laminate';
 
-export default function AdminSection({ remainingData, consumedData, onImport, onMarkAsConsumed, onPartialConsume, activeView, onSendForLamination, onMarkAsReceived }: AdminSectionProps) {
+export default function AdminSection({ remainingData, consumedData, onImport, onMarkAsConsumed, onPartialConsume, activeView, onSendForLamination, onMarkAsReceived, bagsProducedData }: AdminSectionProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentView, setCurrentView] = useState<View>('remaining');
@@ -42,7 +43,6 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
   const [lamStatusFilter, setLamStatusFilter] = useState<string>('all');
   
   const allData = [...remainingData, ...consumedData];
-  const bagsProducedData = consumedData.filter(d => d.noOfBags && d.noOfBags > 0);
 
   const handleExport = () => {
     const worksheet = XLSX.utils.json_to_sheet(allData);
@@ -203,8 +203,6 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
 
   const selectedRollForPartialUse = selectedRowIds.length === 1 ? remainingData.find(d => d.id === selectedRowIds[0]) : undefined;
   
-  const laminatedData = allData.filter(d => d.lamUnlam === 'Laminated');
-  const unlaminatedData = allData.filter(d => d.lamUnlam === 'Unlaminated');
   const sentForLaminationData = allData.filter(d => d.lamUnlam === 'Sent for Lamination');
   const receivedFromLaminationData = allData.filter(d => d.lamUnlam === 'Received from Lamination');
   
@@ -282,39 +280,6 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
 
           {currentView === 'laminate' && activeView === 'rolls' ? (
              <div className='space-y-8'>
-                <Card className="shadow-lg">
-                  <CardHeader>
-                    <CardTitle>Laminated Rolls</CardTitle>
-                    <CardDescription>A log of all laminated rolls.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <DataTable 
-                      data={laminatedData}
-                      selectedRowIds={[]}
-                      onSelectedRowIdsChange={() => {}}
-                      showCheckboxes={false}
-                    />
-                  </CardContent>
-                </Card>
-                <Card className="shadow-lg">
-                  <CardHeader className="flex flex-row justify-between items-center">
-                    <div>
-                      <CardTitle>Unlaminated Rolls</CardTitle>
-                      <CardDescription>Select rolls to send for lamination.</CardDescription>
-                    </div>
-                    <Button onClick={handleSendForLaminationClick} disabled={selectedUnlaminatedRowIds.length === 0}>
-                      <Send className="mr-2 h-4 w-4" /> Send for Lamination
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <DataTable 
-                      data={unlaminatedData}
-                      selectedRowIds={selectedUnlaminatedRowIds}
-                      onSelectedRowIdsChange={setSelectedUnlaminatedRowIds}
-                      showCheckboxes={true}
-                    />
-                  </CardContent>
-                </Card>
                 <Card className="shadow-lg">
                    <CardHeader className="flex flex-row justify-between items-center">
                     <div>

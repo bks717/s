@@ -4,7 +4,7 @@ import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { LoomSheetData, loomSheetSchema, BagProductionData } from '@/lib/schemas';
+import { LoomSheetData, loomSheetSchema, BagProductionData, lamStatuses } from '@/lib/schemas';
 import { DataTable } from '@/components/data-table';
 import AiSummary from '@/components/ai-summary';
 import { Upload, Download, CheckSquare, SplitSquareHorizontal, Send } from 'lucide-react';
@@ -14,6 +14,8 @@ import { ConsumedByDialog } from './consumed-by-dialog';
 import { PartialUseDialog } from './partial-use-dialog';
 import BagsProduced from './bags-produced';
 import { Separator } from './ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Label } from './ui/label';
 
 interface AdminSectionProps {
   remainingData: LoomSheetData[];
@@ -37,6 +39,7 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
   const [selectedSentForLaminationIds, setSelectedSentForLaminationIds] = useState<string[]>([]);
   const [isConsumedDialogVisible, setIsConsumedDialogVisible] = useState(false);
   const [isPartialUseDialogVisible, setIsPartialUseDialogVisible] = useState(false);
+  const [lamStatusFilter, setLamStatusFilter] = useState<string>('all');
   
   const allData = [...remainingData, ...consumedData];
   const bagsProducedData = consumedData.filter(d => d.noOfBags && d.noOfBags > 0);
@@ -204,7 +207,9 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
   const unlaminatedData = allData.filter(d => d.lamUnlam === 'Unlaminated');
   const sentForLaminationData = allData.filter(d => d.lamUnlam === 'Sent for Lamination');
   const receivedFromLaminationData = allData.filter(d => d.lamUnlam === 'Received from Lamination');
-
+  
+  const filteredRemainingData = remainingData.filter(d => lamStatusFilter === 'all' || d.lamUnlam === lamStatusFilter);
+  const filteredConsumedData = consumedData.filter(d => lamStatusFilter === 'all' || d.lamUnlam === lamStatusFilter);
 
   return (
     <section id="admin-dashboard">
@@ -248,7 +253,23 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
                   Consumed ({consumedData.length})
                 </Button>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                  {currentView !== 'laminate' && (
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="lam-status-filter">Lam Status</Label>
+                      <Select value={lamStatusFilter} onValueChange={setLamStatusFilter}>
+                        <SelectTrigger id="lam-status-filter" className="w-48">
+                          <SelectValue placeholder="Filter by status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All</SelectItem>
+                          {lamStatuses.map(status => (
+                            <SelectItem key={status} value={status}>{status}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   <Button variant="outline" onClick={handleImportClick}>
                       <Upload className="mr-2 h-4 w-4"/> Import Excel
                   </Button>
@@ -350,7 +371,7 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
               </CardHeader>
               <CardContent>
                 <DataTable 
-                  data={currentView === 'remaining' ? remainingData : consumedData}
+                  data={currentView === 'remaining' ? filteredRemainingData : filteredConsumedData}
                   selectedRowIds={selectedRowIds}
                   onSelectedRowIdsChange={setSelectedRowIds}
                   showCheckboxes={currentView === 'remaining'}

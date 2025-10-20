@@ -206,8 +206,19 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
   const sentForLaminationData = allData.filter(d => d.lamUnlam === 'Sent for Lamination');
   const receivedFromLaminationData = allData.filter(d => d.lamUnlam === 'Received from Lamination');
   
-  const filteredRemainingData = remainingData.filter(d => lamStatusFilter === 'all' || d.lamUnlam === lamStatusFilter);
-  const filteredConsumedData = consumedData.filter(d => lamStatusFilter === 'all' || d.lamUnlam === lamStatusFilter);
+  const filterData = (data: LoomSheetData[]) => {
+    if (lamStatusFilter === 'all') {
+      return data;
+    }
+    if (lamStatusFilter === 'both-lam-unlam') {
+      return data.filter(d => d.lamUnlam === 'Laminated' || d.lamUnlam === 'Unlaminated');
+    }
+    return data.filter(d => d.lamUnlam === lamStatusFilter);
+  };
+
+  const filteredRemainingData = filterData(remainingData);
+  const filteredConsumedData = filterData(consumedData);
+
 
   return (
     <section id="admin-dashboard">
@@ -261,6 +272,7 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All</SelectItem>
+                          <SelectItem value="both-lam-unlam">Both Laminated &amp; Unlaminated</SelectItem>
                           {lamStatuses.map(status => (
                             <SelectItem key={status} value={status}>{status}</SelectItem>
                           ))}

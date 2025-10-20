@@ -14,6 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { Terminal } from 'lucide-react';
 import { Separator } from './ui/separator';
 import LoomSheetForm from './loom-sheet-form';
+import { ScrollArea } from './ui/scroll-area';
 
 interface ReceiveLaminationDialogProps {
   isOpen: boolean;
@@ -87,10 +88,12 @@ export function ReceiveLaminationDialog({ isOpen, onClose, selectedRolls, onRetu
                 <DialogDescription className="mb-4">
                     The {selectedRolls.length} selected rolls will be consumed, and their serial numbers will be recorded. Fill out the form below to create the new, consolidated laminated roll. It will default to 'Laminated: true'.
                 </DialogDescription>
-                <LoomSheetForm
-                    onFormSubmit={handleCollaborateSubmit}
-                    defaultValues={{ lamination: true }}
-                />
+                <ScrollArea className="h-[60vh] p-4 border rounded-md">
+                    <LoomSheetForm
+                        onFormSubmit={handleCollaborateSubmit}
+                        defaultValues={{ lamination: true }}
+                    />
+                </ScrollArea>
                  <Button variant="outline" onClick={() => setView('options')} className="mt-4">Back to Options</Button>
             </div>
         )}

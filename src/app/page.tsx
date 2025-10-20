@@ -114,6 +114,31 @@ export default function Home() {
       return [...updatedData, newRoll];
     });
   };
+  
+  const handleSerialNumberChange = (oldRollId: string, newSerialNumber: string) => {
+    const oldRoll = allData.find(item => item.id === oldRollId);
+    if (!oldRoll) return;
+
+    const newRoll: LoomSheetData = {
+      ...oldRoll,
+      id: (Date.now()).toString(),
+      serialNumber: newSerialNumber,
+      productionDate: new Date(),
+      lamination: true,
+      status: 'Active Stock'
+    };
+
+    setAllData(prevData => {
+      const updatedData = prevData.map(item => {
+        if (item.id === oldRollId) {
+          return { ...item, status: 'Consumed', consumedBy: `S/N Change: ${newSerialNumber}` };
+        }
+        return item;
+      });
+      return [...updatedData, newRoll];
+    });
+  };
+
 
   const remainingData = allData.filter(d => d.status !== 'Consumed');
   const consumedData = allData.filter(d => d.status === 'Consumed');
@@ -164,6 +189,7 @@ export default function Home() {
             onReturnToStock={handleReturnToStock}
             onCollaborateAndCreate={handleCollaborateAndCreate}
             bagsProducedData={bagsProducedData}
+            onSerialNumberChange={handleSerialNumberChange}
           />
         </>
       )}
@@ -192,6 +218,7 @@ export default function Home() {
             onReturnToStock={handleReturnToStock}
             onCollaborateAndCreate={handleCollaborateAndCreate}
             bagsProducedData={bagsProducedData}
+            onSerialNumberChange={handleSerialNumberChange}
           />
         </>
       )}

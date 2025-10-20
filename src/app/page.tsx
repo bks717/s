@@ -69,7 +69,7 @@ export default function Home() {
   const handleSendForLamination = (selectedIds: string[]) => {
     const updateStatus = (data: LoomSheetData[]) => data.map(item => {
       if (selectedIds.includes(item.id!)) {
-        return { ...item, lamUnlam: 'Sent for lamination' };
+        return { ...item, lamUnlam: 'Sent for Lamination' };
       }
       return item;
     });
@@ -80,7 +80,7 @@ export default function Home() {
   const handleMarkAsReceived = (selectedIds: string[]) => {
     const updateStatus = (data: LoomSheetData[]) => data.map(item => {
       if (selectedIds.includes(item.id!)) {
-        return { ...item, lamUnlam: 'revlam' };
+        return { ...item, lamUnlam: 'Received from Lamination' };
       }
       return item;
     });
@@ -127,7 +127,7 @@ export default function Home() {
           <AdminSection 
             activeView={activeView}
             remainingData={loomData}
-            consumedData={consumedData} 
+            consumedData={consumedData}
             bagsProducedData={bagsProducedData}
             onImport={handleImportData}
             onMarkAsConsumed={handleMarkAsConsumed}
@@ -154,7 +154,7 @@ export default function Home() {
           <AdminSection 
             activeView={activeView}
             remainingData={loomData}
-            consumedData={consumedData} 
+            consumedData={consumedData}
             bagsProducedData={bagsProducedData}
             onImport={handleImportData}
             onMarkAsConsumed={handleMarkAsConsumed}

@@ -34,10 +34,14 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import React from "react";
 import { Separator } from "./ui/separator";
+import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
+import { Label } from "./ui/label";
 
 interface LoomSheetFormProps {
   onFormSubmit: (data: Omit<LoomSheetData, 'id' | 'productionDate'>) => void;
 }
+
+const lamStatuses = ['Laminated', 'Unlaminated', 'Ready for Lamination', 'Sent for Lamination', 'Received from Lamination'] as const;
 
 export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
   const { toast } = useToast();
@@ -222,30 +226,34 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="lamUnlam"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Lam Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select lamination status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Laminated">Laminated</SelectItem>
-                        <SelectItem value="Unlaminated">Unlaminated</SelectItem>
-                        <SelectItem value="Sent for lamination">Sent for lamination</SelectItem>
-                        <SelectItem value="revlam">Received from Lamination</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
+
+            <FormField
+              control={form.control}
+              name="lamUnlam"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Lam Status</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex flex-wrap items-center gap-x-6 gap-y-2"
+                    >
+                      {lamStatuses.map((status) => (
+                        <FormItem key={status} className="flex items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value={status} id={`radio-${status}`} />
+                          </FormControl>
+                          <Label htmlFor={`radio-${status}`} className="font-normal cursor-pointer">{status}</Label>
+                        </FormItem>
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             <Separator />
             

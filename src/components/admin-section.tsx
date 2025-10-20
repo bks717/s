@@ -18,7 +18,6 @@ import { Separator } from './ui/separator';
 interface AdminSectionProps {
   remainingData: LoomSheetData[];
   consumedData: LoomSheetData[];
-  bagsProducedData: LoomSheetData[];
   onImport: (data: LoomSheetData[]) => void;
   onMarkAsConsumed: (selectedIds: string[], consumedBy: string, bagData?: BagProductionData) => void;
   onPartialConsume: (originalId: string, consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string, bagData?: BagProductionData) => void;
@@ -29,7 +28,7 @@ interface AdminSectionProps {
 
 type View = 'remaining' | 'consumed' | 'laminate';
 
-export default function AdminSection({ remainingData, consumedData, bagsProducedData, onImport, onMarkAsConsumed, onPartialConsume, activeView, onSendForLamination, onMarkAsReceived }: AdminSectionProps) {
+export default function AdminSection({ remainingData, consumedData, onImport, onMarkAsConsumed, onPartialConsume, activeView, onSendForLamination, onMarkAsReceived }: AdminSectionProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentView, setCurrentView] = useState<View>('remaining');
@@ -40,6 +39,7 @@ export default function AdminSection({ remainingData, consumedData, bagsProduced
   const [isPartialUseDialogVisible, setIsPartialUseDialogVisible] = useState(false);
   
   const allData = [...remainingData, ...consumedData];
+  const bagsProducedData = consumedData.filter(d => d.noOfBags && d.noOfBags > 0);
 
   const handleExport = () => {
     const worksheet = XLSX.utils.json_to_sheet(allData);
@@ -202,8 +202,8 @@ export default function AdminSection({ remainingData, consumedData, bagsProduced
   
   const laminatedData = allData.filter(d => d.lamUnlam === 'Laminated');
   const unlaminatedData = allData.filter(d => d.lamUnlam === 'Unlaminated');
-  const sentForLaminationData = allData.filter(d => d.lamUnlam === 'Sent for lamination');
-  const receivedFromLaminationData = allData.filter(d => d.lamUnlam === 'revlam');
+  const sentForLaminationData = allData.filter(d => d.lamUnlam === 'Sent for Lamination');
+  const receivedFromLaminationData = allData.filter(d => d.lamUnlam === 'Received from Lamination');
 
 
   return (

@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { LoomSheetData, loomSheetSchema, BagProductionData, lamStatuses } from '@/lib/schemas';
 import { DataTable } from '@/components/data-table';
-import AiSummary from '@/components/ai-summary';
 import { Upload, Download, CheckSquare, SplitSquareHorizontal, Send } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { z } from 'zod';
@@ -373,8 +372,6 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
             </>
           )}
 
-          <Separator className="my-12" />
-          <AiSummary data={allData} />
       </div>
     </section>
   );

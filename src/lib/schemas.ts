@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const lamStatuses = ['Laminated', 'Unlaminated', 'Ready for Lamination', 'Sent for Lamination', 'Received from Lamination'] as const;
+export const statuses = ['Active Stock', 'Ready for Lamination', 'Sent for Lamination', 'Consumed'] as const;
 
 export const loomSheetSchema = z.object({
   id: z.string().optional(),
@@ -13,7 +13,7 @@ export const loomSheetSchema = z.object({
   grSut: z.string().min(1, 'Gr/Sut is required'),
   color: z.string().min(1, 'Color is required'),
   lamination: z.boolean().default(false),
-  lamUnlam: z.enum(lamStatuses),
+  status: z.enum(statuses),
   mtrs: z.coerce.number().positive('Mtrs must be a positive number'),
   gw: z.coerce.number().positive('G.W. must be a positive number'),
   cw: z.coerce.number().positive('C.W. must be a positive number'),

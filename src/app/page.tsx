@@ -12,41 +12,42 @@ type View = 'rolls' | 'bags';
 
 export default function Home() {
   const [activeView, setActiveView] = useState<View>('bags');
-  const [loomData, setLoomData] = useState<LoomSheetData[]>(initialData);
-  const [consumedData, setConsumedData] = useState<LoomSheetData[]>([]);
+  const [allData, setAllData] = useState<LoomSheetData[]>(initialData);
 
   const handleAddData = (newData: LoomSheetData) => {
-    setLoomData(prevData => [...prevData, { ...newData, id: (Date.now()).toString(), productionDate: new Date() }]);
+    setAllData(prevData => [...prevData, { ...newData, id: (Date.now()).toString(), productionDate: new Date() }]);
   };
 
   const handleImportData = (importedData: LoomSheetData[]) => {
-    const newLoomData = importedData.map(d => ({ ...d, id: (Date.now() + Math.random()).toString(), productionDate: new Date() }));
-    setLoomData(prevData => [...prevData, ...newLoomData]);
+    const newLoomData = importedData.map(d => ({ ...d, id: (Date.now() + Math.random()).toString(), productionDate: new Date(), status: d.status || 'Active Stock' }));
+    setAllData(prevData => [...prevData, ...newLoomData]);
   };
   
   const handleMarkAsConsumed = (selectedIds: string[], consumedBy: string, bagData?: BagProductionData) => {
-    const itemsToMove = loomData.filter(item => selectedIds.includes(item.id!));
-    const updatedItemsToMove = itemsToMove.map(item => ({
-      ...item, 
-      consumedBy,
-      ...(activeView === 'bags' && bagData ? bagData : {})
-    }));
-    setConsumedData(prev => [...prev, ...updatedItemsToMove]);
-    setLoomData(prev => prev.filter(item => !selectedIds.includes(item.id!)));
+    setAllData(prevData =>
+      prevData.map(item =>
+        selectedIds.includes(item.id!)
+          ? { ...item, status: 'Consumed', consumedBy, ...(bagData || {}) }
+          : item
+      )
+    );
   };
 
   const handlePartialConsume = (originalId: string, consumedPartData: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string, bagData?: BagProductionData) => {
+    const originalRoll = allData.find(item => item.id === originalId);
+    if (!originalRoll) return;
+
     const newConsumedRoll: LoomSheetData = {
       ...consumedPartData,
       id: (Date.now() + Math.random()).toString(),
       productionDate: new Date(),
+      status: 'Consumed',
       consumedBy,
-      ...(activeView === 'bags' && bagData ? bagData : {})
+      ...(bagData || {})
     };
-    setConsumedData(prev => [...prev, newConsumedRoll]);
     
-    setLoomData(prevData => {
-      return prevData.map(item => {
+    setAllData(prevData => {
+      const updatedData = prevData.map(item => {
         if (item.id === originalId) {
           const updatedRemainingRoll: LoomSheetData = {
             ...item,
@@ -55,39 +56,38 @@ export default function Home() {
             cw: item.cw - (consumedPartData.cw || 0),
             nw: item.nw - (consumedPartData.nw || 0),
           };
-
-          if (updatedRemainingRoll.mtrs <= 0 && updatedRemainingRoll.gw <=0) {
-            return null;
+          // If the roll is fully consumed, mark it as such instead of deleting
+          if (updatedRemainingRoll.mtrs <= 0 && updatedRemainingRoll.gw <= 0) {
+             return { ...updatedRemainingRoll, status: 'Consumed', mtrs: 0, gw: 0, cw: 0, nw: 0 };
           }
           return updatedRemainingRoll;
         }
         return item;
-      }).filter(Boolean) as LoomSheetData[];
+      });
+      return [...updatedData, newConsumedRoll];
     });
   };
 
   const handleSendForLamination = (selectedIds: string[]) => {
-    const updateStatus = (data: LoomSheetData[]) => data.map(item => {
+    setAllData(prevData => prevData.map(item => {
       if (selectedIds.includes(item.id!)) {
-        return { ...item, lamUnlam: 'Sent for Lamination' };
+        return { ...item, status: 'Sent for Lamination' };
       }
       return item;
-    });
-    setLoomData(updateStatus);
-    setConsumedData(updateStatus);
+    }));
   };
   
   const handleMarkAsReceived = (selectedIds: string[]) => {
-    const updateStatus = (data: LoomSheetData[]) => data.map(item => {
+     setAllData(prevData => prevData.map(item => {
       if (selectedIds.includes(item.id!)) {
-        return { ...item, lamUnlam: 'Received from Lamination' };
+        return { ...item, status: 'Ready for Lamination' }; // Or another status like 'Received from Lamination'
       }
       return item;
-    });
-    setLoomData(updateStatus);
-    setConsumedData(updateStatus);
+    }));
   };
 
+  const remainingData = allData.filter(d => d.status !== 'Consumed');
+  const consumedData = allData.filter(d => d.status === 'Consumed');
   const bagsProducedData = consumedData.filter(d => d.noOfBags && d.noOfBags > 0);
 
   return (
@@ -126,14 +126,13 @@ export default function Home() {
 
           <AdminSection 
             activeView={activeView}
-            remainingData={loomData}
-            consumedData={consumedData}
-            bagsProducedData={bagsProducedData}
+            allData={allData}
             onImport={handleImportData}
             onMarkAsConsumed={handleMarkAsConsumed}
             onPartialConsume={handlePartialConsume}
             onSendForLamination={handleSendForLamination}
             onMarkAsReceived={handleMarkAsReceived}
+            bagsProducedData={bagsProducedData}
           />
         </>
       )}
@@ -153,14 +152,13 @@ export default function Home() {
 
           <AdminSection 
             activeView={activeView}
-            remainingData={loomData}
-            consumedData={consumedData}
-            bagsProducedData={bagsProducedData}
+            allData={allData}
             onImport={handleImportData}
             onMarkAsConsumed={handleMarkAsConsumed}
             onPartialConsume={handlePartialConsume}
             onSendForLamination={handleSendForLamination}
             onMarkAsReceived={handleMarkAsReceived}
+            bagsProducedData={bagsProducedData}
           />
         </>
       )}

@@ -4,7 +4,7 @@ import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { LoomSheetData, loomSheetSchema, BagProductionData, lamStatuses } from '@/lib/schemas';
+import { LoomSheetData, loomSheetSchema, BagProductionData, statuses } from '@/lib/schemas';
 import { DataTable } from '@/components/data-table';
 import { Upload, Download, CheckSquare, SplitSquareHorizontal, Send } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -17,8 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Label } from './ui/label';
 
 interface AdminSectionProps {
-  remainingData: LoomSheetData[];
-  consumedData: LoomSheetData[];
+  allData: LoomSheetData[];
   onImport: (data: LoomSheetData[]) => void;
   onMarkAsConsumed: (selectedIds: string[], consumedBy: string, bagData?: BagProductionData) => void;
   onPartialConsume: (originalId: string, consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string, bagData?: BagProductionData) => void;
@@ -30,7 +29,7 @@ interface AdminSectionProps {
 
 type View = 'remaining' | 'consumed' | 'laminate';
 
-export default function AdminSection({ remainingData, consumedData, onImport, onMarkAsConsumed, onPartialConsume, activeView, onSendForLamination, onMarkAsReceived, bagsProducedData }: AdminSectionProps) {
+export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPartialConsume, activeView, onSendForLamination, onMarkAsReceived, bagsProducedData }: AdminSectionProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentView, setCurrentView] = useState<View>('remaining');
@@ -39,9 +38,10 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
   const [selectedSentForLaminationIds, setSelectedSentForLaminationIds] = useState<string[]>([]);
   const [isConsumedDialogVisible, setIsConsumedDialogVisible] = useState(false);
   const [isPartialUseDialogVisible, setIsPartialUseDialogVisible] = useState(false);
-  const [lamStatusFilter, setLamStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   
-  const allData = [...remainingData, ...consumedData];
+  const remainingData = allData.filter(d => d.status !== 'Consumed');
+  const consumedData = allData.filter(d => d.status === 'Consumed');
 
   const handleExport = () => {
     const worksheet = XLSX.utils.json_to_sheet(allData);
@@ -91,7 +91,7 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
             onImport(parsedData.data as any[]);
             toast({
               title: 'Import Successful',
-              description: `${parsedData.data.length} rows have been imported into the 'Remaining' table.`,
+              description: `${parsedData.data.length} rows have been imported.`,
             });
         } else {
           console.error("Import validation error:", parsedData.error);
@@ -200,20 +200,16 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
     setSelectedSentForLaminationIds([]);
   };
 
-  const selectedRollForPartialUse = selectedRowIds.length === 1 ? remainingData.find(d => d.id === selectedRowIds[0]) : undefined;
+  const selectedRollForPartialUse = selectedRowIds.length === 1 ? allData.find(d => d.id === selectedRowIds[0]) : undefined;
   
-  const readyForLaminationData = allData.filter(d => d.lamUnlam === 'Ready for Lamination');
-  const sentForLaminationData = allData.filter(d => d.lamUnlam === 'Sent for Lamination');
-  const receivedFromLaminationData = allData.filter(d => d.lamUnlam === 'Received from Lamination');
+  const readyForLaminationData = allData.filter(d => d.status === 'Ready for Lamination');
+  const sentForLaminationData = allData.filter(d => d.status === 'Sent for Lamination');
   
   const filterData = (data: LoomSheetData[]) => {
-    if (lamStatusFilter === 'all') {
+    if (statusFilter === 'all') {
       return data;
     }
-    if (lamStatusFilter === 'both-lam-unlam') {
-      return data.filter(d => d.lamUnlam === 'Laminated' || d.lamUnlam === 'Unlaminated');
-    }
-    return data.filter(d => d.lamUnlam === lamStatusFilter);
+    return data.filter(d => d.status === statusFilter);
   };
 
   const filteredRemainingData = filterData(remainingData);
@@ -265,15 +261,14 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
               <div className="flex gap-2 items-center">
                   {currentView !== 'laminate' && (
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="lam-status-filter">Lam Status</Label>
-                      <Select value={lamStatusFilter} onValueChange={setLamStatusFilter}>
-                        <SelectTrigger id="lam-status-filter" className="w-48">
+                      <Label htmlFor="status-filter">Status</Label>
+                      <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger id="status-filter" className="w-48">
                           <SelectValue placeholder="Filter by status" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All</SelectItem>
-                          <SelectItem value="both-lam-unlam">Both Laminated &amp; Unlaminated</SelectItem>
-                          {lamStatuses.map(status => (
+                          {statuses.map(status => (
                             <SelectItem key={status} value={status}>{status}</SelectItem>
                           ))}
                         </SelectContent>
@@ -327,20 +322,6 @@ export default function AdminSection({ remainingData, consumedData, onImport, on
                       selectedRowIds={selectedSentForLaminationIds}
                       onSelectedRowIdsChange={setSelectedSentForLaminationIds}
                       showCheckboxes={true}
-                    />
-                  </CardContent>
-                </Card>
-                <Card className="shadow-lg">
-                  <CardHeader>
-                    <CardTitle>Received from Lamination</CardTitle>
-                    <CardDescription>A log of all rolls received from lamination.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <DataTable
-                      data={receivedFromLaminationData}
-                      selectedRowIds={[]}
-                      onSelectedRowIdsChange={() => {}}
-                      showCheckboxes={false}
                     />
                   </CardContent>
                 </Card>

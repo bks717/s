@@ -2,13 +2,11 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
-import { loomSheetSchema, type LoomSheetData, lamStatuses } from "@/lib/schemas";
+import { loomSheetSchema, type LoomSheetData, statuses } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
@@ -18,11 +16,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -58,7 +51,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
       grSut: "",
       color: "",
       lamination: false,
-      lamUnlam: "Laminated",
+      status: "Active Stock",
       mtrs: undefined,
       gw: undefined,
       cw: undefined,
@@ -250,17 +243,17 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
               />
               <FormField
                 control={form.control}
-                name="lamUnlam"
+                name="status"
                 render={({ field }) => (
                   <FormItem className="space-y-3">
-                    <FormLabel>Lam Status</FormLabel>
+                    <FormLabel>Status</FormLabel>
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                         className="flex flex-wrap items-center gap-x-6 gap-y-2"
                       >
-                        {lamStatuses.map((status) => (
+                        {statuses.map((status) => (
                           <FormItem key={status} className="flex items-center space-x-2 space-y-0">
                             <FormControl>
                               <RadioGroupItem value={status} id={`radio-${status}`} />

@@ -129,7 +129,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                   <FormItem>
                     <FormLabel>Roll No.</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} value={field.value ?? ''} />
+                      <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -142,7 +142,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                   <FormItem>
                     <FormLabel>Loom No.</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., L-14" {...field} />
+                      <Input placeholder="e.g., L-14" {...field} value={field.value ?? ''}/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -161,7 +161,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                   <FormItem>
                     <FormLabel>Width</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} value={field.value ?? ''} />
+                      <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -174,7 +174,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                   <FormItem>
                     <FormLabel>Number 1</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} value={field.value ?? ''} />
+                      <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -187,7 +187,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                   <FormItem>
                     <FormLabel>Number 2</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} value={field.value ?? ''} />
+                      <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -200,7 +200,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                   <FormItem>
                     <FormLabel>Gr/Sut</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., 120 GSM" {...field} />
+                      <Input placeholder="e.g., 120 GSM" {...field} value={field.value ?? ''}/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -213,7 +213,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                   <FormItem>
                     <FormLabel>Color</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Royal Blue" {...field} />
+                      <Input placeholder="e.g., Royal Blue" {...field} value={field.value ?? ''}/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -280,7 +280,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                     <FormItem>
                         <FormLabel>Meters (Mtrs)</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} value={field.value ?? ''} />
+                        <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -293,7 +293,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                     <FormItem>
                         <FormLabel>Gross Weight (G.W.)</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} value={field.value ?? ''} />
+                        <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -306,7 +306,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                     <FormItem>
                         <FormLabel>Calc. Weight (C.W.)</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} value={field.value ?? ''} />
+                        <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -319,7 +319,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                     <FormItem>
                         <FormLabel>Net Weight (N.W.)</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} value={field.value ?? ''} />
+                        <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -332,7 +332,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                     <FormItem>
                         <FormLabel>Average</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} value={field.value ?? ''} />
+                        <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -345,7 +345,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                     <FormItem>
                         <FormLabel>Variance</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} value={field.value ?? ''} />
+                        <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>

@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { CalendarIcon, Loader2 } from "lucide-react";
 
-import { loomSheetSchema, type LoomSheetData } from "@/lib/schemas";
+import { loomSheetSchema, type LoomSheetData, lamStatuses } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -41,8 +41,6 @@ interface LoomSheetFormProps {
   onFormSubmit: (data: Omit<LoomSheetData, 'id' | 'productionDate'>) => void;
 }
 
-const lamStatuses = ['Laminated', 'Unlaminated', 'Ready for Lamination', 'Sent for Lamination', 'Received from Lamination'] as const;
-
 export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -50,7 +48,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
   const form = useForm<Omit<LoomSheetData, 'id' | 'productionDate'>>({
     resolver: zodResolver(loomSheetSchema.omit({ id: true, productionDate: true })),
     defaultValues: {
-      primaryColumn: "",
+      serialNumber: "",
       operatorName: "",
       rollNo: undefined,
       width: undefined,
@@ -94,12 +92,12 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
             <div className="grid md:grid-cols-2 gap-8">
               <FormField
                 control={form.control}
-                name="primaryColumn"
+                name="serialNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Primary Column</FormLabel>
+                    <FormLabel>Serial Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Fabric Type A" {...field} />
+                      <Input placeholder="e.g., A-001" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

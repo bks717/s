@@ -4,7 +4,7 @@ export const lamStatuses = ['Laminated', 'Unlaminated', 'Ready for Lamination', 
 
 export const loomSheetSchema = z.object({
   id: z.string().optional(),
-  primaryColumn: z.string().min(1, 'Primary Column is required'),
+  serialNumber: z.string().min(1, 'Serial Number is required'),
   operatorName: z.string().min(1, 'Operator Name is required'),
   rollNo: z.coerce.number().positive('Roll No. must be a positive number'),
   width: z.coerce.number().positive('Width must be a positive number'),

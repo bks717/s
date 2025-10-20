@@ -42,7 +42,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
     { key: 'rollNo', label: 'Roll No.' },
     { key: 'operatorName', label: 'Operator' },
     { key: 'loomNo', label: 'Loom No.' },
-    { key: 'primaryColumn', label: 'Primary Col' },
+    { key: 'serialNumber', label: 'Serial Number' },
     { key: 'width', label: 'Width' },
     { key: 'number1', label: 'Num 1' },
     { key: 'number2', label: 'Num 2' },

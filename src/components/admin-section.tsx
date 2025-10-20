@@ -48,6 +48,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   const [isReceiveDialogVisible, setIsReceiveDialogVisible] = useState(false);
   
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [laminationFilter, setLaminationFilter] = useState<'all' | 'true' | 'false'>('all');
   
   const remainingData = allData.filter(d => d.status !== 'Consumed');
   const consumedData = allData.filter(d => d.status === 'Consumed');
@@ -244,14 +245,11 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   const sentForLaminationData = allData.filter(d => d.status === 'Sent for Lamination');
   const receivedFromLaminationData = allData.filter(d => d.status === 'Received from Lamination');
   
-  const filterData = (data: LoomSheetData[]) => {
-    if (statusFilter === 'all') {
-      return data;
-    }
-    return data.filter(d => d.status === statusFilter);
-  };
-
-  const filteredRemainingData = filterData(remainingData);
+  const filteredRemainingData = remainingData.filter(d => {
+    const statusMatch = statusFilter === 'all' || d.status === statusFilter;
+    const laminationMatch = laminationFilter === 'all' || String(d.lamination) === laminationFilter;
+    return statusMatch && laminationMatch;
+  });
 
   const availableFilters = statuses.filter(s => s !== 'Consumed');
 
@@ -305,21 +303,36 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                   Consumed ({consumedData.length})
                 </Button>
               </div>
-              <div className="flex gap-2 items-center">
+              <div className="flex gap-4 items-center">
                   {currentView === 'remaining' && (
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor="status-filter">Status</Label>
-                      <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger id="status-filter" className="w-48">
-                          <SelectValue placeholder="Filter by status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All</SelectItem>
-                          {availableFilters.map(status => (
-                            <SelectItem key={status} value={status}>{status}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="status-filter">Status</Label>
+                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                          <SelectTrigger id="status-filter" className="w-48">
+                            <SelectValue placeholder="Filter by status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All</SelectItem>
+                            {availableFilters.map(status => (
+                              <SelectItem key={status} value={status}>{status}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                       <div className="flex items-center gap-2">
+                        <Label htmlFor="lamination-filter">Lamination</Label>
+                        <Select value={laminationFilter} onValueChange={(value) => setLaminationFilter(value as 'all' | 'true' | 'false')}>
+                          <SelectTrigger id="lamination-filter" className="w-32">
+                            <SelectValue placeholder="Filter by lamination" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All</SelectItem>
+                            <SelectItem value="true">True</SelectItem>
+                            <SelectItem value="false">False</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   )}
                   <Button variant="outline" onClick={handleImportClick}>
@@ -435,4 +448,5 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     </section>
   );
 }
+
 

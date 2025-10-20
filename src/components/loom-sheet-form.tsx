@@ -231,13 +231,17 @@ export default function LoomSheetForm({ onFormSubmit, defaultValues }: LoomSheet
                     </FormLabel>
                     <FormMessage />
                   </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                       disabled={defaultValues?.lamination}
-                    />
-                  </FormControl>
+                  <div className="flex items-center space-x-2">
+                    <Label>False</Label>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={defaultValues?.lamination}
+                      />
+                    </FormControl>
+                    <Label>True</Label>
+                  </div>
                 </FormItem>
               )}
             />

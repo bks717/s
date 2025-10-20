@@ -134,13 +134,17 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
                             </FormLabel>
                             <FormMessage />
                           </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                              disabled
-                            />
-                          </FormControl>
+                          <div className="flex items-center space-x-2">
+                            <Label>False</Label>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                disabled
+                              />
+                            </FormControl>
+                            <Label>True</Label>
+                          </div>
                         </FormItem>
                       )}
                     />

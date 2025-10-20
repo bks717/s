@@ -4,7 +4,7 @@ import type { LoomSheetData } from '@/lib/schemas';
 export const loomDataStore: LoomSheetData[] = [
     {
         id: '1',
-        serialNumber: 'Initial Data',
+        serialNumber: 'A1',
         operatorName: 'John Doe',
         rollNo: 101,
         width: 150,
@@ -24,7 +24,7 @@ export const loomDataStore: LoomSheetData[] = [
     },
     {
         id: '2',
-        serialNumber: 'Sample Roll',
+        serialNumber: 'A2',
         operatorName: 'Jane Smith',
         rollNo: 102,
         width: 155,

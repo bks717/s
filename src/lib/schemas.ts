@@ -12,6 +12,7 @@ export const loomSheetSchema = z.object({
   number2: z.coerce.number().min(0, 'Cannot be negative'),
   grSut: z.string().min(1, 'Gr/Sut is required'),
   color: z.string().min(1, 'Color is required'),
+  lamination: z.boolean().default(false),
   lamUnlam: z.enum(lamStatuses),
   mtrs: z.coerce.number().positive('Mtrs must be a positive number'),
   gw: z.coerce.number().positive('G.W. must be a positive number'),

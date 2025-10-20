@@ -17,6 +17,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
+import { Switch } from './ui/switch';
 
 interface PartialUseDialogProps {
   isOpen: boolean;
@@ -121,6 +122,27 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
                             <FormMessage />
                         </FormItem>
                         )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="lamination"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">
+                              Lamination
+                            </FormLabel>
+                            <FormMessage />
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              disabled
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
                     />
                  </div>
                  {activeView === 'bags' && (

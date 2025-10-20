@@ -48,6 +48,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
     { key: 'number2', label: 'Num 2' },
     { key: 'grSut', label: 'Gr/Sut' },
     { key: 'color', label: 'Color' },
+    { key: 'lamination', label: 'Lamination' },
     { key: 'lamUnlam', label: 'Lam Status' },
     { key: 'mtrs', label: 'Mtrs' },
     { key: 'gw', label: 'G.W.' },
@@ -161,7 +162,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
                               aria-label={`Select row ${item.rollNo}`}
                             />
                           </div>
-                        ) : col.key === 'productionDate' && item[col.key] ? format(new Date(item[col.key] as Date), 'PP') : String(item[col.key as keyof LoomSheetData] ?? '')}
+                        ) : col.key === 'productionDate' && item[col.key] ? format(new Date(item[col.key] as Date), 'PP') : col.key === 'lamination' ? String(item[col.key]) : String(item[col.key as keyof LoomSheetData] ?? '')}
                     </TableCell>
                 ))}
               </TableRow>

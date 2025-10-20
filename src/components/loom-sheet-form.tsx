@@ -36,6 +36,7 @@ import React from "react";
 import { Separator } from "./ui/separator";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Label } from "./ui/label";
+import { Switch } from "./ui/switch";
 
 interface LoomSheetFormProps {
   onFormSubmit: (data: Omit<LoomSheetData, 'id' | 'productionDate'>) => void;
@@ -56,6 +57,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
       number2: undefined,
       grSut: "",
       color: "",
+      lamination: false,
       lamUnlam: "Laminated",
       mtrs: undefined,
       gw: undefined,
@@ -225,33 +227,54 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                 )}
               />
             </div>
-
-            <FormField
-              control={form.control}
-              name="lamUnlam"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>Lam Status</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex flex-wrap items-center gap-x-6 gap-y-2"
-                    >
-                      {lamStatuses.map((status) => (
-                        <FormItem key={status} className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value={status} id={`radio-${status}`} />
-                          </FormControl>
-                          <Label htmlFor={`radio-${status}`} className="font-normal cursor-pointer">{status}</Label>
-                        </FormItem>
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <FormField
+                control={form.control}
+                name="lamination"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">
+                        Lamination
+                      </FormLabel>
+                      <FormMessage />
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lamUnlam"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Lam Status</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-wrap items-center gap-x-6 gap-y-2"
+                      >
+                        {lamStatuses.map((status) => (
+                          <FormItem key={status} className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value={status} id={`radio-${status}`} />
+                            </FormControl>
+                            <Label htmlFor={`radio-${status}`} className="font-normal cursor-pointer">{status}</Label>
+                          </FormItem>
+                        ))}
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             
             <Separator />
             

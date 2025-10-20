@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -49,6 +50,23 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   
   const remainingData = allData.filter(d => d.status !== 'Consumed');
   const consumedData = allData.filter(d => d.status === 'Consumed');
+  
+  const onSetSelectedRowIds = useCallback((ids: string[]) => {
+    setSelectedRowIds(ids);
+  }, []);
+
+  const onSetSelectedReadyForLaminationIds = useCallback((ids: string[]) => {
+    setSelectedReadyForLaminationIds(ids);
+  }, []);
+
+  const onSetSelectedSentForLaminationIds = useCallback((ids: string[]) => {
+    setSelectedSentForLaminationIds(ids);
+  }, []);
+
+  const onSetSelectedReceivedFromLaminationIds = useCallback((ids: string[]) => {
+    setSelectedReceivedFromLaminationIds(ids);
+  }, []);
+
 
   const handleExport = () => {
     const worksheet = XLSX.utils.json_to_sheet(allData);
@@ -329,7 +347,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                     <DataTable
                       data={readyForLaminationData}
                       selectedRowIds={selectedReadyForLaminationIds}
-                      onSelectedRowIdsChange={setSelectedReadyForLaminationIds}
+                      onSelectedRowIdsChange={onSetSelectedReadyForLaminationIds}
                       showCheckboxes={true}
                     />
                   </CardContent>
@@ -348,7 +366,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                     <DataTable 
                       data={sentForLaminationData}
                       selectedRowIds={selectedSentForLaminationIds}
-                      onSelectedRowIdsChange={setSelectedSentForLaminationIds}
+                      onSelectedRowIdsChange={onSetSelectedSentForLaminationIds}
                       showCheckboxes={true}
                     />
                   </CardContent>
@@ -367,7 +385,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                     <DataTable 
                       data={receivedFromLaminationData}
                       selectedRowIds={selectedReceivedFromLaminationIds}
-                      onSelectedRowIdsChange={setSelectedReceivedFromLaminationIds}
+                      onSelectedRowIdsChange={onSetSelectedReceivedFromLaminationIds}
                       showCheckboxes={true}
                     />
                   </CardContent>
@@ -397,7 +415,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                 <DataTable 
                   data={currentView === 'remaining' ? filteredRemainingData : filteredConsumedData}
                   selectedRowIds={selectedRowIds}
-                  onSelectedRowIdsChange={setSelectedRowIds}
+                  onSelectedRowIdsChange={onSetSelectedRowIds}
                   showCheckboxes={currentView === 'remaining'}
                   view={currentView}
                 />
@@ -416,3 +434,4 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     </section>
   );
 }
+

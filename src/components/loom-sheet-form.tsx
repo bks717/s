@@ -227,7 +227,7 @@ export default function LoomSheetForm({ onFormSubmit }: LoomSheetFormProps) {
                 name="lamUnlam"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Lamination</FormLabel>
+                    <FormLabel>Lam Status</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>

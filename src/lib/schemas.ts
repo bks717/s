@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const statuses = ['Active Stock', 'Ready for Lamination', 'Sent for Lamination', 'Consumed'] as const;
+export const statuses = ['Active Stock', 'Ready for Lamination', 'Sent for Lamination', 'Received from Lamination', 'Consumed'] as const;
 
 export const loomSheetSchema = z.object({
   id: z.string().optional(),

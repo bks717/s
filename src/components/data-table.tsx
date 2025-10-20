@@ -34,15 +34,15 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
   // Reset selection when the component is re-purposed for different data sets
   useEffect(() => {
     onSelectedRowIdsChange([]);
-  }, [onSelectedRowIdsChange]);
+  }, [onSelectedRowIdsChange, data]);
 
   const baseColumns: { key: keyof LoomSheetData | 'select', label: string }[] = [
     // The 'select' column is conditionally added later
     { key: 'productionDate', label: 'Prod. Date' },
-    { key: 'rollNo', label: 'Roll No.' },
-    { key: 'operatorName', label: 'Operator' },
-    { key: 'loomNo', label: 'Loom No.' },
     { key: 'serialNumber', label: 'Serial Number' },
+    { key: 'operatorName', label: 'Operator' },
+    { key: 'rollNo', label: 'Roll No.' },
+    { key: 'loomNo', label: 'Loom No.' },
     { key: 'width', label: 'Width' },
     { key: 'number1', label: 'Num 1' },
     { key: 'number2', label: 'Num 2' },
@@ -56,12 +56,12 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
     { key: 'nw', label: 'N.W.' },
     { key: 'average', label: 'Average' },
     { key: 'variance', label: 'Variance' },
+    { key: 'consumedBy', label: 'Consumed By'},
   ];
   
   let columns = [...baseColumns];
 
   if (view === 'consumed') {
-    columns.push({ key: 'consumedBy', label: 'Consumed By'});
     columns.push({ key: 'noOfBags', label: 'No. of Bags'});
     columns.push({ key: 'avgBagWeight', label: 'Avg. Bag Wt.'});
     columns.push({ key: 'bagSize', label: 'Bag Size'});

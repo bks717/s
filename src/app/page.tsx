@@ -51,10 +51,10 @@ export default function Home() {
         if (item.id === originalId) {
           const updatedRemainingRoll: LoomSheetData = {
             ...item,
-            mtrs: item.mtrs - (consumedPartData.mtrs || 0),
-            gw: item.gw - (consumedPartData.gw || 0),
-            cw: item.cw - (consumedPartData.cw || 0),
-            nw: item.nw - (consumedPartData.nw || 0),
+            mtrs: (item.mtrs || 0) - (consumedPartData.mtrs || 0),
+            gw: (item.gw || 0) - (consumedPartData.gw || 0),
+            cw: (item.cw || 0) - (consumedPartData.cw || 0),
+            nw: (item.nw || 0) - (consumedPartData.nw || 0),
           };
           // If the roll is fully consumed, mark it as such instead of deleting
           if (updatedRemainingRoll.mtrs <= 0 && updatedRemainingRoll.gw <= 0) {
@@ -80,10 +80,39 @@ export default function Home() {
   const handleMarkAsReceived = (selectedIds: string[]) => {
      setAllData(prevData => prevData.map(item => {
       if (selectedIds.includes(item.id!)) {
-        return { ...item, status: 'Ready for Lamination' }; // Or another status like 'Received from Lamination'
+        return { ...item, status: 'Received from Lamination' };
       }
       return item;
     }));
+  };
+
+  const handleReturnToStock = (selectedIds: string[]) => {
+    setAllData(prevData => prevData.map(item => {
+      if (selectedIds.includes(item.id!)) {
+        return { ...item, status: 'Active Stock', lamination: true };
+      }
+      return item;
+    }));
+  };
+
+  const handleCollaborateAndCreate = (selectedIds: string[], newRollData: LoomSheetData) => {
+    const newRoll: LoomSheetData = {
+      ...newRollData,
+      id: (Date.now()).toString(),
+      productionDate: new Date(),
+      lamination: true,
+      status: 'Active Stock'
+    };
+    
+    setAllData(prevData => {
+      const updatedData = prevData.map(item => {
+        if (selectedIds.includes(item.id!)) {
+          return { ...item, status: 'Consumed', consumedBy: newRoll.serialNumber };
+        }
+        return item;
+      });
+      return [...updatedData, newRoll];
+    });
   };
 
   const remainingData = allData.filter(d => d.status !== 'Consumed');
@@ -132,6 +161,8 @@ export default function Home() {
             onPartialConsume={handlePartialConsume}
             onSendForLamination={handleSendForLamination}
             onMarkAsReceived={handleMarkAsReceived}
+            onReturnToStock={handleReturnToStock}
+            onCollaborateAndCreate={handleCollaborateAndCreate}
             bagsProducedData={bagsProducedData}
           />
         </>
@@ -158,6 +189,8 @@ export default function Home() {
             onPartialConsume={handlePartialConsume}
             onSendForLamination={handleSendForLamination}
             onMarkAsReceived={handleMarkAsReceived}
+            onReturnToStock={handleReturnToStock}
+            onCollaborateAndCreate={handleCollaborateAndCreate}
             bagsProducedData={bagsProducedData}
           />
         </>

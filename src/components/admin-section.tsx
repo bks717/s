@@ -15,6 +15,7 @@ import BagsProduced from './bags-produced';
 import { Separator } from './ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
+import { ReceiveLaminationDialog } from './receive-lamination-dialog';
 
 interface AdminSectionProps {
   allData: LoomSheetData[];
@@ -24,20 +25,26 @@ interface AdminSectionProps {
   activeView: 'rolls' | 'bags';
   onSendForLamination: (selectedIds: string[]) => void;
   onMarkAsReceived: (selectedIds: string[]) => void;
+  onReturnToStock: (selectedIds: string[]) => void;
+  onCollaborateAndCreate: (selectedIds: string[], newRollData: LoomSheetData) => void;
   bagsProducedData: LoomSheetData[];
 }
 
 type View = 'remaining' | 'consumed' | 'laminate';
 
-export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPartialConsume, activeView, onSendForLamination, onMarkAsReceived, bagsProducedData }: AdminSectionProps) {
+export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPartialConsume, activeView, onSendForLamination, onMarkAsReceived, onReturnToStock, onCollaborateAndCreate, bagsProducedData }: AdminSectionProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentView, setCurrentView] = useState<View>('remaining');
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
   const [selectedReadyForLaminationIds, setSelectedReadyForLaminationIds] = useState<string[]>([]);
   const [selectedSentForLaminationIds, setSelectedSentForLaminationIds] = useState<string[]>([]);
+  const [selectedReceivedFromLaminationIds, setSelectedReceivedFromLaminationIds] = useState<string[]>([]);
+  
   const [isConsumedDialogVisible, setIsConsumedDialogVisible] = useState(false);
   const [isPartialUseDialogVisible, setIsPartialUseDialogVisible] = useState(false);
+  const [isReceiveDialogVisible, setIsReceiveDialogVisible] = useState(false);
+  
   const [statusFilter, setStatusFilter] = useState<string>('all');
   
   const remainingData = allData.filter(d => d.status !== 'Consumed');
@@ -200,14 +207,27 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     setSelectedSentForLaminationIds([]);
   };
 
+  const handleReceiveDialog = () => {
+    if (selectedReceivedFromLaminationIds.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No Rows Selected',
+        description: 'Please select received rolls to process.',
+      });
+      return;
+    }
+    setIsReceiveDialogVisible(true);
+  };
+
   const selectedRollForPartialUse = selectedRowIds.length === 1 ? allData.find(d => d.id === selectedRowIds[0]) : undefined;
   
   const readyForLaminationData = allData.filter(d => d.status === 'Ready for Lamination');
   const sentForLaminationData = allData.filter(d => d.status === 'Sent for Lamination');
+  const receivedFromLaminationData = allData.filter(d => d.status === 'Received from Lamination');
   
   const filterData = (data: LoomSheetData[]) => {
     if (statusFilter === 'all') {
-      return data;
+      return data.filter(d => d.status === 'Active Stock');
     }
     return data.filter(d => d.status === statusFilter);
   };
@@ -216,7 +236,6 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   const filteredConsumedData = filterData(consumedData);
 
   const availableFilters = statuses.filter(s => s !== 'Active Stock' && s !== 'Consumed');
-
 
   return (
     <section id="admin-dashboard">
@@ -236,6 +255,13 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
             activeView={activeView}
         />
       )}
+      <ReceiveLaminationDialog
+        isOpen={isReceiveDialogVisible}
+        onClose={() => setIsReceiveDialogVisible(false)}
+        selectedRolls={allData.filter(d => selectedReceivedFromLaminationIds.includes(d.id!))}
+        onReturnToStock={onReturnToStock}
+        onCollaborateAndCreate={onCollaborateAndCreate}
+      />
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold tracking-tight text-primary font-headline">
           Admin Dashboard
@@ -269,7 +295,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                           <SelectValue placeholder="Filter by status" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">All</SelectItem>
+                          <SelectItem value="all">Active Stock</SelectItem>
                           {availableFilters.map(status => (
                             <SelectItem key={status} value={status}>{status}</SelectItem>
                           ))}
@@ -323,6 +349,25 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                       data={sentForLaminationData}
                       selectedRowIds={selectedSentForLaminationIds}
                       onSelectedRowIdsChange={setSelectedSentForLaminationIds}
+                      showCheckboxes={true}
+                    />
+                  </CardContent>
+                </Card>
+                <Card className="shadow-lg">
+                   <CardHeader className="flex flex-row justify-between items-center">
+                    <div>
+                      <CardTitle>Rolls Received from Lamination</CardTitle>
+                      <CardDescription>Process rolls that have been received from lamination.</CardDescription>
+                    </div>
+                    <Button onClick={handleReceiveDialog} disabled={selectedReceivedFromLaminationIds.length === 0}>
+                      <CheckSquare className="mr-2 h-4 w-4" /> Process
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    <DataTable 
+                      data={receivedFromLaminationData}
+                      selectedRowIds={selectedReceivedFromLaminationIds}
+                      onSelectedRowIdsChange={setSelectedReceivedFromLaminationIds}
                       showCheckboxes={true}
                     />
                   </CardContent>

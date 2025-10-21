@@ -14,6 +14,7 @@ import { ArrowUpDown } from 'lucide-react';
 import { Button } from './ui/button';
 import { format } from 'date-fns';
 import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from '@/lib/utils';
 
 interface DataTableProps {
   data: LoomSheetData[];
@@ -149,7 +150,9 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
             sortedData.map((item) => (
               <TableRow key={item.id} data-state={selectedRowIds.includes(item.id!) && "selected"}>
                 {columns.map(col => (
-                    <TableCell key={`${item.id}-${col.key}`} className="p-1 text-[10px] whitespace-nowrap">
+                    <TableCell key={`${item.id}-${col.key}`} className={cn("p-1 text-[10px] whitespace-nowrap", {
+                      "whitespace-pre-line": col.key === 'consumedBy'
+                    })}>
                         {col.key === 'select' ? (
                           <div className="flex items-center justify-center">
                             <Checkbox

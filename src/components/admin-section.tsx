@@ -272,8 +272,17 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   const receivedFromLaminationData = allData.filter(d => d.status === 'Received from Lamination');
   
   const filteredRemainingData = remainingData.filter(d => {
-    const statusMatch = statusFilter === 'all' || d.status === statusFilter;
     const laminationMatch = laminationFilter === 'all' || String(d.lamination) === laminationFilter;
+    
+    let statusMatch = false;
+    if (statusFilter === 'all') {
+      statusMatch = true;
+    } else if (statusFilter === 'Working Rolls') {
+      statusMatch = d.status === 'Active Stock' || d.status === 'Received from Lamination';
+    } else {
+      statusMatch = d.status === statusFilter;
+    }
+
     return statusMatch && laminationMatch;
   });
 
@@ -345,6 +354,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="all">All</SelectItem>
+                              <SelectItem value="Working Rolls">Working Rolls</SelectItem>
                               {availableFilters.map(status => (
                                 <SelectItem key={status} value={status}>{status}</SelectItem>
                               ))}
@@ -480,3 +490,5 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     </>
   );
 }
+
+    

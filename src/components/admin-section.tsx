@@ -17,6 +17,7 @@ import { Separator } from './ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import { ReceiveLaminationDialog } from './receive-lamination-dialog';
+import AiSummary from './ai-summary';
 
 interface AdminSectionProps {
   allData: LoomSheetData[];
@@ -344,7 +345,9 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                   </Button>
               </div>
           </div>
-
+          <Separator className='my-12'/>
+          <AiSummary data={allData} />
+          <Separator className='my-12' />
           {currentView === 'laminate' && activeView === 'rolls' ? (
              <div className='space-y-8'>
                 <Card className="shadow-lg">
@@ -449,4 +452,4 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   );
 }
 
-
+    

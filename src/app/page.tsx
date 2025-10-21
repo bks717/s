@@ -42,7 +42,7 @@ export default function Home() {
       id: (Date.now() + Math.random()).toString(),
       productionDate: new Date(),
       status: 'Consumed',
-      consumedBy,
+      consumedBy: `Partial Use: ${consumedBy}`,
       ...(bagData || {})
     };
     
@@ -55,6 +55,7 @@ export default function Home() {
             gw: (item.gw || 0) - (consumedPartData.gw || 0),
             cw: (item.cw || 0) - (consumedPartData.cw || 0),
             nw: (item.nw || 0) - (consumedPartData.nw || 0),
+            status: 'Partially Consumed'
           };
           // If the roll is fully consumed, mark it as such instead of deleting
           if (updatedRemainingRoll.mtrs <= 0 && updatedRemainingRoll.gw <= 0) {

@@ -323,7 +323,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
             <div className="flex justify-between items-center">
                 <div className="flex gap-2">
                   <Button variant={currentView === 'remaining' ? 'default' : 'outline'} onClick={() => setCurrentView('remaining')}>
-                    Remaining ({remainingData.length})
+                    My Stock ({remainingData.length})
                   </Button>
                   {activeView === 'rolls' && (
                     <Button variant={currentView === 'laminate' ? 'default' : 'outline'} onClick={() => setCurrentView('laminate')}>
@@ -441,9 +441,9 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                 <CardHeader className="flex flex-row justify-between items-center">
                   <div>
                     <CardTitle>
-                      {currentView === 'remaining' ? 'Remaining Rolls' : 'Consumed Rolls'}
+                      {currentView === 'remaining' ? 'My Stock' : 'Consumed Rolls'}
                     </CardTitle>
-                    <CardDescription>A log of all {currentView} rolls. You can sort by clicking on column headers.</CardDescription>
+                    <CardDescription>A log of all {currentView === 'remaining' ? 'stock' : 'consumed'} rolls. You can sort by clicking on column headers.</CardDescription>
                   </div>
                   {currentView === 'remaining' && (
                      <div className="flex gap-2">

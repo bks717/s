@@ -289,6 +289,9 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
         </p>
       </div>
       
+      <AiSummary data={allData} />
+      <Separator className='my-12' />
+      
       <div className="space-y-8">
           <div className="flex justify-between items-center">
               <div className="flex gap-2">
@@ -346,8 +349,6 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
               </div>
           </div>
           <Separator className='my-12'/>
-          <AiSummary data={allData} />
-          <Separator className='my-12' />
           {currentView === 'laminate' && activeView === 'rolls' ? (
              <div className='space-y-8'>
                 <Card className="shadow-lg">

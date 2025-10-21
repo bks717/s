@@ -33,7 +33,7 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
         <DialogHeader>
           <DialogTitle>Collaborate & Create New Roll</DialogTitle>
           <DialogDescription>
-            The {selectedRolls.length} selected rolls will be consumed. Fill out the form below to create the new, consolidated laminated roll. It will default to 'Laminated: true' and 'Active Stock'.
+            The {selectedRolls.length} selected rolls will be consumed. Fill out the form below to create the new, consolidated laminated roll. It will default to 'Laminated: true' and 'Received from Lamination'.
           </DialogDescription>
         </DialogHeader>
         
@@ -45,7 +45,7 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
             <ScrollArea className="h-[60vh] p-4 border rounded-md">
                 <LoomSheetForm
                     onFormSubmit={handleSubmit}
-                    defaultValues={{ lamination: true, status: 'Active Stock' }}
+                    defaultValues={{ lamination: true, status: 'Received from Lamination' }}
                 />
             </ScrollArea>
              <Button variant="outline" onClick={onClose} className="mt-4">Cancel</Button>

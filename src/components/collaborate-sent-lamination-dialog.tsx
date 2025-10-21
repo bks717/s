@@ -52,19 +52,20 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl">
-        <DialogHeader>
-          <DialogTitle>Collaborate & Create New Roll</DialogTitle>
-          <DialogDescription>
-            The {selectedRolls.length} selected rolls will be consumed. Fill out the form below to create the new, consolidated laminated roll.
-          </DialogDescription>
-        </DialogHeader>
-        
         <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)}>
+            <DialogHeader>
+              <DialogTitle>Collaborate & Create New Roll</DialogTitle>
+              <DialogDescription>
+                The {selectedRolls.length} selected rolls will be consumed. Fill out the form below to create the new, consolidated laminated roll.
+              </DialogDescription>
+            </DialogHeader>
+            
             <Separator className="my-4"/>
             <DialogDescription className="mb-4">
                 The following rolls will be consumed: {consumedByValue}
             </DialogDescription>
-             <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="space-y-2">
                     <Label htmlFor="receivedSerialNumber">Received S.No</Label>
                     <Input
@@ -86,29 +87,25 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
             </div>
             <ScrollArea className="h-[50vh] p-4 border rounded-md">
                 <LoomSheetForm
-                    onFormSubmit={handleSubmit}
                     formContext={form}
-                    isSubmitting={form.formState.isSubmitting || !newSerialNumber}
                     hideFields={['serialNumber']}
-                    showSubmitButton={false}
                 />
             </ScrollArea>
 
             <DialogFooter className="pt-4">
                 <Button variant="outline" type="button" onClick={onClose}>Cancel</Button>
                 <Button
-                    type="button"
+                    type="submit"
                     size="lg"
                     disabled={form.formState.isSubmitting || !newSerialNumber}
                     className="bg-accent hover:bg-accent/90 text-accent-foreground"
-                    onClick={form.handleSubmit(handleSubmit)}
                 >
                     {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     sub-Mit
                 </Button>
             </DialogFooter>
+          </form>
         </Form>
-
       </DialogContent>
     </Dialog>
   );

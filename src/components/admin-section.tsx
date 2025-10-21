@@ -54,6 +54,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   
   const remainingData = allData.filter(d => d.status !== 'Consumed');
   const consumedData = allData.filter(d => d.status === 'Consumed');
+  const workingRollsData = remainingData.filter(d => d.status === 'Active Stock' || d.status === 'Received from Lamination');
   
   const onSetSelectedRowIds = useCallback((ids: string[]) => {
     setSelectedRowIds(ids);
@@ -331,8 +332,11 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
         <div className="space-y-8">
             <div className="flex justify-between items-center">
                 <div className="flex gap-2">
-                  <Button variant={currentView === 'remaining' ? 'default' : 'outline'} onClick={() => setCurrentView('remaining')}>
+                  <Button variant={(currentView === 'remaining' && statusFilter === 'all') ? 'default' : 'outline'} onClick={() => { setCurrentView('remaining'); setStatusFilter('all')}}>
                     My Stock ({remainingData.length})
+                  </Button>
+                  <Button variant={(currentView === 'remaining' && statusFilter === 'Working Rolls') ? 'default' : 'outline'} onClick={() => { setCurrentView('remaining'); setStatusFilter('Working Rolls')}}>
+                    Working Rolls ({workingRollsData.length})
                   </Button>
                   {activeView === 'rolls' && (
                     <Button variant={currentView === 'laminate' ? 'default' : 'outline'} onClick={() => setCurrentView('laminate')}>

@@ -72,7 +72,7 @@ export default function Home() {
   const handleSendForLamination = (selectedIds: string[]) => {
     setAllData(prevData => prevData.map(item => {
       if (selectedIds.includes(item.id!)) {
-        return { ...item, status: 'Ready for Lamination' };
+        return { ...item, status: 'Sent for Lamination' };
       }
       return item;
     }));

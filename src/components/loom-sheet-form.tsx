@@ -43,7 +43,6 @@ interface LoomSheetFormProps {
 
 export default function LoomSheetForm({ onFormSubmit, defaultValues, isSubmitting: isSubmittingProp, hideFields = [], onCancel }: LoomSheetFormProps) {
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const form = useForm<Omit<LoomSheetData, 'id' | 'productionDate'>>({
     resolver: zodResolver(loomSheetSchema.omit({ id: true, productionDate: true })),
@@ -70,8 +69,6 @@ export default function LoomSheetForm({ onFormSubmit, defaultValues, isSubmittin
   });
 
   async function onSubmit(data: Omit<LoomSheetData, 'id' | 'productionDate'>) {
-    setIsSubmitting(true);
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     onFormSubmit(data);
@@ -83,11 +80,10 @@ export default function LoomSheetForm({ onFormSubmit, defaultValues, isSubmittin
     if(!defaultValues) {
       form.reset();
     }
-    setIsSubmitting(false);
   }
 
   const isCard = !defaultValues;
-  const finalIsSubmitting = isSubmittingProp !== undefined ? isSubmittingProp : isSubmitting;
+  const finalIsSubmitting = isSubmittingProp !== undefined ? isSubmittingProp : form.formState.isSubmitting;
   
   const shouldShow = (fieldName: HiddenField) => !hideFields.includes(fieldName);
 

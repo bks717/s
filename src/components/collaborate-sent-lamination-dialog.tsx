@@ -23,17 +23,13 @@ interface CollaborateSentLaminationDialogProps {
 export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls, onConfirm }: CollaborateSentLaminationDialogProps) {
   const [receivedSerialNumber, setReceivedSerialNumber] = useState('');
   const [newSerialNumber, setNewSerialNumber] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
+  
   const handleSubmit = (newRollData: Omit<LoomSheetData, 'id' | 'productionDate'>) => {
-    setIsSubmitting(true);
     if (!newSerialNumber.trim()) {
         alert('New Serial Number is required.');
-        setIsSubmitting(false);
         return;
     }
     onConfirm({ ...newRollData, serialNumber: newSerialNumber, receivedSerialNumber: receivedSerialNumber });
-    // No need to setIsSubmitting(false) here as the dialog will close.
   }
 
   const consumedByValue = selectedRolls.map(r => r.serialNumber).join(', ');
@@ -77,7 +73,7 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
                 <LoomSheetForm
                     onFormSubmit={handleSubmit}
                     defaultValues={{ lamination: true, status: 'Received from Lamination', serialNumber: '' }}
-                    isSubmitting={isSubmitting || !newSerialNumber}
+                    isSubmitting={!newSerialNumber}
                     hideFields={['serialNumber']}
                     onCancel={onClose}
                 />

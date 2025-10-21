@@ -26,6 +26,7 @@ export const loomSheetSchema = z.object({
   noOfBags: z.coerce.number().optional(),
   avgBagWeight: z.coerce.number().optional(),
   bagSize: z.string().optional(),
+  receivedSerialNumber: z.string().optional(),
 });
 
 export type LoomSheetData = z.infer<typeof loomSheetSchema>;

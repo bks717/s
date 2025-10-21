@@ -52,6 +52,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
     { key: 'average', label: 'Average' },
     { key: 'variance', label: 'Variance' },
     { key: 'consumedBy', label: 'Consumed By'},
+    { key: 'receivedSerialNumber', label: 'Received S.No'},
   ];
   
   let columns = [...baseColumns];

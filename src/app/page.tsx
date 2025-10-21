@@ -72,19 +72,48 @@ export default function Home() {
   const handleSendForLamination = (selectedIds: string[]) => {
     setAllData(prevData => prevData.map(item => {
       if (selectedIds.includes(item.id!)) {
-        return { ...item, status: 'Sent for Lamination' };
+        return { ...item, status: 'Ready for Lamination' };
       }
       return item;
     }));
   };
   
-  const handleMarkAsReceived = (selectedIds: string[]) => {
-     setAllData(prevData => prevData.map(item => {
-      if (selectedIds.includes(item.id!)) {
-        return { ...item, status: 'Received from Lamination' };
-      }
-      return item;
-    }));
+  const handleMarkAsReceived = (selectedIds: string[], newSerialNumber?: string, receivedSerialNumber?: string) => {
+     if (selectedIds.length === 1 && newSerialNumber && receivedSerialNumber) {
+        const oldRollId = selectedIds[0];
+        const oldRoll = allData.find(item => item.id === oldRollId);
+        if (!oldRoll) return;
+
+        const newRoll: LoomSheetData = {
+            ...oldRoll,
+            id: (Date.now()).toString(),
+            serialNumber: newSerialNumber,
+            receivedSerialNumber: receivedSerialNumber,
+            productionDate: new Date(),
+            status: 'Received from Lamination'
+        };
+
+        setAllData(prevData => {
+            const updatedData = prevData.map(item => {
+                if (item.id === oldRollId) {
+                    return { 
+                        ...item, 
+                        status: 'Consumed', 
+                        consumedBy: `Lam:\nNew S.No. ${newSerialNumber}\nReceived S.No: ${receivedSerialNumber}` 
+                    };
+                }
+                return item;
+            });
+            return [...updatedData, newRoll];
+        });
+     } else {
+        setAllData(prevData => prevData.map(item => {
+          if (selectedIds.includes(item.id!)) {
+            return { ...item, status: 'Received from Lamination' };
+          }
+          return item;
+        }));
+     }
   };
 
   const handleReturnToStock = (selectedIds: string[], newSerialNumber?: string) => {
@@ -124,18 +153,22 @@ export default function Home() {
   };
 
   const handleCollaborateAndCreate = (selectedIds: string[], newRollData: LoomSheetData) => {
+    const consumedRolls = allData.filter(item => selectedIds.includes(item.id!));
+    const consumedByValue = consumedRolls.map(r => r.serialNumber).join(', ');
+
     const newRoll: LoomSheetData = {
       ...newRollData,
       id: (Date.now()).toString(),
       productionDate: new Date(),
       lamination: true,
-      status: 'Active Stock'
+      status: 'Active Stock',
+      consumedBy: consumedByValue, // Store combined serial numbers
     };
     
     setAllData(prevData => {
       const updatedData = prevData.map(item => {
         if (selectedIds.includes(item.id!)) {
-          return { ...item, status: 'Consumed', consumedBy: newRoll.serialNumber };
+          return { ...item, status: 'Consumed', consumedBy: `Collaborated into ${newRollData.serialNumber}` };
         }
         return item;
       });

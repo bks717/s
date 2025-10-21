@@ -17,6 +17,9 @@ import { Separator } from './ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import { ReceiveLaminationDialog } from './receive-lamination-dialog';
+import { ReceiveSentLaminationDialog } from './receive-sent-lamination-dialog';
+import { CollaborateSentLaminationDialog } from './collaborate-sent-lamination-dialog';
+
 
 interface AdminSectionProps {
   allData: LoomSheetData[];
@@ -25,7 +28,7 @@ interface AdminSectionProps {
   onPartialConsume: (originalId: string, consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string, bagData?: BagProductionData) => void;
   activeView: 'rolls' | 'bags';
   onSendForLamination: (selectedIds: string[]) => void;
-  onMarkAsReceived: (selectedIds: string[]) => void;
+  onMarkAsReceived: (selectedIds: string[], newSerialNumber?: string, receivedSerialNumber?: string) => void;
   onReturnToStock: (selectedIds: string[], newSerialNumber?: string) => void;
   onCollaborateAndCreate: (selectedIds: string[], newRollData: LoomSheetData) => void;
   bagsProducedData: LoomSheetData[];
@@ -45,6 +48,8 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   const [isConsumedDialogVisible, setIsConsumedDialogVisible] = useState(false);
   const [isPartialUseDialogVisible, setIsPartialUseDialogVisible] = useState(false);
   const [isReceiveDialogVisible, setIsReceiveDialogVisible] = useState(false);
+  const [isReceiveSentDialogVisible, setIsReceiveSentDialogVisible] = useState(false);
+  const [isCollaborateSentDialogVisible, setIsCollaborateSentDialogVisible] = useState(false);
   
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [laminationFilter, setLaminationFilter] = useState<'all' | 'true' | 'false'>('all');
@@ -218,13 +223,32 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
       });
       return;
     }
-    onMarkAsReceived(selectedSentForLaminationIds);
+    if (selectedSentForLaminationIds.length > 1) {
+      setIsCollaborateSentDialogVisible(true);
+    } else {
+      setIsReceiveSentDialogVisible(true);
+    }
+  };
+
+  const handleConfirmReceiveSent = (newSerialNumber: string, receivedSerialNumber: string) => {
+    onMarkAsReceived(selectedSentForLaminationIds, newSerialNumber, receivedSerialNumber);
     toast({
-      title: 'Success',
-      description: `${selectedSentForLaminationIds.length} rolls have been marked as received.`,
+        title: 'Success',
+        description: `Roll processed and moved to 'Received from Lamination'.`,
     });
     setSelectedSentForLaminationIds([]);
+    setIsReceiveSentDialogVisible(false);
   };
+
+  const handleConfirmCollaborateSent = (newRollData: LoomSheetData) => {
+    onCollaborateAndCreate(selectedSentForLaminationIds, newRollData);
+     toast({
+        title: 'Success',
+        description: `New roll ${newRollData.serialNumber} created. Original rolls marked as consumed.`,
+    });
+    setSelectedSentForLaminationIds([]);
+    setIsCollaborateSentDialogVisible(false);
+  }
 
   const handleReceiveDialog = () => {
     if (selectedReceivedFromLaminationIds.length === 0) {
@@ -253,7 +277,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   const availableFilters = statuses.filter(s => s !== 'Consumed');
 
   return (
-    <section id="admin-dashboard">
+    <>
       <ConsumedByDialog 
         isOpen={isConsumedDialogVisible}
         onClose={() => setIsConsumedDialogVisible(false)}
@@ -277,172 +301,186 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
         onReturnToStock={onReturnToStock}
         onCollaborateAndCreate={onCollaborateAndCreate}
       />
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold tracking-tight text-primary font-headline">
-          Admin Dashboard
-        </h2>
-        <p className="mt-1 text-md text-muted-foreground">
-          View all submitted data, import/export, and manage roll status.
-        </p>
-      </div>
-      
-      <div className="space-y-8">
-          <div className="flex justify-between items-center">
-              <div className="flex gap-2">
-                <Button variant={currentView === 'remaining' ? 'default' : 'outline'} onClick={() => setCurrentView('remaining')}>
-                  Remaining ({remainingData.length})
-                </Button>
-                {activeView === 'rolls' && (
-                  <Button variant={currentView === 'laminate' ? 'default' : 'outline'} onClick={() => setCurrentView('laminate')}>
-                    Laminate
+      <ReceiveSentLaminationDialog
+        isOpen={isReceiveSentDialogVisible}
+        onClose={() => setIsReceiveSentDialogVisible(false)}
+        onConfirm={handleConfirmReceiveSent}
+        selectedRoll={allData.find(d => d.id === selectedSentForLaminationIds[0])}
+      />
+      <CollaborateSentLaminationDialog
+        isOpen={isCollaborateSentDialogVisible}
+        onClose={() => setIsCollaborateSentDialogVisible(false)}
+        selectedRolls={allData.filter(d => selectedSentForLaminationIds.includes(d.id!))}
+        onConfirm={handleConfirmCollaborateSent}
+      />
+      <section id="admin-dashboard">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold tracking-tight text-primary font-headline">
+            Admin Dashboard
+          </h2>
+          <p className="mt-1 text-md text-muted-foreground">
+            View all submitted data, import/export, and manage roll status.
+          </p>
+        </div>
+        
+        <div className="space-y-8">
+            <div className="flex justify-between items-center">
+                <div className="flex gap-2">
+                  <Button variant={currentView === 'remaining' ? 'default' : 'outline'} onClick={() => setCurrentView('remaining')}>
+                    Remaining ({remainingData.length})
                   </Button>
-                )}
-                <Button variant={currentView === 'consumed' ? 'default' : 'outline'} onClick={() => setCurrentView('consumed')}>
-                  Consumed ({consumedData.length})
-                </Button>
-              </div>
-              <div className="flex gap-4 items-center">
-                  {currentView === 'remaining' && (
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <Label htmlFor="status-filter">Status</Label>
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                          <SelectTrigger id="status-filter" className="w-48">
-                            <SelectValue placeholder="Filter by status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All</SelectItem>
-                            {availableFilters.map(status => (
-                              <SelectItem key={status} value={status}>{status}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                       <div className="flex items-center gap-2">
-                        <Label htmlFor="lamination-filter">Lamination</Label>
-                        <Select value={laminationFilter} onValueChange={(value) => setLaminationFilter(value as 'all' | 'true' | 'false')}>
-                          <SelectTrigger id="lamination-filter" className="w-32">
-                            <SelectValue placeholder="Filter by lamination" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All</SelectItem>
-                            <SelectItem value="true">True</SelectItem>
-                            <SelectItem value="false">False</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
+                  {activeView === 'rolls' && (
+                    <Button variant={currentView === 'laminate' ? 'default' : 'outline'} onClick={() => setCurrentView('laminate')}>
+                      Laminate
+                    </Button>
                   )}
-                  <Button variant="outline" onClick={handleImportClick}>
-                      <Upload className="mr-2 h-4 w-4"/> Import Excel
+                  <Button variant={currentView === 'consumed' ? 'default' : 'outline'} onClick={() => setCurrentView('consumed')}>
+                    Consumed ({consumedData.length})
                   </Button>
-                  <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".xlsx, .xls" />
-                  <Button variant="outline" onClick={handleExport}>
-                      <Download className="mr-2 h-4 w-4"/> Export Excel
-                  </Button>
-              </div>
-          </div>
-          <Separator className='my-12'/>
-          {currentView === 'laminate' && activeView === 'rolls' ? (
-             <div className='space-y-8'>
-                <Card className="shadow-lg">
-                  <CardHeader className="flex flex-row justify-between items-center">
-                    <div>
-                      <CardTitle>Ready for Lamination</CardTitle>
-                      <CardDescription>Select rolls to send for lamination.</CardDescription>
-                    </div>
-                    <Button onClick={handleSendForLaminationClick} disabled={selectedReadyForLaminationIds.length === 0}>
-                      <Send className="mr-2 h-4 w-4" /> Send
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <DataTable
-                      data={readyForLaminationData}
-                      selectedRowIds={selectedReadyForLaminationIds}
-                      onSelectedRowIdsChange={onSetSelectedReadyForLaminationIds}
-                      showCheckboxes={true}
-                    />
-                  </CardContent>
-                </Card>
-                <Card className="shadow-lg">
-                   <CardHeader className="flex flex-row justify-between items-center">
-                    <div>
-                      <CardTitle>Rolls Sent for Lamination</CardTitle>
-                      <CardDescription>A log of all rolls sent for lamination.</CardDescription>
-                    </div>
-                    <Button onClick={handleMarkAsReceivedClick} disabled={selectedSentForLaminationIds.length === 0}>
-                      <CheckSquare className="mr-2 h-4 w-4" /> Received
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <DataTable 
-                      data={sentForLaminationData}
-                      selectedRowIds={selectedSentForLaminationIds}
-                      onSelectedRowIdsChange={onSetSelectedSentForLaminationIds}
-                      showCheckboxes={true}
-                    />
-                  </CardContent>
-                </Card>
-                <Card className="shadow-lg">
-                   <CardHeader className="flex flex-row justify-between items-center">
-                    <div>
-                      <CardTitle>Rolls Received from Lamination</CardTitle>
-                      <CardDescription>Process rolls that have been received from lamination.</CardDescription>
-                    </div>
-                    <Button onClick={handleReceiveDialog} disabled={selectedReceivedFromLaminationIds.length === 0}>
-                      <CheckSquare className="mr-2 h-4 w-4" /> Process
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <DataTable 
-                      data={receivedFromLaminationData}
-                      selectedRowIds={selectedReceivedFromLaminationIds}
-                      onSelectedRowIdsChange={onSetSelectedReceivedFromLaminationIds}
-                      showCheckboxes={true}
-                    />
-                  </CardContent>
-                </Card>
-             </div>
-          ) : (
-            <Card className="shadow-lg">
-              <CardHeader className="flex flex-row justify-between items-center">
-                <div>
-                  <CardTitle>
-                    {currentView === 'remaining' ? 'Remaining Rolls' : 'Consumed Rolls'}
-                  </CardTitle>
-                  <CardDescription>A log of all {currentView} rolls. You can sort by clicking on column headers.</CardDescription>
                 </div>
-                {currentView === 'remaining' && (
-                   <div className="flex gap-2">
-                      <Button onClick={handleOpenPartialUseDialog} disabled={selectedRowIds.length !== 1}>
-                        <SplitSquareHorizontal className="mr-2 h-4 w-4" /> Partial Use
+                <div className="flex gap-4 items-center">
+                    {currentView === 'remaining' && (
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <Label htmlFor="status-filter">Status</Label>
+                          <Select value={statusFilter} onValueChange={setStatusFilter}>
+                            <SelectTrigger id="status-filter" className="w-48">
+                              <SelectValue placeholder="Filter by status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All</SelectItem>
+                              {availableFilters.map(status => (
+                                <SelectItem key={status} value={status}>{status}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                         <div className="flex items-center gap-2">
+                          <Label htmlFor="lamination-filter">Lamination</Label>
+                          <Select value={laminationFilter} onValueChange={(value) => setLaminationFilter(value as 'all' | 'true' | 'false')}>
+                            <SelectTrigger id="lamination-filter" className="w-32">
+                              <SelectValue placeholder="Filter by lamination" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All</SelectItem>
+                              <SelectItem value="true">True</SelectItem>
+                              <SelectItem value="false">False</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    )}
+                    <Button variant="outline" onClick={handleImportClick}>
+                        <Upload className="mr-2 h-4 w-4"/> Import Excel
+                    </Button>
+                    <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".xlsx, .xls" />
+                    <Button variant="outline" onClick={handleExport}>
+                        <Download className="mr-2 h-4 w-4"/> Export Excel
+                    </Button>
+                </div>
+            </div>
+            <Separator className='my-12'/>
+            {currentView === 'laminate' && activeView === 'rolls' ? (
+               <div className='space-y-8'>
+                  <Card className="shadow-lg">
+                    <CardHeader className="flex flex-row justify-between items-center">
+                      <div>
+                        <CardTitle>Ready for Lamination</CardTitle>
+                        <CardDescription>Select rolls to send for lamination.</CardDescription>
+                      </div>
+                      <Button onClick={handleSendForLaminationClick} disabled={selectedReadyForLaminationIds.length === 0}>
+                        <Send className="mr-2 h-4 w-4" /> Send
                       </Button>
-                      <Button onClick={handleOpenConsumedDialog} disabled={selectedRowIds.length === 0}>
-                        <CheckSquare className="mr-2 h-4 w-4" /> Submit Consumed
+                    </CardHeader>
+                    <CardContent>
+                      <DataTable
+                        data={readyForLaminationData}
+                        selectedRowIds={selectedReadyForLaminationIds}
+                        onSelectedRowIdsChange={onSetSelectedReadyForLaminationIds}
+                        showCheckboxes={true}
+                      />
+                    </CardContent>
+                  </Card>
+                  <Card className="shadow-lg">
+                     <CardHeader className="flex flex-row justify-between items-center">
+                      <div>
+                        <CardTitle>Rolls Sent for Lamination</CardTitle>
+                        <CardDescription>A log of all rolls sent for lamination.</CardDescription>
+                      </div>
+                      <Button onClick={handleMarkAsReceivedClick} disabled={selectedSentForLaminationIds.length === 0}>
+                        <CheckSquare className="mr-2 h-4 w-4" /> Received
                       </Button>
-                   </div>
-                )}
-              </CardHeader>
-              <CardContent>
-                <DataTable 
-                  data={currentView === 'remaining' ? filteredRemainingData : consumedData}
-                  selectedRowIds={selectedRowIds}
-                  onSelectedRowIdsChange={onSetSelectedRowIds}
-                  showCheckboxes={currentView === 'remaining'}
-                  view={currentView}
-                />
-              </CardContent>
-            </Card>
-          )}
+                    </CardHeader>
+                    <CardContent>
+                      <DataTable 
+                        data={sentForLaminationData}
+                        selectedRowIds={selectedSentForLaminationIds}
+                        onSelectedRowIdsChange={onSetSelectedSentForLaminationIds}
+                        showCheckboxes={true}
+                      />
+                    </CardContent>
+                  </Card>
+                  <Card className="shadow-lg">
+                     <CardHeader className="flex flex-row justify-between items-center">
+                      <div>
+                        <CardTitle>Rolls Received from Lamination</CardTitle>
+                        <CardDescription>Process rolls that have been received from lamination.</CardDescription>
+                      </div>
+                      <Button onClick={handleReceiveDialog} disabled={selectedReceivedFromLaminationIds.length === 0}>
+                        <CheckSquare className="mr-2 h-4 w-4" /> Process
+                      </Button>
+                    </CardHeader>
+                    <CardContent>
+                      <DataTable 
+                        data={receivedFromLaminationData}
+                        selectedRowIds={selectedReceivedFromLaminationIds}
+                        onSelectedRowIdsChange={onSetSelectedReceivedFromLaminationIds}
+                        showCheckboxes={true}
+                      />
+                    </CardContent>
+                  </Card>
+               </div>
+            ) : (
+              <Card className="shadow-lg">
+                <CardHeader className="flex flex-row justify-between items-center">
+                  <div>
+                    <CardTitle>
+                      {currentView === 'remaining' ? 'Remaining Rolls' : 'Consumed Rolls'}
+                    </CardTitle>
+                    <CardDescription>A log of all {currentView} rolls. You can sort by clicking on column headers.</CardDescription>
+                  </div>
+                  {currentView === 'remaining' && (
+                     <div className="flex gap-2">
+                        <Button onClick={handleOpenPartialUseDialog} disabled={selectedRowIds.length !== 1}>
+                          <SplitSquareHorizontal className="mr-2 h-4 w-4" /> Partial Use
+                        </Button>
+                        <Button onClick={handleOpenConsumedDialog} disabled={selectedRowIds.length === 0}>
+                          <CheckSquare className="mr-2 h-4 w-4" /> Submit Consumed
+                        </Button>
+                     </div>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <DataTable 
+                    data={currentView === 'remaining' ? filteredRemainingData : consumedData}
+                    selectedRowIds={selectedRowIds}
+                    onSelectedRowIdsChange={onSetSelectedRowIds}
+                    showCheckboxes={currentView === 'remaining'}
+                    view={currentView}
+                  />
+                </CardContent>
+              </Card>
+            )}
 
-          {activeView === 'bags' && (
-            <>
-              <Separator className="my-12" />
-              <BagsProduced data={bagsProducedData} />
-            </>
-          )}
+            {activeView === 'bags' && (
+              <>
+                <Separator className="my-12" />
+                <BagsProduced data={bagsProducedData} />
+              </>
+            )}
 
-      </div>
-    </section>
+        </div>
+      </section>
+    </>
   );
 }

@@ -39,7 +39,7 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
     },
   });
 
-  const handleSubmit = (newRollData: Omit<LoomSheetData, 'id' | 'productionDate'>) => {
+  const onSubmit = (newRollData: Omit<LoomSheetData, 'id' | 'productionDate'>) => {
     if (!newSerialNumber.trim()) {
         alert('New Serial Number is required.');
         return;
@@ -53,7 +53,7 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
               <DialogTitle>Collaborate & Create New Roll</DialogTitle>
               <DialogDescription>

@@ -329,14 +329,11 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
           </p>
         </div>
         
-        <div className="space-y-8">
+        <div className="space-y-4">
             <div className="flex justify-between items-center">
                 <div className="flex gap-2">
                   <Button variant={(currentView === 'remaining' && statusFilter === 'all') ? 'default' : 'outline'} onClick={() => { setCurrentView('remaining'); setStatusFilter('all')}}>
                     My Stock ({remainingData.length})
-                  </Button>
-                  <Button variant={(currentView === 'remaining' && statusFilter === 'Working Rolls') ? 'default' : 'outline'} onClick={() => { setCurrentView('remaining'); setStatusFilter('Working Rolls')}}>
-                    Working Rolls ({workingRollsData.length})
                   </Button>
                   {activeView === 'rolls' && (
                     <Button variant={currentView === 'laminate' ? 'default' : 'outline'} onClick={() => setCurrentView('laminate')}>
@@ -348,38 +345,6 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                   </Button>
                 </div>
                 <div className="flex gap-4 items-center">
-                    {currentView === 'remaining' && (
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <Label htmlFor="status-filter">Status</Label>
-                          <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger id="status-filter" className="w-48">
-                              <SelectValue placeholder="Filter by status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All</SelectItem>
-                              <SelectItem value="Working Rolls">Working Rolls</SelectItem>
-                              {availableFilters.map(status => (
-                                <SelectItem key={status} value={status}>{status}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                         <div className="flex items-center gap-2">
-                          <Label htmlFor="lamination-filter">Lamination</Label>
-                          <Select value={laminationFilter} onValueChange={(value) => setLaminationFilter(value as 'all' | 'true' | 'false')}>
-                            <SelectTrigger id="lamination-filter" className="w-32">
-                              <SelectValue placeholder="Filter by lamination" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All</SelectItem>
-                              <SelectItem value="true">True</SelectItem>
-                              <SelectItem value="false">False</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    )}
                     <Button variant="outline" onClick={handleImportClick}>
                         <Upload className="mr-2 h-4 w-4"/> Import Excel
                     </Button>
@@ -389,6 +354,41 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                     </Button>
                 </div>
             </div>
+            {currentView === 'remaining' && (
+              <div className="flex justify-start items-center gap-4 pt-2">
+                 <Button variant={(currentView === 'remaining' && statusFilter === 'Working Rolls') ? 'default' : 'outline'} onClick={() => { setCurrentView('remaining'); setStatusFilter('Working Rolls')}}>
+                    Working Rolls ({workingRollsData.length})
+                  </Button>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="status-filter">Status</Label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger id="status-filter" className="w-48">
+                      <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="Working Rolls">Working Rolls</SelectItem>
+                      {availableFilters.map(status => (
+                        <SelectItem key={status} value={status}>{status}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                  <div className="flex items-center gap-2">
+                  <Label htmlFor="lamination-filter">Lamination</Label>
+                  <Select value={laminationFilter} onValueChange={(value) => setLaminationFilter(value as 'all' | 'true' | 'false')}>
+                    <SelectTrigger id="lamination-filter" className="w-32">
+                      <SelectValue placeholder="Filter by lamination" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="true">True</SelectItem>
+                      <SelectItem value="false">False</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
             <Separator className='my-12'/>
             {currentView === 'laminate' && activeView === 'rolls' ? (
                <div className='space-y-8'>
@@ -495,4 +495,5 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   );
 }
 
+    
     

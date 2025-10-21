@@ -17,7 +17,6 @@ import { Separator } from './ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import { ReceiveLaminationDialog } from './receive-lamination-dialog';
-import AiSummary from './ai-summary';
 
 interface AdminSectionProps {
   allData: LoomSheetData[];
@@ -256,7 +255,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
 
   return (
     <section id="admin-dashboard">
-       <ConsumedByDialog 
+      <ConsumedByDialog 
         isOpen={isConsumedDialogVisible}
         onClose={() => setIsConsumedDialogVisible(false)}
         onConfirm={handleConfirmConsumed}
@@ -288,9 +287,6 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
           View all submitted data, import/export, and manage roll status.
         </p>
       </div>
-      
-      <AiSummary data={allData} />
-      <Separator className='my-12' />
       
       <div className="space-y-8">
           <div className="flex justify-between items-center">
@@ -452,5 +448,3 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     </section>
   );
 }
-
-    

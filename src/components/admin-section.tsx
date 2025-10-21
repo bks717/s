@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { LoomSheetData, loomSheetSchema, BagProductionData, statuses } from '@/lib/schemas';
 import { DataTable } from '@/components/data-table';
-import { Upload, Download, CheckSquare, SplitSquareHorizontal, Send } from 'lucide-react';
+import { Upload, Download, CheckSquare, SplitSquareHorizontal, Send, RefreshCw } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { z } from 'zod';
 import { ConsumedByDialog } from './consumed-by-dialog';
@@ -16,7 +16,6 @@ import BagsProduced from './bags-produced';
 import { Separator } from './ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
-import { ReceiveLaminationDialog } from './receive-lamination-dialog';
 import { ReceiveSentLaminationDialog } from './receive-sent-lamination-dialog';
 import { CollaborateSentLaminationDialog } from './collaborate-sent-lamination-dialog';
 
@@ -29,7 +28,7 @@ interface AdminSectionProps {
   activeView: 'rolls' | 'bags';
   onSendForLamination: (selectedIds: string[]) => void;
   onMarkAsReceived: (selectedIds: string[], newSerialNumber?: string, receivedSerialNumber?: string) => void;
-  onReturnToStock: (selectedIds: string[], newSerialNumber?: string) => void;
+  onReturnToStock: (selectedIds: string[]) => void;
   onCollaborateAndCreate: (selectedIds: string[], newRollData: LoomSheetData) => void;
   bagsProducedData: LoomSheetData[];
 }
@@ -47,7 +46,6 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   
   const [isConsumedDialogVisible, setIsConsumedDialogVisible] = useState(false);
   const [isPartialUseDialogVisible, setIsPartialUseDialogVisible] = useState(false);
-  const [isReceiveDialogVisible, setIsReceiveDialogVisible] = useState(false);
   const [isReceiveSentDialogVisible, setIsReceiveSentDialogVisible] = useState(false);
   const [isCollaborateSentDialogVisible, setIsCollaborateSentDialogVisible] = useState(false);
   
@@ -250,16 +248,21 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     setIsCollaborateSentDialogVisible(false);
   }
 
-  const handleReceiveDialog = () => {
+  const handleReturnToStockClick = () => {
     if (selectedReceivedFromLaminationIds.length === 0) {
-      toast({
+       toast({
         variant: 'destructive',
         title: 'No Rows Selected',
-        description: 'Please select received rolls to process.',
+        description: 'Please select received rolls to return to stock.',
       });
       return;
     }
-    setIsReceiveDialogVisible(true);
+    onReturnToStock(selectedReceivedFromLaminationIds);
+    toast({
+      title: 'Success',
+      description: `${selectedReceivedFromLaminationIds.length} rolls returned to active stock.`,
+    });
+    setSelectedReceivedFromLaminationIds([]);
   };
 
   const selectedRollForPartialUse = selectedRowIds.length === 1 ? allData.find(d => d.id === selectedRowIds[0]) : undefined;
@@ -294,13 +297,6 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
             activeView={activeView}
         />
       )}
-      <ReceiveLaminationDialog
-        isOpen={isReceiveDialogVisible}
-        onClose={() => setIsReceiveDialogVisible(false)}
-        selectedRolls={allData.filter(d => selectedReceivedFromLaminationIds.includes(d.id!))}
-        onReturnToStock={onReturnToStock}
-        onCollaborateAndCreate={onCollaborateAndCreate}
-      />
       <ReceiveSentLaminationDialog
         isOpen={isReceiveSentDialogVisible}
         onClose={() => setIsReceiveSentDialogVisible(false)}
@@ -426,8 +422,8 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                         <CardTitle>Rolls Received from Lamination</CardTitle>
                         <CardDescription>Process rolls that have been received from lamination.</CardDescription>
                       </div>
-                      <Button onClick={handleReceiveDialog} disabled={selectedReceivedFromLaminationIds.length === 0}>
-                        <CheckSquare className="mr-2 h-4 w-4" /> Process
+                      <Button onClick={handleReturnToStockClick} disabled={selectedReceivedFromLaminationIds.length === 0}>
+                        <RefreshCw className="mr-2 h-4 w-4" /> Return to Stock
                       </Button>
                     </CardHeader>
                     <CardContent>

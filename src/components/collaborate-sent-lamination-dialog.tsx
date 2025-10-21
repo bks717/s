@@ -5,6 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { LoomSheetData } from '@/lib/schemas';
@@ -24,13 +25,17 @@ interface CollaborateSentLaminationDialogProps {
 export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls, onConfirm }: CollaborateSentLaminationDialogProps) {
   const [receivedSerialNumber, setReceivedSerialNumber] = useState('');
   const [newSerialNumber, setNewSerialNumber] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (newRollData: Omit<LoomSheetData, 'id' | 'productionDate'>) => {
+    setIsSubmitting(true);
     if (!newSerialNumber.trim()) {
         alert('New Serial Number is required.');
+        setIsSubmitting(false);
         return;
     }
     onConfirm({ ...newRollData, serialNumber: newSerialNumber, receivedSerialNumber: receivedSerialNumber });
+    // No need to setIsSubmitting(false) here as the dialog will close.
   }
 
   const consumedByValue = selectedRolls.map(r => r.serialNumber).join(', ');
@@ -74,11 +79,13 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
                 <LoomSheetForm
                     onFormSubmit={handleSubmit}
                     defaultValues={{ lamination: true, status: 'Received from Lamination', serialNumber: '' }}
-                    isSubmitting={!newSerialNumber}
+                    isSubmitting={isSubmitting || !newSerialNumber}
                     hideFields={['serialNumber']}
                 />
             </ScrollArea>
-             <Button variant="outline" onClick={onClose} className="mt-4">Cancel</Button>
+             <DialogFooter className="mt-4">
+                <Button variant="outline" onClick={onClose}>Cancel</Button>
+            </DialogFooter>
         </div>
 
       </DialogContent>

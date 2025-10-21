@@ -1,17 +1,23 @@
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog';
-import { LoomSheetData } from '@/lib/schemas';
+import { loomSheetSchema, LoomSheetData } from '@/lib/schemas';
 import LoomSheetForm from './loom-sheet-form';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { Button } from './ui/button';
+import { Form } from './ui/form';
 
 interface CollaborateSentLaminationDialogProps {
   isOpen: boolean;
@@ -24,6 +30,15 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
   const [receivedSerialNumber, setReceivedSerialNumber] = useState('');
   const [newSerialNumber, setNewSerialNumber] = useState('');
   
+  const form = useForm<Omit<LoomSheetData, 'id' | 'productionDate'>>({
+    resolver: zodResolver(loomSheetSchema.omit({ id: true, productionDate: true })),
+    defaultValues: {
+      lamination: true,
+      status: 'Received from Lamination',
+      serialNumber: '',
+    },
+  });
+
   const handleSubmit = (newRollData: Omit<LoomSheetData, 'id' | 'productionDate'>) => {
     if (!newSerialNumber.trim()) {
         alert('New Serial Number is required.');
@@ -44,7 +59,7 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
           </DialogDescription>
         </DialogHeader>
         
-        <div>
+        <Form {...form}>
             <Separator className="my-4"/>
             <DialogDescription className="mb-4">
                 The following rolls will be consumed: {consumedByValue}
@@ -72,13 +87,27 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
             <ScrollArea className="h-[50vh] p-4 border rounded-md">
                 <LoomSheetForm
                     onFormSubmit={handleSubmit}
-                    defaultValues={{ lamination: true, status: 'Received from Lamination', serialNumber: '' }}
-                    isSubmitting={!newSerialNumber}
+                    formContext={form}
+                    isSubmitting={form.formState.isSubmitting || !newSerialNumber}
                     hideFields={['serialNumber']}
-                    onCancel={onClose}
+                    showSubmitButton={false}
                 />
             </ScrollArea>
-        </div>
+
+            <DialogFooter className="pt-4">
+                <Button variant="outline" type="button" onClick={onClose}>Cancel</Button>
+                <Button
+                    type="button"
+                    size="lg"
+                    disabled={form.formState.isSubmitting || !newSerialNumber}
+                    className="bg-accent hover:bg-accent/90 text-accent-foreground"
+                    onClick={form.handleSubmit(handleSubmit)}
+                >
+                    {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    sub-Mit
+                </Button>
+            </DialogFooter>
+        </Form>
 
       </DialogContent>
     </Dialog>

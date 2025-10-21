@@ -126,15 +126,17 @@ export default function Home() {
   };
 
   const handleCollaborateAndCreate = (selectedIds: string[], newRollData: LoomSheetData) => {
-    const consumedRolls = allData.filter(item => selectedIds.includes(item.id!));
-    const consumedByValue = consumedRolls.map(r => r.serialNumber).join(', ');
+    const consumedByValue = allData
+      .filter(item => selectedIds.includes(item.id!))
+      .map(r => r.serialNumber)
+      .join(', ');
 
     const newRoll: LoomSheetData = {
       ...newRollData,
       id: (Date.now()).toString(),
       productionDate: new Date(),
       lamination: true,
-      status: 'Active Stock',
+      status: newRollData.status || 'Active Stock',
     };
     
     setAllData(prevData => {

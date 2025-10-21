@@ -26,15 +26,14 @@ interface AdminSectionProps {
   activeView: 'rolls' | 'bags';
   onSendForLamination: (selectedIds: string[]) => void;
   onMarkAsReceived: (selectedIds: string[]) => void;
-  onReturnToStock: (selectedIds: string[]) => void;
+  onReturnToStock: (selectedIds: string[], newSerialNumber?: string) => void;
   onCollaborateAndCreate: (selectedIds: string[], newRollData: LoomSheetData) => void;
-  onSerialNumberChange: (oldRollId: string, newSerialNumber: string) => void;
   bagsProducedData: LoomSheetData[];
 }
 
 type View = 'remaining' | 'consumed' | 'laminate';
 
-export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPartialConsume, activeView, onSendForLamination, onMarkAsReceived, onReturnToStock, onCollaborateAndCreate, onSerialNumberChange, bagsProducedData }: AdminSectionProps) {
+export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPartialConsume, activeView, onSendForLamination, onMarkAsReceived, onReturnToStock, onCollaborateAndCreate, bagsProducedData }: AdminSectionProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentView, setCurrentView] = useState<View>('remaining');
@@ -277,7 +276,6 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
         selectedRolls={allData.filter(d => selectedReceivedFromLaminationIds.includes(d.id!))}
         onReturnToStock={onReturnToStock}
         onCollaborateAndCreate={onCollaborateAndCreate}
-        onSerialNumberChange={onSerialNumberChange}
       />
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold tracking-tight text-primary font-headline">

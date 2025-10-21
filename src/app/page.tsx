@@ -87,13 +87,40 @@ export default function Home() {
     }));
   };
 
-  const handleReturnToStock = (selectedIds: string[]) => {
-    setAllData(prevData => prevData.map(item => {
-      if (selectedIds.includes(item.id!)) {
-        return { ...item, status: 'Active Stock', lamination: true };
-      }
-      return item;
-    }));
+  const handleReturnToStock = (selectedIds: string[], newSerialNumber?: string) => {
+    // Logic for handling serial number change for a single roll
+    if (selectedIds.length === 1 && newSerialNumber && newSerialNumber.trim() !== '') {
+      const oldRollId = selectedIds[0];
+      const oldRoll = allData.find(item => item.id === oldRollId);
+      if (!oldRoll) return;
+
+      const newRoll: LoomSheetData = {
+        ...oldRoll,
+        id: (Date.now()).toString(),
+        serialNumber: newSerialNumber,
+        productionDate: new Date(),
+        lamination: true,
+        status: 'Active Stock'
+      };
+
+      setAllData(prevData => {
+        const updatedData = prevData.map(item => {
+          if (item.id === oldRollId) {
+            return { ...item, status: 'Consumed', consumedBy: `S/N Change: ${newSerialNumber}` };
+          }
+          return item;
+        });
+        return [...updatedData, newRoll];
+      });
+    } else {
+      // Original logic for returning multiple rolls to stock
+      setAllData(prevData => prevData.map(item => {
+        if (selectedIds.includes(item.id!)) {
+          return { ...item, status: 'Active Stock', lamination: true };
+        }
+        return item;
+      }));
+    }
   };
 
   const handleCollaborateAndCreate = (selectedIds: string[], newRollData: LoomSheetData) => {
@@ -116,31 +143,6 @@ export default function Home() {
     });
   };
   
-  const handleSerialNumberChange = (oldRollId: string, newSerialNumber: string) => {
-    const oldRoll = allData.find(item => item.id === oldRollId);
-    if (!oldRoll) return;
-
-    const newRoll: LoomSheetData = {
-      ...oldRoll,
-      id: (Date.now()).toString(),
-      serialNumber: newSerialNumber,
-      productionDate: new Date(),
-      lamination: true,
-      status: 'Active Stock'
-    };
-
-    setAllData(prevData => {
-      const updatedData = prevData.map(item => {
-        if (item.id === oldRollId) {
-          return { ...item, status: 'Consumed', consumedBy: `S/N Change: ${newSerialNumber}` };
-        }
-        return item;
-      });
-      return [...updatedData, newRoll];
-    });
-  };
-
-
   const remainingData = allData.filter(d => d.status !== 'Consumed');
   const consumedData = allData.filter(d => d.status === 'Consumed');
   const bagsProducedData = consumedData.filter(d => d.noOfBags && d.noOfBags > 0);
@@ -190,7 +192,6 @@ export default function Home() {
             onReturnToStock={handleReturnToStock}
             onCollaborateAndCreate={handleCollaborateAndCreate}
             bagsProducedData={bagsProducedData}
-            onSerialNumberChange={handleSerialNumberChange}
           />
         </>
       )}
@@ -219,7 +220,6 @@ export default function Home() {
             onReturnToStock={handleReturnToStock}
             onCollaborateAndCreate={handleCollaborateAndCreate}
             bagsProducedData={bagsProducedData}
-            onSerialNumberChange={handleSerialNumberChange}
           />
         </>
       )}

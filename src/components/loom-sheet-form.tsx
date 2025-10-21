@@ -34,10 +34,10 @@ import { Switch } from "./ui/switch";
 type HiddenField = keyof LoomSheetData;
 
 interface LoomSheetFormProps {
-  onFormSubmit: (data: Omit<LoomSheetData, 'id' | 'productionDate'>) => void;
+  onFormSubmit?: (data: Omit<LoomSheetData, 'id' | 'productionDate'>) => void;
   defaultValues?: Partial<Omit<LoomSheetData, 'id' | 'productionDate'>>;
   hideFields?: HiddenField[];
-  formContext?: UseFormReturn<Omit<LoomSheetData, 'id' | 'productionDate'>>;
+  formContext?: UseFormReturn<any>; // Allow any form context
 }
 
 export default function LoomSheetForm({ 
@@ -74,19 +74,20 @@ export default function LoomSheetForm({
 
   const form = formContext || internalForm;
 
-  async function onSubmit(data: Omit<LoomSheetData, 'id' | 'productionDate'>) {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    onFormSubmit(data);
+  const handleLocalSubmit = async (data: Omit<LoomSheetData, 'id' | 'productionDate'>) => {
+    if (onFormSubmit) {
+      onFormSubmit(data);
+    }
 
     if (!formContext) { // Only show toast and reset for top-level forms
+      await new Promise(resolve => setTimeout(resolve, 1000));
       toast({
         title: "Success!",
         description: "New loom data has been saved.",
       });
       form.reset();
     }
-  }
+  };
 
   const isCard = !formContext;
   
@@ -404,6 +405,22 @@ export default function LoomSheetForm({
     </div>
   );
 
+  const mainForm = (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleLocalSubmit)}>
+        {FormFields}
+        {!formContext && (
+          <div className="flex justify-end pt-4 space-x-2">
+            <Button type="submit" size="lg" disabled={form.formState.isSubmitting} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+              {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              sub-Mit
+            </Button>
+          </div>
+        )}
+      </form>
+    </Form>
+  );
+
   if (isCard) {
     return (
       <Card className="max-w-4xl mx-auto shadow-lg">
@@ -411,21 +428,15 @@ export default function LoomSheetForm({
           <CardTitle className="text-2xl font-headline text-primary">New Roll Entry</CardTitle>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              {FormFields}
-              <div className="flex justify-end pt-4 space-x-2">
-                <Button type="submit" size="lg" disabled={form.formState.isSubmitting} className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                  {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  sub-Mit
-                </Button>
-              </div>
-            </form>
-          </Form>
+          {mainForm}
         </CardContent>
       </Card>
     )
   }
+  
+  if (formContext) {
+    return FormFields;
+  }
 
-  return FormFields;
+  return mainForm;
 }

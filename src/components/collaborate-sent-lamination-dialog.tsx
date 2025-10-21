@@ -5,9 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { LoomSheetData } from '@/lib/schemas';
 import LoomSheetForm from './loom-sheet-form';
 import { ScrollArea } from './ui/scroll-area';
@@ -81,11 +79,9 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
                     defaultValues={{ lamination: true, status: 'Received from Lamination', serialNumber: '' }}
                     isSubmitting={isSubmitting || !newSerialNumber}
                     hideFields={['serialNumber']}
+                    onCancel={onClose}
                 />
             </ScrollArea>
-             <DialogFooter className="mt-4">
-                <Button variant="outline" onClick={onClose}>Cancel</Button>
-            </DialogFooter>
         </div>
 
       </DialogContent>

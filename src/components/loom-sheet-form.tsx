@@ -38,9 +38,10 @@ interface LoomSheetFormProps {
   defaultValues?: Partial<Omit<LoomSheetData, 'id' | 'productionDate'>>;
   isSubmitting?: boolean;
   hideFields?: HiddenField[];
+  onCancel?: () => void;
 }
 
-export default function LoomSheetForm({ onFormSubmit, defaultValues, isSubmitting: isSubmittingProp, hideFields = [] }: LoomSheetFormProps) {
+export default function LoomSheetForm({ onFormSubmit, defaultValues, isSubmitting: isSubmittingProp, hideFields = [], onCancel }: LoomSheetFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -401,7 +402,8 @@ export default function LoomSheetForm({ onFormSubmit, defaultValues, isSubmittin
                )}
           </div>
 
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-end pt-4 space-x-2">
+            {onCancel && <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>}
             <Button type="submit" size="lg" disabled={finalIsSubmitting} className="bg-accent hover:bg-accent/90 text-accent-foreground">
               {finalIsSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Submit Data

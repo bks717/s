@@ -121,7 +121,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
   
   const visibleColumns = columns.filter(col => {
     if (view === 'consumed') {
-        const consumedHidden: (keyof LoomSheetData | 'select')[] = ['lamination', 'receivedSerialNumber', 'status'];
+        const consumedHidden: (keyof LoomSheetData | 'select')[] = ['status'];
         if (data.every(d => !d.callOut)) consumedHidden.push('callOut');
         
         if (activeView === 'rolls') {
@@ -192,6 +192,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
                           </div>
                         ) : col.key === 'productionDate' && item[col.key] ? format(new Date(item[col.key] as Date), 'PP') 
                         : col.key === 'sizeS' ? `${item.width || ''}" ${item.gram || ''} Gms ${item.color || ''}`
+                        : col.key === 'lamination' ? (item.lamination === 'Lam active' ? 'True' : 'False')
                         : String(item[col.key as keyof LoomSheetData] ?? '')}
                     </TableCell>
                 ))}

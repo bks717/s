@@ -39,8 +39,9 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
     { key: 'loomNo', label: 'Loom No.' },
     { key: 'width', label: 'Width' },
     { key: 'gram', label: 'Gram' },
-    { key: 'fabricType', label: 'Fabric' },
     { key: 'color', label: 'Color' },
+    { key: 'sizeS', label: 'Size S'},
+    { key: 'fabricType', label: 'Fabric' },
     { key: 'lamination', label: 'Lamination' },
     { key: 'status', label: 'Status' },
     { key: 'mtrs', label: 'Meters' },
@@ -179,7 +180,9 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
                               aria-label={`Select row ${item.serialNumber}`}
                             />
                           </div>
-                        ) : col.key === 'productionDate' && item[col.key] ? format(new Date(item[col.key] as Date), 'PP') : String(item[col.key as keyof LoomSheetData] ?? '')}
+                        ) : col.key === 'productionDate' && item[col.key] ? format(new Date(item[col.key] as Date), 'PP') 
+                        : col.key === 'sizeS' ? `${item.width || ''}" ${item.gram || ''} Grms ${item.color || ''}`
+                        : String(item[col.key as keyof LoomSheetData] ?? '')}
                     </TableCell>
                 ))}
               </TableRow>

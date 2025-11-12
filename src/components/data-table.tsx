@@ -181,7 +181,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
                             />
                           </div>
                         ) : col.key === 'productionDate' && item[col.key] ? format(new Date(item[col.key] as Date), 'PP') 
-                        : col.key === 'sizeS' ? `${item.width || ''}" ${item.gram || ''} Grms ${item.color || ''}`
+                        : col.key === 'sizeS' ? `${item.width || ''}" ${item.gram || ''} Gms ${item.color || ''}`
                         : String(item[col.key as keyof LoomSheetData] ?? '')}
                     </TableCell>
                 ))}

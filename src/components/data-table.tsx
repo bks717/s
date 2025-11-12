@@ -50,23 +50,17 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
     { key: 'nw', label: 'Net' },
     { key: 'average', label: 'Average' },
     { key: 'variance', label: 'Variance (UB/LB)', className: 'w-48' },
+    { key: 'consumedBy', label: 'Consumed By'},
+    { key: 'soNumber', label: 'S/O Number'},
+    { key: 'poNumber', label: 'P/O Number'},
+    { key: 'noOfBags', label: 'No. of Bags'},
+    { key: 'avgBagWeight', label: 'Avg. Bag Wt.'},
+    { key: 'bagSize', label: 'Bag Size'},
+    { key: 'receivedSerialNumber', label: 'Received Roll No'},
+    { key: 'callOut', label: 'Call Out'}
   ];
   
   let columns = [...baseColumns];
-
-  if (view === 'consumed') {
-    columns.push({ key: 'consumedBy', label: 'Consumed By'});
-    columns.push({ key: 'soNumber', label: 'S/O Number'});
-    columns.push({ key: 'poNumber', label: 'P/O Number'});
-    columns.push({ key: 'noOfBags', label: 'No. of Bags'});
-    columns.push({ key: 'avgBagWeight', label: 'Avg. Bag Wt.'});
-    columns.push({ key: 'bagSize', label: 'Bag Size'});
-  } else {
-    columns.push({ key: 'consumedBy', label: 'Consumed By'});
-    columns.push({ key: 'receivedSerialNumber', label: 'Received Roll No'});
-  }
-  
-  columns.push({ key: 'callOut', label: 'Call Out'});
 
   if (showCheckboxes) {
     columns.unshift({ key: 'select', label: 'Select' });
@@ -127,13 +121,17 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
   const visibleColumns = columns.filter(col => {
     if(view === 'consumed') {
         const consumedHidden: (keyof LoomSheetData | 'select')[] = ['lamination', 'receivedSerialNumber', 'status'];
+        if (data.every(d => !d.callOut)) consumedHidden.push('callOut');
         return !consumedHidden.includes(col.key);
     }
+    
+    // For remaining view, only hide callOut if it's empty for all rows
     if (view === 'remaining') {
-        const remainingHidden: (keyof LoomSheetData | 'select')[] = ['noOfBags', 'avgBagWeight', 'bagSize', 'soNumber', 'poNumber'];
+         const remainingHidden: (keyof LoomSheetData | 'select')[] = [];
          if (data.every(d => !d.callOut)) remainingHidden.push('callOut');
          return !remainingHidden.includes(col.key);
     }
+    
     return true;
   })
 

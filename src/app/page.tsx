@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -48,17 +49,38 @@ export default function Home() {
     setAllData(prevData => {
       const updatedData = prevData.map(item => {
         if (item.id === originalId) {
+          const remainingMtrs = (item.mtrs || 0) - (consumedPartData.mtrs || 0);
+          const remainingGw = (item.gw || 0) - (consumedPartData.gw || 0);
+          const remainingCw = item.cw || 0;
+          const remainingNw = remainingGw - remainingCw;
+          
+          let remainingAverage = 0;
+          let remainingVariance = 'N/A';
+
+          if (remainingNw > 0 && remainingMtrs > 0) {
+            remainingAverage = parseFloat(((remainingNw * 1000) / remainingMtrs).toFixed(2));
+          }
+          
+          if (remainingAverage > 0 && item.width && item.gram) {
+            const widthGram = item.width * item.gram;
+            const ub = remainingAverage + widthGram;
+            const lb = remainingAverage - widthGram;
+            remainingVariance = `UB: ${ub.toFixed(2)} / LB: ${lb.toFixed(2)}`;
+          }
+
           const updatedRemainingRoll: LoomSheetData = {
             ...item,
-            mtrs: (item.mtrs || 0) - (consumedPartData.mtrs || 0),
-            gw: (item.gw || 0) - (consumedPartData.gw || 0),
-            cw: (item.cw || 0) - (consumedPartData.cw || 0),
-            nw: (item.nw || 0) - (consumedPartData.nw || 0),
+            mtrs: remainingMtrs,
+            gw: remainingGw,
+            cw: remainingCw,
+            nw: remainingNw,
+            average: remainingAverage,
+            variance: remainingVariance,
             status: 'Partially Consumed'
           };
-          // If the roll is fully consumed, mark it as such instead of deleting
+          
           if (updatedRemainingRoll.mtrs <= 0 && updatedRemainingRoll.gw <= 0) {
-             return { ...updatedRemainingRoll, status: 'Consumed', mtrs: 0, gw: 0, cw: 0, nw: 0 };
+             return { ...updatedRemainingRoll, status: 'Consumed', mtrs: 0, gw: 0, cw: 0, nw: 0, average: 0, variance: 'N/A' };
           }
           return updatedRemainingRoll;
         }

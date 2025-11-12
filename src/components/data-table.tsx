@@ -119,16 +119,20 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
   const isAllSelected = data.length > 0 && selectedRowIds.length === data.length;
   
   const visibleColumns = columns.filter(col => {
-    if(view === 'consumed') {
+    if (view === 'consumed') {
         const consumedHidden: (keyof LoomSheetData | 'select')[] = ['lamination', 'receivedSerialNumber', 'status'];
         if (data.every(d => !d.callOut)) consumedHidden.push('callOut');
         return !consumedHidden.includes(col.key);
     }
     
-    // For remaining view, only hide callOut if it's empty for all rows
     if (view === 'remaining') {
-         const remainingHidden: (keyof LoomSheetData | 'select')[] = [];
-         if (data.every(d => !d.callOut)) remainingHidden.push('callOut');
+         const remainingHidden: (keyof LoomSheetData | 'select')[] = [
+            'noOfBags', 
+            'avgBagWeight', 
+            'bagSize',
+            'soNumber',
+            'poNumber'
+         ];
          return !remainingHidden.includes(col.key);
     }
     

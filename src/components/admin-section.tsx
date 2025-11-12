@@ -5,7 +5,7 @@ import React, { useRef, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { LoomSheetData, loomSheetSchema, BagProductionData, statuses } from '@/lib/schemas';
+import { LoomSheetData, loomSheetSchema, BagProductionData, statuses, ConsumedByData } from '@/lib/schemas';
 import { DataTable } from '@/components/data-table';
 import { Upload, Download, CheckSquare, SplitSquareHorizontal, Send, RefreshCw } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -23,7 +23,7 @@ import { CollaborateSentLaminationDialog } from './collaborate-sent-lamination-d
 interface AdminSectionProps {
   allData: LoomSheetData[];
   onImport: (data: LoomSheetData[]) => void;
-  onMarkAsConsumed: (selectedIds: string[], consumedBy: string, bagData?: BagProductionData) => void;
+  onMarkAsConsumed: (selectedIds: string[], consumptionData: ConsumedByData, bagData?: BagProductionData) => void;
   onPartialConsume: (originalId: string, consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string, bagData?: BagProductionData) => void;
   activeView: 'rolls' | 'bags';
   onSendForLamination: (selectedIds: string[]) => void;
@@ -163,11 +163,11 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     setIsConsumedDialogVisible(true);
   };
 
-  const handleConfirmConsumed = (consumedBy: string, bagData?: BagProductionData) => {
-    onMarkAsConsumed(selectedRowIds, consumedBy, bagData);
+  const handleConfirmConsumed = (consumptionData: ConsumedByData, bagData?: BagProductionData) => {
+    onMarkAsConsumed(selectedRowIds, consumptionData, bagData);
     toast({
       title: 'Success',
-      description: `${selectedRowIds.length} rows marked as consumed by ${consumedBy}.`,
+      description: `${selectedRowIds.length} rows marked as consumed by ${consumptionData.consumedBy}.`,
     });
     setSelectedRowIds([]);
     setIsConsumedDialogVisible(false);
@@ -273,7 +273,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   const receivedFromLaminationData = allData.filter(d => d.status === 'Received from Lamination');
   
   const filteredRemainingData = remainingData.filter(d => {
-    const laminationMatch = laminationFilter === 'all' || String(d.lamination) === laminationFilter;
+    const laminationMatch = laminationFilter === 'all' || (d.lamination === 'Lam active' ? 'true' : 'false') === laminationFilter;
     
     let statusMatch = false;
     if (statusFilter === 'all') {

@@ -10,19 +10,21 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BagProductionData } from '@/lib/schemas';
+import { BagProductionData, ConsumedByData } from '@/lib/schemas';
 import { Separator } from './ui/separator';
 
 interface ConsumedByDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (consumedBy: string, bagData?: BagProductionData) => void;
+  onConfirm: (consumptionData: ConsumedByData, bagData?: BagProductionData) => void;
   selectedCount: number;
   activeView: 'rolls' | 'bags';
 }
 
 export function ConsumedByDialog({ isOpen, onClose, onConfirm, selectedCount, activeView }: ConsumedByDialogProps) {
   const [consumedBy, setConsumedBy] = useState('');
+  const [soNumber, setSoNumber] = useState('');
+  const [poNumber, setPoNumber] = useState('');
   const [noOfBags, setNoOfBags] = useState<number | ''>('');
   const [avgBagWeight, setAvgBagWeight] = useState<number | ''>('');
   const [bagSize, setBagSize] = useState<string>('');
@@ -31,6 +33,8 @@ export function ConsumedByDialog({ isOpen, onClose, onConfirm, selectedCount, ac
   useEffect(() => {
     if (isOpen) {
       setConsumedBy('');
+      setSoNumber('');
+      setPoNumber('');
       setNoOfBags('');
       setAvgBagWeight('');
       setBagSize('');
@@ -39,10 +43,15 @@ export function ConsumedByDialog({ isOpen, onClose, onConfirm, selectedCount, ac
   
   const handleConfirm = () => {
     if (consumedBy.trim()) {
+        const consumptionData: ConsumedByData = {
+            consumedBy: consumedBy.trim(),
+            soNumber: soNumber.trim(),
+            poNumber: poNumber.trim(),
+        };
         if(activeView === 'bags') {
-            onConfirm(consumedBy.trim(), { noOfBags: noOfBags || undefined, avgBagWeight: avgBagWeight || undefined, bagSize });
+            onConfirm(consumptionData, { noOfBags: noOfBags || undefined, avgBagWeight: avgBagWeight || undefined, bagSize });
         } else {
-            onConfirm(consumedBy.trim());
+            onConfirm(consumptionData);
         }
     }
   };
@@ -67,6 +76,30 @@ export function ConsumedByDialog({ isOpen, onClose, onConfirm, selectedCount, ac
               onChange={(e) => setConsumedBy(e.target.value)}
               className="col-span-3"
               placeholder="e.g., Customer Name"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="soNumber" className="text-right">
+              S/O Number
+            </Label>
+            <Input
+              id="soNumber"
+              value={soNumber}
+              onChange={(e) => setSoNumber(e.target.value)}
+              className="col-span-3"
+              placeholder="S/O Number"
+            />
+          </div>
+           <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="poNumber" className="text-right">
+              P/O Number
+            </Label>
+            <Input
+              id="poNumber"
+              value={poNumber}
+              onChange={(e) => setPoNumber(e.target.value)}
+              className="col-span-3"
+              placeholder="P/O Number"
             />
           </div>
           {activeView === 'bags' && (

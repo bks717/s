@@ -49,16 +49,20 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
     { key: 'nw', label: 'Net' },
     { key: 'average', label: 'Average' },
     { key: 'variance', label: 'Variance', className: 'w-20' },
-    { key: 'consumedBy', label: 'Consumed By'},
-    { key: 'receivedSerialNumber', label: 'Received S.No'},
   ];
   
   let columns = [...baseColumns];
 
   if (view === 'consumed') {
+    columns.push({ key: 'consumedBy', label: 'Consumed By'});
+    columns.push({ key: 'soNumber', label: 'S/O Number'});
+    columns.push({ key: 'poNumber', label: 'P/O Number'});
     columns.push({ key: 'noOfBags', label: 'No. of Bags'});
     columns.push({ key: 'avgBagWeight', label: 'Avg. Bag Wt.'});
-    columnspush({ key: 'bagSize', label: 'Bag Size'});
+    columns.push({ key: 'bagSize', label: 'Bag Size'});
+  } else {
+    columns.push({ key: 'consumedBy', label: 'Consumed By'});
+    columns.push({ key: 'receivedSerialNumber', label: 'Received S.No'});
   }
 
   if (showCheckboxes) {
@@ -116,13 +120,26 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
   };
 
   const isAllSelected = data.length > 0 && selectedRowIds.length === data.length;
+  
+  const visibleColumns = columns.filter(col => {
+    if(view === 'consumed') {
+        const consumedHidden: (keyof LoomSheetData | 'select')[] = ['lamination', 'receivedSerialNumber', 'status'];
+        return !consumedHidden.includes(col.key);
+    }
+    if (view === 'remaining') {
+        const remainingHidden: (keyof LoomSheetData | 'select')[] = ['noOfBags', 'avgBagWeight', 'bagSize', 'soNumber', 'poNumber'];
+         return !remainingHidden.includes(col.key);
+    }
+    return true;
+  })
+
 
   return (
     <div className="rounded-md border overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            {columns.map(col => (
+            {visibleColumns.map(col => (
                 <TableHead key={col.key} className={cn("p-0", col.className)}>
                     {col.key === 'select' ? (
                         <div className="flex items-center justify-center h-8 w-12">
@@ -146,7 +163,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
           {sortedData.length > 0 ? (
             sortedData.map((item) => (
               <TableRow key={item.id} data-state={selectedRowIds.includes(item.id!) && "selected"}>
-                {columns.map(col => (
+                {visibleColumns.map(col => (
                     <TableCell key={`${item.id}-${col.key}`} className={cn("p-1 text-[10px] whitespace-nowrap", {
                       "whitespace-pre-line": col.key === 'consumedBy',
                       "font-bold": ['nw', 'average', 'variance'].includes(col.key),

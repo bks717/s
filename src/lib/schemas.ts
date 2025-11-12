@@ -31,6 +31,8 @@ export const loomSheetSchema = z.object({
   productionDate: z.date(),
   status: z.enum(statuses).default('Active Stock'),
   consumedBy: z.string().optional(),
+  soNumber: z.string().optional(),
+  poNumber: z.string().optional(),
   noOfBags: z.coerce.number().optional(),
   avgBagWeight: z.coerce.number().optional(),
   bagSize: z.string().optional(),
@@ -52,3 +54,11 @@ export const bagProductionSchema = z.object({
 });
 
 export type BagProductionData = z.infer<typeof bagProductionSchema>;
+
+export const consumedBySchema = z.object({
+    consumedBy: z.string().min(1, 'Consumer name is required'),
+    soNumber: z.string().optional(),
+    poNumber: z.string().optional(),
+});
+
+export type ConsumedByData = z.infer<typeof consumedBySchema>;

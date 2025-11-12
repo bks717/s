@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import LoomSheetForm from '@/components/loom-sheet-form';
 import AdminSection from '@/components/admin-section';
-import { LoomSheetData, BagProductionData } from '@/lib/schemas';
+import { LoomSheetData, BagProductionData, ConsumedByData } from '@/lib/schemas';
 import { loomDataStore as initialData } from '@/lib/data';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
@@ -23,11 +23,11 @@ export default function Home() {
     setAllData(prevData => [...prevData, ...newLoomData]);
   };
   
-  const handleMarkAsConsumed = (selectedIds: string[], consumedBy: string, bagData?: BagProductionData) => {
+  const handleMarkAsConsumed = (selectedIds: string[], consumptionData: ConsumedByData, bagData?: BagProductionData) => {
     setAllData(prevData =>
       prevData.map(item =>
         selectedIds.includes(item.id!)
-          ? { ...item, status: 'Consumed', consumedBy, ...(bagData || {}) }
+          ? { ...item, status: 'Consumed', ...consumptionData, ...(bagData || {}) }
           : item
       )
     );

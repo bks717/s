@@ -29,7 +29,7 @@ interface AdminSectionProps {
   onMarkAsConsumed: (selectedIds: string[], consumptionData: ConsumedByData, bagData?: BagProductionData) => void;
   onPartialConsume: (originalId: string, consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, bagData?: BagProductionData) => void;
   activeView: 'rolls' | 'bags';
-  onSendForLamination: (selectedIds: string[], callOut?: string) => void;
+  onSendForLamination: (rollsToUpdate: { id: string; callOut: string }[]) => void;
   onMarkAsReceived: (selectedIds: string[], newSerialNumber?: string, receivedSerialNumber?: string) => void;
   onReturnToStock: (selectedIds: string[]) => void;
   onCollaborateAndCreate: (selectedIds: string[], newRollData: LoomSheetData) => void;
@@ -207,31 +207,35 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     setIsPartialUseDialogVisible(false);
   };
 
-  const generateLaminationPdf = (selectedRolls: LoomSheetData[], callOut: string) => {
+  const generateLaminationPdf = (rollsToUpdate: { id: string; callOut: string }[]) => {
+    const selectedRolls = allData.filter(roll => rollsToUpdate.some(update => update.id === roll.id));
+    
     const doc = new jsPDF();
-    const tableColumns = ["S.NO", "Width", "Gram", "Meters", "Net Wt."];
-    const tableRows = selectedRolls.map(roll => [
-      roll.serialNumber,
-      roll.width,
-      roll.gram,
-      roll.mtrs,
-      roll.nw
-    ]);
+    const tableColumns = ["S.NO", "Width", "Gram", "Meters", "Net Wt.", "Call Out"];
+    const tableRows = selectedRolls.map(roll => {
+      const updateInfo = rollsToUpdate.find(update => update.id === roll.id);
+      return [
+        roll.serialNumber,
+        roll.width,
+        roll.gram,
+        roll.mtrs,
+        roll.nw,
+        updateInfo?.callOut || ''
+      ]
+    });
 
     doc.text("Lamination Dispatch Note", 14, 15);
     doc.setFontSize(12);
-    if(callOut) {
-      doc.text(`Call Out: ${callOut}`, 14, 22);
-    }
     
     (doc as any).autoTable({
-      startY: 30,
+      startY: 22,
       head: [tableColumns],
       body: tableRows,
     });
 
     doc.save(`lamination-dispatch-${new Date().toISOString().split('T')[0]}.pdf`);
   };
+
 
   const handleSendForLaminationClick = () => {
     if (selectedReadyForLaminationIds.length === 0) {
@@ -245,14 +249,13 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     setIsSendForLaminationDialogVisible(true);
   };
   
-  const handleConfirmSendForLamination = (callOut: string) => {
-    const selectedRollsData = allData.filter(d => selectedReadyForLaminationIds.includes(d.id!));
-    generateLaminationPdf(selectedRollsData, callOut);
+  const handleConfirmSendForLamination = (rollsToUpdate: { id: string; callOut: string }[]) => {
+    generateLaminationPdf(rollsToUpdate);
     
-    onSendForLamination(selectedReadyForLaminationIds, callOut);
+    onSendForLamination(rollsToUpdate);
     toast({
       title: 'Success',
-      description: `${selectedReadyForLaminationIds.length} rolls have been sent for lamination. PDF downloading.`,
+      description: `${rollsToUpdate.length} rolls have been sent for lamination. PDF downloading.`,
     });
     setSelectedReadyForLaminationIds([]);
     setIsSendForLaminationDialogVisible(false);
@@ -369,7 +372,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
         isOpen={isSendForLaminationDialogVisible}
         onClose={() => setIsSendForLaminationDialogVisible(false)}
         onConfirm={handleConfirmSendForLamination}
-        selectedCount={selectedReadyForLaminationIds.length}
+        selectedRolls={allData.filter(d => selectedReadyForLaminationIds.includes(d.id!))}
       />
       <section id="admin-dashboard">
         <div className="text-center mb-8">
@@ -548,4 +551,6 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
 }
 
     
+    
+
     

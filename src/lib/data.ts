@@ -1,8 +1,8 @@
+
 import type { LoomSheetData } from '@/lib/schemas';
 
 // This is a mock database. In a real application, you would use a database like Firestore.
 export const loomDataStore: LoomSheetData[] = [
-    // Active Stock
     {
         id: '1',
         serialNumber: 'A1',
@@ -19,7 +19,7 @@ export const loomDataStore: LoomSheetData[] = [
         nw: 540,
         average: 1080,
         variance: "UB: 19080.00 / LB: -16920.00",
-        status: 'Active Stock',
+        status: 'Ready for Lamination',
         productionDate: new Date('2023-10-26T00:00:00.000Z'),
     },
     {
@@ -38,28 +38,8 @@ export const loomDataStore: LoomSheetData[] = [
         nw: 520,
         average: 1083.33,
         variance: "UB: 20458.33 / LB: -18291.67",
-        status: 'Active Stock',
-        productionDate: new Date('2023-10-27T00:00:00.000Z'),
-    },
-    // Ready for Lamination
-    {
-        id: '3',
-        serialNumber: 'B1',
-        operatorName: 'a',
-        loomNo: 'L-10',
-        width: 160,
-        gram: 130,
-        fabricType: 'Slit',
-        color: 'Natural',
-        lamination: 'Unlammed',
-        mtrs: 600,
-        gw: 650,
-        cw: 12,
-        nw: 638,
-        average: 1063.33,
-        variance: "UB: 21863.33 / LB: -19736.67",
         status: 'Ready for Lamination',
-        productionDate: new Date('2023-10-28T00:00:00.000Z'),
+        productionDate: new Date('2023-10-27T00:00:00.000Z'),
     },
     {
         id: '3b',
@@ -77,7 +57,7 @@ export const loomDataStore: LoomSheetData[] = [
         nw: 648,
         average: 1062.30,
         variance: "UB: 21862.30 / LB: -19737.70",
-        status: 'Ready for Lamination',
+        status: 'Partially Consumed',
         productionDate: new Date('2023-10-29T00:00:00.000Z'),
     },
     // Sent for Lamination
@@ -119,7 +99,7 @@ export const loomDataStore: LoomSheetData[] = [
         status: 'Sent for Lamination',
         productionDate: new Date('2023-10-29T00:00:00.000Z'),
     },
-    // Received from Lamination
+    // Laminated
     {
         id: '5',
         serialNumber: 'D1-L',
@@ -136,7 +116,7 @@ export const loomDataStore: LoomSheetData[] = [
         nw: 750,
         average: 1071.43,
         variance: "UB: 24871.43 / LB: -22728.57",
-        status: 'Received from Lamination',
+        status: 'Laminated',
         productionDate: new Date('2023-10-30T00:00:00.000Z'),
         receivedSerialNumber: 'RCVD-D1',
     },
@@ -156,7 +136,7 @@ export const loomDataStore: LoomSheetData[] = [
         nw: 760,
         average: 1070.42,
         variance: "UB: 26445.42 / LB: -24304.58",
-        status: 'Received from Lamination',
+        status: 'Laminated',
         productionDate: new Date('2023-10-30T00:00:00.000Z'),
         receivedSerialNumber: 'RCVD-D2',
     },

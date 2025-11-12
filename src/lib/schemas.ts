@@ -1,6 +1,7 @@
+
 import { z } from 'zod';
 
-export const statuses = ['Active Stock', 'Partially Consumed', 'Ready for Lamination', 'Sent for Lamination', 'Received from Lamination', 'Consumed'] as const;
+export const statuses = ['Ready for Lamination', 'Sent for Lamination', 'Laminated', 'Partially Consumed', 'Consumed'] as const;
 export const fabricTypes = ['Slit', 'Tube'] as const;
 export const laminationTypes = ['Lam active', 'Unlammed'] as const;
 export const colors = ['Natural', 'Red', 'Blue', 'Green', 'Yellow', 'Orange', 'Black', 'White'] as const;
@@ -29,7 +30,7 @@ export const loomSheetSchema = z.object({
 
   // System and Status fields
   productionDate: z.date(),
-  status: z.enum(statuses).default('Active Stock'),
+  status: z.enum(statuses).default('Ready for Lamination'),
   consumedBy: z.string().optional(),
   soNumber: z.string().optional(),
   poNumber: z.string().optional(),

@@ -16,11 +16,11 @@ export default function Home() {
   const [allData, setAllData] = useState<LoomSheetData[]>(initialData);
 
   const handleAddData = (newData: LoomSheetData) => {
-    setAllData(prevData => [...prevData, { ...newData, id: (Date.now()).toString(), productionDate: new Date(), status: 'Active Stock' }]);
+    setAllData(prevData => [...prevData, { ...newData, id: (Date.now()).toString(), productionDate: new Date(), status: 'Ready for Lamination' }]);
   };
 
   const handleImportData = (importedData: LoomSheetData[]) => {
-    const newLoomData = importedData.map(d => ({ ...d, id: (Date.now() + Math.random()).toString(), productionDate: new Date(), status: d.status || 'Active Stock' }));
+    const newLoomData = importedData.map(d => ({ ...d, id: (Date.now() + Math.random()).toString(), productionDate: new Date(), status: d.status || 'Ready for Lamination' }));
     setAllData(prevData => [...prevData, ...newLoomData]);
   };
   
@@ -113,7 +113,7 @@ export default function Home() {
             receivedSerialNumber: receivedSerialNumber,
             productionDate: new Date(),
             lamination: 'Lam active',
-            status: 'Received from Lamination'
+            status: 'Laminated'
         };
 
         setAllData(prevData => {
@@ -132,17 +132,17 @@ export default function Home() {
      } else {
         setAllData(prevData => prevData.map(item => {
           if (selectedIds.includes(item.id!)) {
-            return { ...item, status: 'Received from Lamination' };
+            return { ...item, status: 'Laminated' };
           }
           return item;
         }));
      }
   };
 
-  const handleReturnToStock = (selectedIds: string[]) => {
+  const handleMarkAsLaminated = (selectedIds: string[]) => {
     setAllData(prevData => prevData.map(item => {
       if (selectedIds.includes(item.id!)) {
-        return { ...item, status: 'Active Stock' };
+        return { ...item, status: 'Laminated' };
       }
       return item;
     }));
@@ -157,7 +157,7 @@ export default function Home() {
       id: (Date.now()).toString(),
       productionDate: new Date(),
       lamination: 'Lam active',
-      status: newRollData.status || 'Received from Lamination',
+      status: newRollData.status || 'Laminated',
     };
     
     setAllData(prevData => {
@@ -216,7 +216,7 @@ export default function Home() {
             onPartialConsume={handlePartialConsume}
             onSendForLamination={handleSendForLamination}
             onMarkAsReceived={handleMarkAsReceived}
-            onReturnToStock={handleReturnToStock}
+            onMarkAsLaminated={handleMarkAsLaminated}
             onCollaborateAndCreate={handleCollaborateAndCreate}
             bagsProducedData={bagsProducedData}
           />
@@ -244,7 +244,7 @@ export default function Home() {
             onPartialConsume={handlePartialConsume}
             onSendForLamination={handleSendForLamination}
             onMarkAsReceived={handleMarkAsReceived}
-            onReturnToStock={handleReturnToStock}
+            onMarkAsLaminated={handleMarkAsLaminated}
             onCollaborateAndCreate={handleCollaborateAndCreate}
             bagsProducedData={bagsProducedData}
           />

@@ -31,7 +31,7 @@ interface AdminSectionProps {
   activeView: 'rolls' | 'bags';
   onSendForLamination: (rollsToUpdate: { id: string; callOut: string }[]) => void;
   onMarkAsReceived: (selectedIds: string[], newSerialNumber?: string, receivedSerialNumber?: string) => void;
-  onReturnToStock: (selectedIds: string[]) => void;
+  onMarkAsLaminated: (selectedIds: string[]) => void;
   onCollaborateAndCreate: (selectedIds: string[], newRollData: LoomSheetData) => void;
   bagsProducedData: LoomSheetData[];
 }
@@ -45,14 +45,14 @@ declare global {
   }
 }
 
-export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPartialConsume, activeView, onSendForLamination, onMarkAsReceived, onReturnToStock, onCollaborateAndCreate, bagsProducedData }: AdminSectionProps) {
+export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPartialConsume, activeView, onSendForLamination, onMarkAsReceived, onMarkAsLaminated, onCollaborateAndCreate, bagsProducedData }: AdminSectionProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentView, setCurrentView] = useState<View>('remaining');
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
   const [selectedReadyForLaminationIds, setSelectedReadyForLaminationIds] = useState<string[]>([]);
   const [selectedSentForLaminationIds, setSelectedSentForLaminationIds] = useState<string[]>([]);
-  const [selectedReceivedFromLaminationIds, setSelectedReceivedFromLaminationIds] = useState<string[]>([]);
+  const [selectedLaminatedIds, setSelectedLaminatedIds] = useState<string[]>([]);
   
   const [isConsumedDialogVisible, setIsConsumedDialogVisible] = useState(false);
   const [isPartialUseDialogVisible, setIsPartialUseDialogVisible] = useState(false);
@@ -65,7 +65,6 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   
   const remainingData = allData.filter(d => d.status !== 'Consumed');
   const consumedData = allData.filter(d => d.status === 'Consumed');
-  const workingRollsData = remainingData.filter(d => d.status === 'Active Stock' || d.status === 'Received from Lamination');
   
   const onSetSelectedRowIds = useCallback((ids: string[]) => {
     setSelectedRowIds(ids);
@@ -79,8 +78,8 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     setSelectedSentForLaminationIds(ids);
   }, []);
 
-  const onSetSelectedReceivedFromLaminationIds = useCallback((ids: string[]) => {
-    setSelectedReceivedFromLaminationIds(ids);
+  const onSetSelectedLaminatedIds = useCallback((ids: string[]) => {
+    setSelectedLaminatedIds(ids);
   }, []);
 
 
@@ -288,7 +287,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     onMarkAsReceived(selectedSentForLaminationIds, newSerialNumber, receivedSerialNumber);
     toast({
         title: 'Success',
-        description: `Roll processed and moved to 'Received from Lamination'.`,
+        description: `Roll processed and moved to 'Laminated'.`,
     });
     setSelectedSentForLaminationIds([]);
     setIsReceiveSentDialogVisible(false);
@@ -304,28 +303,28 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     setIsCollaborateSentDialogVisible(false);
   }
 
-  const handleReturnToStockClick = () => {
-    if (selectedReceivedFromLaminationIds.length === 0) {
+  const handleMarkAsLaminatedClick = () => {
+    if (selectedLaminatedIds.length === 0) {
        toast({
         variant: 'destructive',
         title: 'No Rows Selected',
-        description: 'Please select received rolls to return to stock.',
+        description: 'Please select laminated rolls to mark them.',
       });
       return;
     }
-    onReturnToStock(selectedReceivedFromLaminationIds);
+    onMarkAsLaminated(selectedLaminatedIds);
     toast({
       title: 'Success',
-      description: `${selectedReceivedFromLaminationIds.length} rolls returned to active stock.`,
+      description: `${selectedLaminatedIds.length} rolls marked as laminated.`,
     });
-    setSelectedReceivedFromLaminationIds([]);
+    setSelectedLaminatedIds([]);
   };
 
   const selectedRollForPartialUse = selectedRowIds.length === 1 ? allData.find(d => d.id === selectedRowIds[0]) : undefined;
   
   const readyForLaminationData = allData.filter(d => d.status === 'Ready for Lamination');
   const sentForLaminationData = allData.filter(d => d.status === 'Sent for Lamination');
-  const receivedFromLaminationData = allData.filter(d => d.status === 'Received from Lamination');
+  const laminatedData = allData.filter(d => d.status === 'Laminated');
   
   const filteredRemainingData = remainingData.filter(d => {
     const laminationMatch = laminationFilter === 'all' || (d.lamination === 'Lam active' ? 'true' : 'false') === laminationFilter;
@@ -333,8 +332,6 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     let statusMatch = false;
     if (statusFilter === 'all') {
       statusMatch = true;
-    } else if (statusFilter === 'Working Rolls') {
-      statusMatch = d.status === 'Active Stock' || d.status === 'Received from Lamination';
     } else {
       statusMatch = d.status === statusFilter;
     }
@@ -342,7 +339,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     return statusMatch && laminationMatch;
   });
 
-  const availableFilters = statuses.filter(s => s !== 'Consumed' && s !== 'Active Stock');
+  const availableFilters = statuses.filter(s => s !== 'Consumed');
 
   return (
     <>
@@ -394,7 +391,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
             <div className="flex justify-between items-center">
                 <div className="flex gap-2">
                   <Button variant={(currentView === 'remaining' && statusFilter === 'all') ? 'default' : 'outline'} onClick={() => { setCurrentView('remaining'); setStatusFilter('all')}}>
-                    My Stock ({remainingData.length})
+                    Inventory ({remainingData.length})
                   </Button>
                   {activeView === 'rolls' && (
                     <Button variant={currentView === 'laminate' ? 'default' : 'outline'} onClick={() => setCurrentView('laminate')}>
@@ -490,18 +487,18 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                   <Card className="shadow-lg">
                      <CardHeader className="flex flex-row justify-between items-center">
                       <div>
-                        <CardTitle>Rolls Received from Lamination</CardTitle>
+                        <CardTitle>Laminated Rolls</CardTitle>
                         <CardDescription>Process rolls that have been received from lamination.</CardDescription>
                       </div>
-                      <Button onClick={handleReturnToStockClick} disabled={selectedReceivedFromLaminationIds.length === 0}>
-                        <RefreshCw className="mr-2 h-4 w-4" /> Return to Stock
+                      <Button onClick={handleMarkAsLaminatedClick} disabled={selectedLaminatedIds.length === 0}>
+                        <RefreshCw className="mr-2 h-4 w-4" /> Mark as Laminated
                       </Button>
                     </CardHeader>
                     <CardContent>
                       <DataTable 
-                        data={receivedFromLaminationData}
-                        selectedRowIds={selectedReceivedFromLaminationIds}
-                        onSelectedRowIdsChange={onSetSelectedReceivedFromLaminationIds}
+                        data={laminatedData}
+                        selectedRowIds={selectedLaminatedIds}
+                        onSelectedRowIdsChange={onSetSelectedLaminatedIds}
                         showCheckboxes={true}
                       />
                     </CardContent>
@@ -512,9 +509,9 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                 <CardHeader className="flex flex-row justify-between items-center">
                   <div>
                     <CardTitle>
-                      {currentView === 'remaining' ? 'My Stock' : 'Consumed Rolls'}
+                      {currentView === 'remaining' ? 'Inventory' : 'Consumed Rolls'}
                     </CardTitle>
-                    <CardDescription>A log of all {currentView === 'remaining' ? 'stock' : 'consumed'} rolls. You can sort by clicking on column headers.</CardDescription>
+                    <CardDescription>A log of all {currentView === 'remaining' ? 'inventory' : 'consumed'} rolls. You can sort by clicking on column headers.</CardDescription>
                   </div>
                   {currentView === 'remaining' && (
                      <div className="flex gap-2">

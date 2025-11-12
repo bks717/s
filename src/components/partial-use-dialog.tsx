@@ -45,6 +45,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
   const gw = form.watch('gw');
   const cw = form.watch('cw');
   const gram = form.watch('gram');
+  const width = form.watch('width');
 
   useEffect(() => {
     if (isOpen) {
@@ -56,7 +57,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
         cw: 0,
         nw: 0,
         average: 0,
-        variance: 0,
+        variance: 'N/A',
         noOfBags: 0,
         avgBagWeight: 0,
         bagSize: '',
@@ -72,15 +73,19 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
       const avg = (net * 1000) / mtrs;
       form.setValue('average', parseFloat(avg.toFixed(2)));
 
-      if (gram > 0) {
-        const variance = avg - gram;
-        form.setValue('variance', parseFloat(variance.toFixed(2)));
+      if (gram > 0 && width > 0) {
+        const widthGram = width * gram;
+        const ub = avg + widthGram;
+        const lb = avg - widthGram;
+        form.setValue('variance', `UB: ${ub.toFixed(2)} / LB: ${lb.toFixed(2)}`);
+      } else {
+        form.setValue('variance', 'N/A');
       }
     } else {
       form.setValue('average', 0);
-       form.setValue('variance', 0);
+       form.setValue('variance', 'N/A');
     }
-  }, [mtrs, gw, cw, gram, form]);
+  }, [mtrs, gw, cw, gram, width, form]);
 
 
   const onSubmit = (data: PartialUseFormData) => {
@@ -240,8 +245,8 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
                         <FormControl><Input readOnly value={form.watch('average') || 0} /></FormControl>
                     </FormItem>
                      <FormItem>
-                        <FormLabel>Variance</FormLabel>
-                        <FormControl><Input readOnly value={form.watch('variance') || 0} className={cn(Math.abs(form.watch('variance') || 0) > 3 ? "text-destructive" : "")} /></FormControl>
+                        <FormLabel>Variance (UB/LB)</FormLabel>
+                        <FormControl><Input readOnly value={form.watch('variance') || 'N/A'} /></FormControl>
                     </FormItem>
                 </div>
 

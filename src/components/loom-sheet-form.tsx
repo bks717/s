@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import React, { useEffect } from "react";
 
-import { loomSheetSchema, type LoomSheetData, statuses, fabricTypes, laminationTypes, colors } from "@/lib/schemas";
+import { loomSheetSchema, type LoomSheetData, fabricTypes, laminationTypes, colors } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,7 +48,7 @@ export default function LoomSheetForm({
   const { toast } = useToast();
 
   const internalForm = useForm<Omit<LoomSheetData, 'id' | 'productionDate'>>({
-    resolver: zodResolver(loomSheetSchema.omit({ id: true, productionDate: true, status: true })),
+    resolver: zodResolver(loomSheetSchema.omit({ id: true, productionDate: true })),
     defaultValues: {
       serialNumber: "",
       operatorName: "",
@@ -61,6 +61,7 @@ export default function LoomSheetForm({
       mtrs: undefined,
       gw: undefined,
       cw: undefined,
+      status: 'Active Stock',
       ...defaultValues,
     },
   });
@@ -71,6 +72,8 @@ export default function LoomSheetForm({
   const gw = form.watch('gw');
   const cw = form.watch('cw');
   const gram = form.watch('gram');
+  const width = form.watch('width');
+  const average = form.watch('average');
 
   useEffect(() => {
     const net = (gw || 0) - (cw || 0);
@@ -80,21 +83,25 @@ export default function LoomSheetForm({
       const avg = (net * 1000) / mtrs;
       form.setValue('average', parseFloat(avg.toFixed(2)));
       
-      if(gram > 0) {
-        const variance = avg - gram;
-        form.setValue('variance', parseFloat(variance.toFixed(2)));
+      if(gram > 0 && width > 0) {
+        const widthGram = width * gram;
+        const ub = avg + widthGram;
+        const lb = avg - widthGram;
+        form.setValue('variance', `UB: ${ub.toFixed(2)} / LB: ${lb.toFixed(2)}`);
+      } else {
+        form.setValue('variance', 'N/A');
       }
 
     } else {
       form.setValue('average', 0);
-      form.setValue('variance', 0);
+      form.setValue('variance', 'N/A');
     }
-  }, [mtrs, gw, cw, gram, form]);
+  }, [mtrs, gw, cw, gram, width, form]);
 
 
   const handleLocalSubmit = async (data: Omit<LoomSheetData, 'id' | 'productionDate'>) => {
     if (onFormSubmit) {
-      onFormSubmit({...data, status: 'Active Stock'});
+      onFormSubmit(data);
     }
 
     if (!formContext) { 
@@ -363,9 +370,9 @@ export default function LoomSheetForm({
                 </FormControl>
             </FormItem>
             <FormItem>
-                <FormLabel>Variance (+- 3g)</FormLabel>
+                <FormLabel>Variance (UB/LB)</FormLabel>
                 <FormControl>
-                <Input type="number" readOnly value={form.watch('variance') || 0} className={cn("font-bold bg-background", Math.abs(form.watch('variance') || 0) > 3 ? "text-destructive" : "text-primary")} />
+                <Input readOnly value={form.watch('variance') || 'N/A'} className={cn("font-bold bg-background text-primary")} />
                 </FormControl>
             </FormItem>
         </CardContent>

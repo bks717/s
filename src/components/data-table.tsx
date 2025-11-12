@@ -48,7 +48,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
     { key: 'cw', label: 'Core' },
     { key: 'nw', label: 'Net' },
     { key: 'average', label: 'Average' },
-    { key: 'variance', label: 'Variance', className: 'w-20' },
+    { key: 'variance', label: 'Variance (UB/LB)', className: 'w-48' },
   ];
   
   let columns = [...baseColumns];
@@ -168,9 +168,8 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
               <TableRow key={item.id} data-state={selectedRowIds.includes(item.id!) && "selected"}>
                 {visibleColumns.map(col => (
                     <TableCell key={`${item.id}-${col.key}`} className={cn("p-1 text-[10px] whitespace-nowrap", {
-                      "whitespace-pre-line": ['consumedBy', 'callOut'].includes(col.key),
-                      "font-bold": ['nw', 'average', 'variance'].includes(col.key),
-                      "text-destructive": col.key === 'variance' && item.variance && Math.abs(item.variance) > 3,
+                      "whitespace-pre-line": ['consumedBy', 'callOut', 'variance'].includes(col.key),
+                      "font-bold": ['nw', 'average'].includes(col.key),
                     })}>
                         {col.key === 'select' ? (
                           <div className="flex items-center justify-center">

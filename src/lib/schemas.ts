@@ -25,7 +25,7 @@ export const loomSheetSchema = z.object({
   cw: z.coerce.number().positive('Core Weight must be positive'),
   nw: z.coerce.number().optional(), // Auto-calculated
   average: z.coerce.number().optional(), // Auto-calculated
-  variance: z.coerce.number().optional(), // Auto-calculated
+  variance: z.string().optional(), // Auto-calculated as string "UB: val / LB: val"
 
   // System and Status fields
   productionDate: z.date(),

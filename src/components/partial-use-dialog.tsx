@@ -24,13 +24,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 interface PartialUseDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string, bagData?: BagProductionData) => void;
+  onConfirm: (consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, bagData?: BagProductionData) => void;
   originalRoll: LoomSheetData;
   activeView: 'rolls' | 'bags';
 }
 
 const partialUseSchema = loomSheetSchema.omit({id: true, productionDate: true, serialNumber: true}).extend({
     consumedBy: z.string().min(1, 'Consumer name is required'),
+    soNumber: z.string().optional(),
+    poNumber: z.string().optional(),
 });
 
 type PartialUseFormData = z.infer<typeof partialUseSchema>;
@@ -52,6 +54,8 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
       form.reset({
         ...originalRoll,
         consumedBy: '',
+        soNumber: '',
+        poNumber: '',
         mtrs: 0,
         gw: 0,
         cw: 0,
@@ -89,7 +93,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
 
 
   const onSubmit = (data: PartialUseFormData) => {
-    const { consumedBy, noOfBags, avgBagWeight, bagSize, ...consumedPart } = data;
+    const { noOfBags, avgBagWeight, bagSize, ...consumedPart } = data;
     
     if(consumedPart.mtrs > originalRoll.mtrs) {
         form.setError('mtrs', { type: 'manual', message: `Cannot consume more than available (${originalRoll.mtrs}).` });
@@ -107,9 +111,9 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
     const finalConsumedPart = { ...consumedPart, serialNumber: originalRoll.serialNumber };
 
     if (activeView === 'bags') {
-        onConfirm(finalConsumedPart, consumedBy, { noOfBags, avgBagWeight, bagSize });
+        onConfirm(finalConsumedPart, { noOfBags, avgBagWeight, bagSize });
     } else {
-        onConfirm(finalConsumedPart, consumedBy);
+        onConfirm(finalConsumedPart);
     }
   };
   
@@ -126,7 +130,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <ScrollArea className="h-[60vh] p-4">
               <div className="space-y-8">
-                 <div className="grid md:grid-cols-2 gap-8">
+                 <div className="grid md:grid-cols-3 gap-8">
                     <FormField
                         control={form.control}
                         name="consumedBy"
@@ -135,6 +139,32 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
                             <FormLabel>Consumed By</FormLabel>
                             <FormControl>
                             <Input placeholder="e.g., Customer Name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="soNumber"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>S/O Number</FormLabel>
+                            <FormControl>
+                            <Input placeholder="S/O Number" {...field} value={field.value ?? ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="poNumber"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>P/O Number</FormLabel>
+                            <FormControl>
+                            <Input placeholder="P/O Number" {...field} value={field.value ?? ''} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>

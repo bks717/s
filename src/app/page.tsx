@@ -33,7 +33,7 @@ export default function Home() {
     );
   };
 
-  const handlePartialConsume = (originalId: string, consumedPartData: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string, bagData?: BagProductionData) => {
+  const handlePartialConsume = (originalId: string, consumedPartData: Omit<LoomSheetData, 'id' | 'productionDate'>, bagData?: BagProductionData) => {
     const originalRoll = allData.find(item => item.id === originalId);
     if (!originalRoll) return;
 
@@ -42,7 +42,6 @@ export default function Home() {
       id: (Date.now() + Math.random()).toString(),
       productionDate: new Date(),
       status: 'Consumed',
-      consumedBy: `Partial Use: ${consumedBy}`,
       ...(bagData || {})
     };
     

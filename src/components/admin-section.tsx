@@ -25,7 +25,7 @@ interface AdminSectionProps {
   allData: LoomSheetData[];
   onImport: (data: LoomSheetData[]) => void;
   onMarkAsConsumed: (selectedIds: string[], consumptionData: ConsumedByData, bagData?: BagProductionData) => void;
-  onPartialConsume: (originalId: string, consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string, bagData?: BagProductionData) => void;
+  onPartialConsume: (originalId: string, consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, bagData?: BagProductionData) => void;
   activeView: 'rolls' | 'bags';
   onSendForLamination: (selectedIds: string[], callOut?: string) => void;
   onMarkAsReceived: (selectedIds: string[], newSerialNumber?: string, receivedSerialNumber?: string) => void;
@@ -187,12 +187,12 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     setIsPartialUseDialogVisible(true);
   };
 
-  const handleConfirmPartialUse = (consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string, bagData?: BagProductionData) => {
+  const handleConfirmPartialUse = (consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, bagData?: BagProductionData) => {
     const originalId = selectedRowIds[0];
-    onPartialConsume(originalId, consumedPart, consumedBy, bagData);
+    onPartialConsume(originalId, consumedPart, bagData);
      toast({
       title: 'Success',
-      description: `Roll partially consumed by ${consumedBy}. Remaining roll updated.`,
+      description: `Roll partially consumed by ${consumedPart.consumedBy}. Remaining roll updated.`,
     });
     setSelectedRowIds([]);
     setIsPartialUseDialogVisible(false);

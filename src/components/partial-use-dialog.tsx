@@ -121,7 +121,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Partial Use of S.NO: {originalRoll.serialNumber}</DialogTitle>
+          <DialogTitle>Partial Use of Roll No: {originalRoll.serialNumber}</DialogTitle>
           <DialogDescription>
             Enter the values for the portion of the roll being consumed. The original roll will be updated.
           </DialogDescription>

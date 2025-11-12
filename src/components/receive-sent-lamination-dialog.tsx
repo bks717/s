@@ -42,32 +42,32 @@ export function ReceiveSentLaminationDialog({ isOpen, onClose, onConfirm, select
         <DialogHeader>
           <DialogTitle>Receive Laminated Roll</DialogTitle>
           <DialogDescription>
-            Selected Roll S/N: {selectedRoll?.serialNumber}. Enter the new serial numbers for the received roll.
+            Selected Roll No: {selectedRoll?.serialNumber}. Enter the new serial numbers for the received roll.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="receivedSerialNumber" className="text-right">
-              Received S.No
+              Received Roll No
             </Label>
             <Input
               id="receivedSerialNumber"
               value={receivedSerialNumber}
               onChange={(e) => setReceivedSerialNumber(e.target.value)}
               className="col-span-3"
-              placeholder="Enter received S/N"
+              placeholder="Enter received Roll No"
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="newSerialNumber" className="text-right">
-              New S.No
+              New Roll No
             </Label>
             <Input
               id="newSerialNumber"
               value={newSerialNumber}
               onChange={(e) => setNewSerialNumber(e.target.value)}
               className="col-span-3"
-              placeholder="Enter new S/N"
+              placeholder="Enter new Roll No"
             />
           </div>
         </div>

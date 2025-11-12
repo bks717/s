@@ -34,7 +34,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
 
   const baseColumns: { key: keyof LoomSheetData | 'select', label: string, className?: string }[] = [
     { key: 'productionDate', label: 'Prod. Date' },
-    { key: 'serialNumber', label: 'S.NO' },
+    { key: 'serialNumber', label: 'Roll No' },
     { key: 'operatorName', label: 'Operator' },
     { key: 'loomNo', label: 'Loom No.' },
     { key: 'width', label: 'Width' },
@@ -63,7 +63,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
     columns.push({ key: 'bagSize', label: 'Bag Size'});
   } else {
     columns.push({ key: 'consumedBy', label: 'Consumed By'});
-    columns.push({ key: 'receivedSerialNumber', label: 'Received S.No'});
+    columns.push({ key: 'receivedSerialNumber', label: 'Received Roll No'});
   }
   
   columns.push({ key: 'callOut', label: 'Call Out'});

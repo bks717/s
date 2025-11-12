@@ -211,7 +211,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     const selectedRolls = allData.filter(roll => rollsToUpdate.some(update => update.id === roll.id));
     
     const doc = new jsPDF();
-    const tableColumns = ["S.NO", "Width", "Gram", "Meters", "Net Wt.", "Call Out"];
+    const tableColumns = ["Roll No", "Width", "Gram", "Meters", "Net Wt.", "Call Out"];
     const tableRows = selectedRolls.map(roll => {
       const updateInfo = rollsToUpdate.find(update => update.id === roll.id);
       return [
@@ -549,8 +549,3 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     </>
   );
 }
-
-    
-    
-
-    

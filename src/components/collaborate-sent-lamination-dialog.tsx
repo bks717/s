@@ -27,7 +27,7 @@ interface CollaborateSentLaminationDialogProps {
 }
 
 const collaborateSchema = loomSheetSchema.omit({ id: true, productionDate: true, serialNumber: true, status: true }).extend({
-    newSerialNumber: z.string().min(1, 'New S.NO is required.'),
+    newSerialNumber: z.string().min(1, 'New Roll No is required.'),
     receivedSerialNumber: z.string().optional(),
 });
 
@@ -101,9 +101,9 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
                   name="receivedSerialNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Received S.NO</FormLabel>
+                      <FormLabel>Received Roll No</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter received S.NO" {...field} />
+                        <Input placeholder="Enter received Roll No" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -114,9 +114,9 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
                   name="newSerialNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>New S.NO</FormLabel>
+                      <FormLabel>New Roll No</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter new S.NO" {...field} />
+                        <Input placeholder="Enter new Roll No" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

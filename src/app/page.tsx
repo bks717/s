@@ -100,7 +100,7 @@ export default function Home() {
                     return { 
                         ...item, 
                         status: 'Consumed', 
-                        consumedBy: `Lam:\nNew S.No. ${newSerialNumber}\nReceived S.No: ${receivedSerialNumber}` 
+                        consumedBy: `Lam:\nNew Roll No. ${newSerialNumber}\nReceived Roll No: ${receivedSerialNumber}` 
                     };
                 }
                 return item;
@@ -231,5 +231,3 @@ export default function Home() {
     </main>
   );
 }
-
-    

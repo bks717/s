@@ -64,7 +64,7 @@ export function SendForLaminationDialog({ isOpen, onClose, onConfirm, selectedRo
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>S.NO</TableHead>
+                <TableHead>Roll No</TableHead>
                 <TableHead>Width</TableHead>
                 <TableHead>Gram</TableHead>
                 <TableHead className="w-[50%]">Call Out</TableHead>
@@ -98,5 +98,3 @@ export function SendForLaminationDialog({ isOpen, onClose, onConfirm, selectedRo
     </Dialog>
   );
 }
-
-    

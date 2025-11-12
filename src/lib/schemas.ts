@@ -7,7 +7,7 @@ export const colors = ['Natural', 'Red', 'Blue', 'Green', 'Yellow', 'Orange', 'B
 
 export const loomSheetSchema = z.object({
   id: z.string().optional(),
-  serialNumber: z.string().min(1, 'S.NO is required'),
+  serialNumber: z.string().min(1, 'Roll No is required'),
   operatorName: z.string().min(1, 'Operator Name is required'),
   loomNo: z.string().optional(),
   

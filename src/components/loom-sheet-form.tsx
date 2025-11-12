@@ -61,7 +61,6 @@ export default function LoomSheetForm({
       mtrs: undefined,
       gw: undefined,
       cw: undefined,
-      status: 'Active Stock',
       ...defaultValues,
     },
   });
@@ -83,7 +82,7 @@ export default function LoomSheetForm({
       const avg = (net * 1000) / mtrs;
       form.setValue('average', parseFloat(avg.toFixed(2)));
       
-      if(gram > 0 && width > 0) {
+       if(gram > 0 && width > 0) {
         const widthGram = width * gram;
         const ub = avg + widthGram;
         const lb = avg - widthGram;
@@ -263,34 +262,6 @@ export default function LoomSheetForm({
                     ))}
                   </SelectContent>
                 </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-        {shouldShow('lamination') && (
-          <FormField
-            control={form.control}
-            name="lamination"
-            render={({ field }) => (
-              <FormItem className="space-y-3">
-                <FormLabel>Lamination</FormLabel>
-                 <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    className="flex items-center space-x-4"
-                  >
-                    {laminationTypes.map((type) => (
-                      <FormItem key={type} className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value={type} id={`radio-lamination-${type}`} />
-                        </FormControl>
-                        <Label htmlFor={`radio-lamination-${type}`} className="font-normal cursor-pointer">{type}</Label>
-                      </FormItem>
-                    ))}
-                  </RadioGroup>
-                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

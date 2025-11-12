@@ -15,7 +15,7 @@ export default function Home() {
   const [allData, setAllData] = useState<LoomSheetData[]>(initialData);
 
   const handleAddData = (newData: LoomSheetData) => {
-    setAllData(prevData => [...prevData, { ...newData, id: (Date.now()).toString(), productionDate: new Date() }]);
+    setAllData(prevData => [...prevData, { ...newData, id: (Date.now()).toString(), productionDate: new Date(), status: 'Active Stock' }]);
   };
 
   const handleImportData = (importedData: LoomSheetData[]) => {
@@ -72,7 +72,7 @@ export default function Home() {
   const handleSendForLamination = (selectedIds: string[]) => {
     setAllData(prevData => prevData.map(item => {
       if (selectedIds.includes(item.id!)) {
-        return { ...item, status: 'Sent for Lamination' };
+        return { ...item, status: 'Ready for Lamination' };
       }
       return item;
     }));
@@ -135,7 +135,7 @@ export default function Home() {
       id: (Date.now()).toString(),
       productionDate: new Date(),
       lamination: 'Lam active',
-      status: newRollData.status || 'Active Stock',
+      status: newRollData.status || 'Received from Lamination',
     };
     
     setAllData(prevData => {

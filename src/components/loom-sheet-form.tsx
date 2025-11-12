@@ -48,7 +48,7 @@ export default function LoomSheetForm({
   const { toast } = useToast();
 
   const internalForm = useForm<Omit<LoomSheetData, 'id' | 'productionDate'>>({
-    resolver: zodResolver(loomSheetSchema.omit({ id: true, productionDate: true })),
+    resolver: zodResolver(loomSheetSchema.omit({ id: true, productionDate: true, status: true })),
     defaultValues: {
       serialNumber: "",
       operatorName: "",
@@ -61,7 +61,6 @@ export default function LoomSheetForm({
       mtrs: undefined,
       gw: undefined,
       cw: undefined,
-      status: "Active Stock",
       ...defaultValues,
     },
   });
@@ -95,7 +94,7 @@ export default function LoomSheetForm({
 
   const handleLocalSubmit = async (data: Omit<LoomSheetData, 'id' | 'productionDate'>) => {
     if (onFormSubmit) {
-      onFormSubmit(data);
+      onFormSubmit({...data, status: 'Active Stock'});
     }
 
     if (!formContext) { 
@@ -371,35 +370,6 @@ export default function LoomSheetForm({
             </FormItem>
         </CardContent>
       </Card>
-      
-      {shouldShow('status') && (
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem className="space-y-3">
-                <FormLabel>Status</FormLabel>
-                <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    className="flex flex-wrap items-center gap-x-6 gap-y-2"
-                  >
-                    {statuses.filter(s => s !== 'Consumed').map((status) => (
-                      <FormItem key={status} className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value={status} id={`radio-status-${status}`} />
-                        </FormControl>
-                        <Label htmlFor={`radio-status-${status}`} className="font-normal cursor-pointer">{status}</Label>
-                      </FormItem>
-                    ))}
-                  </RadioGroup>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
     </div>
   );
 

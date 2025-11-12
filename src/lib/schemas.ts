@@ -29,7 +29,7 @@ export const loomSheetSchema = z.object({
 
   // System and Status fields
   productionDate: z.date(),
-  status: z.enum(statuses),
+  status: z.enum(statuses).default('Active Stock'),
   consumedBy: z.string().optional(),
   noOfBags: z.coerce.number().optional(),
   avgBagWeight: z.coerce.number().optional(),

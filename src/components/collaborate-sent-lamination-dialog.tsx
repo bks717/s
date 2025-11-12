@@ -26,7 +26,7 @@ interface CollaborateSentLaminationDialogProps {
   onConfirm: (newRollData: LoomSheetData) => void;
 }
 
-const collaborateSchema = loomSheetSchema.omit({ id: true, productionDate: true, serialNumber: true }).extend({
+const collaborateSchema = loomSheetSchema.omit({ id: true, productionDate: true, serialNumber: true, status: true }).extend({
     newSerialNumber: z.string().min(1, 'New S.NO is required.'),
     receivedSerialNumber: z.string().optional(),
 });
@@ -40,7 +40,6 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
     resolver: zodResolver(collaborateSchema),
     defaultValues: {
       lamination: 'Lam active',
-      status: 'Received from Lamination',
       newSerialNumber: '',
       receivedSerialNumber: '',
     },
@@ -50,7 +49,6 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
     if (isOpen) {
       form.reset({
         lamination: 'Lam active',
-        status: 'Received from Lamination',
         newSerialNumber: '',
         receivedSerialNumber: '',
         operatorName: '',
@@ -68,11 +66,12 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
 
   const onSubmit = (data: CollaborateFormData) => {
     const { newSerialNumber, ...rest } = data;
-    const finalData = {
+    const finalData: LoomSheetData = {
         ...rest,
         serialNumber: newSerialNumber,
         productionDate: new Date(),
         id: Date.now().toString(),
+        status: 'Received from Lamination', 
     };
     onConfirm(finalData);
   }

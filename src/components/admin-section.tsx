@@ -342,7 +342,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     return statusMatch && laminationMatch;
   });
 
-  const availableFilters = statuses.filter(s => s !== 'Consumed');
+  const availableFilters = statuses.filter(s => s !== 'Consumed' && s !== 'Active Stock');
 
   return (
     <>
@@ -417,9 +417,6 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
             </div>
             {currentView === 'remaining' && (
               <div className="flex justify-start items-center gap-4 pt-2">
-                 <Button variant={(currentView === 'remaining' && statusFilter === 'Working Rolls') ? 'default' : 'outline'} onClick={() => { setCurrentView('remaining'); setStatusFilter('Working Rolls')}}>
-                    Working Rolls ({workingRollsData.length})
-                  </Button>
                 <div className="flex items-center gap-2">
                   <Label htmlFor="status-filter">Status</Label>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -428,7 +425,6 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="Working Rolls">Working Rolls</SelectItem>
                       {availableFilters.map(status => (
                         <SelectItem key={status} value={status}>{status}</SelectItem>
                       ))}

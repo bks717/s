@@ -532,6 +532,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                     onSelectedRowIdsChange={onSetSelectedRowIds}
                     showCheckboxes={currentView === 'remaining'}
                     view={currentView}
+                    activeView={activeView}
                   />
                 </CardContent>
               </Card>

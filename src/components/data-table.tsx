@@ -22,6 +22,7 @@ interface DataTableProps {
   onSelectedRowIdsChange: (ids: string[]) => void;
   showCheckboxes?: boolean;
   view?: 'remaining' | 'consumed';
+  activeView?: 'rolls' | 'bags';
 }
 
 type SortConfig = {
@@ -29,7 +30,7 @@ type SortConfig = {
   direction: 'ascending' | 'descending';
 };
 
-export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCheckboxes = false, view = 'remaining' }: DataTableProps) {
+export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCheckboxes = false, view = 'remaining', activeView = 'rolls' }: DataTableProps) {
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'productionDate', direction: 'descending' });
 
   const baseColumns: { key: keyof LoomSheetData | 'select', label: string, className?: string }[] = [
@@ -122,17 +123,24 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
     if (view === 'consumed') {
         const consumedHidden: (keyof LoomSheetData | 'select')[] = ['lamination', 'receivedSerialNumber', 'status'];
         if (data.every(d => !d.callOut)) consumedHidden.push('callOut');
+        
+        if (activeView === 'rolls') {
+          consumedHidden.push('noOfBags', 'avgBagWeight', 'bagSize');
+        }
+
         return !consumedHidden.includes(col.key);
     }
     
     if (view === 'remaining') {
          const remainingHidden: (keyof LoomSheetData | 'select')[] = [
+            'consumedBy',
             'noOfBags', 
             'avgBagWeight', 
             'bagSize',
             'soNumber',
             'poNumber'
          ];
+         if (data.every(d => !d.callOut)) remainingHidden.push('callOut');
          return !remainingHidden.includes(col.key);
     }
     

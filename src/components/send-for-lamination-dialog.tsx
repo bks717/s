@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { LoomSheetData } from '@/lib/schemas';
 import { ScrollArea } from './ui/scroll-area';
 import {
@@ -20,6 +19,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
+import { format } from 'date-fns';
 
 interface SendForLaminationDialogProps {
   isOpen: boolean;
@@ -53,7 +53,7 @@ export function SendForLaminationDialog({ isOpen, onClose, onConfirm, selectedRo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent className="sm:max-w-7xl">
         <DialogHeader>
           <DialogTitle>Send for Lamination</DialogTitle>
           <DialogDescription>
@@ -64,18 +64,30 @@ export function SendForLaminationDialog({ isOpen, onClose, onConfirm, selectedRo
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Sl.No</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Size S</TableHead>
                 <TableHead>Roll No</TableHead>
-                <TableHead>Width</TableHead>
-                <TableHead>Gram</TableHead>
-                <TableHead className="w-[50%]">Call Out</TableHead>
+                <TableHead>Meters</TableHead>
+                <TableHead>Gross Weight</TableHead>
+                <TableHead>Core Weight</TableHead>
+                <TableHead>Net Weight</TableHead>
+                <TableHead>Avg</TableHead>
+                <TableHead className="w-[30%]">Call Out</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {selectedRolls.map(roll => (
+              {selectedRolls.map((roll, index) => (
                 <TableRow key={roll.id}>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{roll.productionDate ? format(new Date(roll.productionDate), 'PP') : ''}</TableCell>
+                  <TableCell>{`${roll.width || ''}" ${roll.gram || ''} Gms ${roll.color || ''}`}</TableCell>
                   <TableCell>{roll.serialNumber}</TableCell>
-                  <TableCell>{roll.width}</TableCell>
-                  <TableCell>{roll.gram}</TableCell>
+                  <TableCell>{roll.mtrs}</TableCell>
+                  <TableCell>{roll.gw}</TableCell>
+                  <TableCell>{roll.cw}</TableCell>
+                  <TableCell>{roll.nw}</TableCell>
+                  <TableCell>{roll.average}</TableCell>
                   <TableCell>
                     <Textarea
                       id={`callOut-${roll.id}`}

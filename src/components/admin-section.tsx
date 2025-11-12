@@ -211,15 +211,19 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     const selectedRolls = allData.filter(roll => rollsToUpdate.some(update => update.id === roll.id));
     
     const doc = new jsPDF();
-    const tableColumns = ["Roll No", "Width", "Gram", "Meters", "Net Wt.", "Call Out"];
-    const tableRows = selectedRolls.map(roll => {
+    const tableColumns = ["Sl.No", "Date", "Size S", "Roll No", "Meters", "Gross Weight", "Core Weight", "Net Weight", "Avg", "Call Out"];
+    const tableRows = selectedRolls.map((roll, index) => {
       const updateInfo = rollsToUpdate.find(update => update.id === roll.id);
       return [
+        index + 1,
+        roll.productionDate ? new Date(roll.productionDate).toLocaleDateString() : '',
+        `${roll.width || ''}" ${roll.gram || ''} Gms ${roll.color || ''}`,
         roll.serialNumber,
-        roll.width,
-        roll.gram,
         roll.mtrs,
+        roll.gw,
+        roll.cw,
         roll.nw,
+        roll.average,
         updateInfo?.callOut || ''
       ]
     });
@@ -231,6 +235,8 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
       startY: 22,
       head: [tableColumns],
       body: tableRows,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [38, 117, 196] },
     });
 
     doc.save(`lamination-dispatch-${new Date().toISOString().split('T')[0]}.pdf`);

@@ -19,6 +19,8 @@ import { Label } from './ui/label';
 import { ReceiveSentLaminationDialog } from './receive-sent-lamination-dialog';
 import { CollaborateSentLaminationDialog } from './collaborate-sent-lamination-dialog';
 import { SendForLaminationDialog } from './send-for-lamination-dialog';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 
 interface AdminSectionProps {
@@ -35,6 +37,13 @@ interface AdminSectionProps {
 }
 
 type View = 'remaining' | 'consumed' | 'laminate';
+
+// Extend the window interface for jsPDF
+declare global {
+  interface Window {
+    jsPDF: typeof jsPDF;
+  }
+}
 
 export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPartialConsume, activeView, onSendForLamination, onMarkAsReceived, onReturnToStock, onCollaborateAndCreate, bagsProducedData }: AdminSectionProps) {
   const { toast } = useToast();
@@ -198,6 +207,32 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     setIsPartialUseDialogVisible(false);
   };
 
+  const generateLaminationPdf = (selectedRolls: LoomSheetData[], callOut: string) => {
+    const doc = new jsPDF();
+    const tableColumns = ["S.NO", "Width", "Gram", "Meters", "Net Wt."];
+    const tableRows = selectedRolls.map(roll => [
+      roll.serialNumber,
+      roll.width,
+      roll.gram,
+      roll.mtrs,
+      roll.nw
+    ]);
+
+    doc.text("Lamination Dispatch Note", 14, 15);
+    doc.setFontSize(12);
+    if(callOut) {
+      doc.text(`Call Out: ${callOut}`, 14, 22);
+    }
+    
+    (doc as any).autoTable({
+      startY: 30,
+      head: [tableColumns],
+      body: tableRows,
+    });
+
+    doc.save(`lamination-dispatch-${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   const handleSendForLaminationClick = () => {
     if (selectedReadyForLaminationIds.length === 0) {
       toast({
@@ -211,10 +246,13 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   };
   
   const handleConfirmSendForLamination = (callOut: string) => {
+    const selectedRollsData = allData.filter(d => selectedReadyForLaminationIds.includes(d.id!));
+    generateLaminationPdf(selectedRollsData, callOut);
+    
     onSendForLamination(selectedReadyForLaminationIds, callOut);
     toast({
       title: 'Success',
-      description: `${selectedReadyForLaminationIds.length} rolls have been sent for lamination.`,
+      description: `${selectedReadyForLaminationIds.length} rolls have been sent for lamination. PDF downloading.`,
     });
     setSelectedReadyForLaminationIds([]);
     setIsSendForLaminationDialogVisible(false);

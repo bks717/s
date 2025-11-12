@@ -64,6 +64,8 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
     columns.push({ key: 'consumedBy', label: 'Consumed By'});
     columns.push({ key: 'receivedSerialNumber', label: 'Received S.No'});
   }
+  
+  columns.push({ key: 'callOut', label: 'Call Out'});
 
   if (showCheckboxes) {
     columns.unshift({ key: 'select', label: 'Select' });
@@ -128,6 +130,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
     }
     if (view === 'remaining') {
         const remainingHidden: (keyof LoomSheetData | 'select')[] = ['noOfBags', 'avgBagWeight', 'bagSize', 'soNumber', 'poNumber'];
+         if (data.every(d => !d.callOut)) remainingHidden.push('callOut');
          return !remainingHidden.includes(col.key);
     }
     return true;
@@ -165,7 +168,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
               <TableRow key={item.id} data-state={selectedRowIds.includes(item.id!) && "selected"}>
                 {visibleColumns.map(col => (
                     <TableCell key={`${item.id}-${col.key}`} className={cn("p-1 text-[10px] whitespace-nowrap", {
-                      "whitespace-pre-line": col.key === 'consumedBy',
+                      "whitespace-pre-line": ['consumedBy', 'callOut'].includes(col.key),
                       "font-bold": ['nw', 'average', 'variance'].includes(col.key),
                       "text-destructive": col.key === 'variance' && item.variance && Math.abs(item.variance) > 3,
                     })}>

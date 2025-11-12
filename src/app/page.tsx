@@ -69,10 +69,10 @@ export default function Home() {
     });
   };
 
-  const handleSendForLamination = (selectedIds: string[]) => {
+  const handleSendForLamination = (selectedIds: string[], callOut?: string) => {
     setAllData(prevData => prevData.map(item => {
       if (selectedIds.includes(item.id!)) {
-        return { ...item, status: 'Ready for Lamination' };
+        return { ...item, status: 'Sent for Lamination', callOut };
       }
       return item;
     }));

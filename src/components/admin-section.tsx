@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Label } from './ui/label';
 import { ReceiveSentLaminationDialog } from './receive-sent-lamination-dialog';
 import { CollaborateSentLaminationDialog } from './collaborate-sent-lamination-dialog';
+import { SendForLaminationDialog } from './send-for-lamination-dialog';
 
 
 interface AdminSectionProps {
@@ -26,7 +27,7 @@ interface AdminSectionProps {
   onMarkAsConsumed: (selectedIds: string[], consumptionData: ConsumedByData, bagData?: BagProductionData) => void;
   onPartialConsume: (originalId: string, consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, consumedBy: string, bagData?: BagProductionData) => void;
   activeView: 'rolls' | 'bags';
-  onSendForLamination: (selectedIds: string[]) => void;
+  onSendForLamination: (selectedIds: string[], callOut?: string) => void;
   onMarkAsReceived: (selectedIds: string[], newSerialNumber?: string, receivedSerialNumber?: string) => void;
   onReturnToStock: (selectedIds: string[]) => void;
   onCollaborateAndCreate: (selectedIds: string[], newRollData: LoomSheetData) => void;
@@ -48,6 +49,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   const [isPartialUseDialogVisible, setIsPartialUseDialogVisible] = useState(false);
   const [isReceiveSentDialogVisible, setIsReceiveSentDialogVisible] = useState(false);
   const [isCollaborateSentDialogVisible, setIsCollaborateSentDialogVisible] = useState(false);
+  const [isSendForLaminationDialogVisible, setIsSendForLaminationDialogVisible] = useState(false);
   
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [laminationFilter, setLaminationFilter] = useState<'all' | 'true' | 'false'>('all');
@@ -205,13 +207,19 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
       });
       return;
     }
-    onSendForLamination(selectedReadyForLaminationIds);
+    setIsSendForLaminationDialogVisible(true);
+  };
+  
+  const handleConfirmSendForLamination = (callOut: string) => {
+    onSendForLamination(selectedReadyForLaminationIds, callOut);
     toast({
       title: 'Success',
       description: `${selectedReadyForLaminationIds.length} rolls have been sent for lamination.`,
     });
     setSelectedReadyForLaminationIds([]);
+    setIsSendForLaminationDialogVisible(false);
   };
+
 
   const handleMarkAsReceivedClick = () => {
     if (selectedSentForLaminationIds.length === 0) {
@@ -318,6 +326,12 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
         onClose={() => setIsCollaborateSentDialogVisible(false)}
         selectedRolls={allData.filter(d => selectedSentForLaminationIds.includes(d.id!))}
         onConfirm={handleConfirmCollaborateSent}
+      />
+       <SendForLaminationDialog
+        isOpen={isSendForLaminationDialogVisible}
+        onClose={() => setIsSendForLaminationDialogVisible(false)}
+        onConfirm={handleConfirmSendForLamination}
+        selectedCount={selectedReadyForLaminationIds.length}
       />
       <section id="admin-dashboard">
         <div className="text-center mb-8">

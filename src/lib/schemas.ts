@@ -37,6 +37,7 @@ export const loomSheetSchema = z.object({
   avgBagWeight: z.coerce.number().optional(),
   bagSize: z.string().optional(),
   receivedSerialNumber: z.string().optional(),
+  callOut: z.string().optional(),
   
   // Deprecated fields from old schema
   rollNo: z.coerce.number().optional(),

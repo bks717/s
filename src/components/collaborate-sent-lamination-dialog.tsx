@@ -26,9 +26,8 @@ interface CollaborateSentLaminationDialogProps {
   onConfirm: (newRollData: LoomSheetData) => void;
 }
 
-// We create a new schema for this specific form that includes the extra fields
 const collaborateSchema = loomSheetSchema.omit({ id: true, productionDate: true, serialNumber: true }).extend({
-    newSerialNumber: z.string().min(1, 'New Serial Number is required.'),
+    newSerialNumber: z.string().min(1, 'New S.NO is required.'),
     receivedSerialNumber: z.string().optional(),
 });
 
@@ -40,7 +39,7 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
   const form = useForm<CollaborateFormData>({
     resolver: zodResolver(collaborateSchema),
     defaultValues: {
-      lamination: true,
+      lamination: 'Lam active',
       status: 'Received from Lamination',
       newSerialNumber: '',
       receivedSerialNumber: '',
@@ -50,25 +49,19 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
   useEffect(() => {
     if (isOpen) {
       form.reset({
-        lamination: true,
+        lamination: 'Lam active',
         status: 'Received from Lamination',
         newSerialNumber: '',
         receivedSerialNumber: '',
-        // Reset other fields as needed
         operatorName: '',
-        rollNo: undefined,
+        loomNo: '',
         width: undefined,
-        number1: undefined,
-        number2: undefined,
-        grSut: '',
-        color: '',
+        gram: undefined,
+        fabricType: 'Slit',
+        color: 'Natural',
         mtrs: undefined,
         gw: undefined,
         cw: undefined,
-        nw: undefined,
-        average: undefined,
-        loomNo: '',
-        variance: undefined,
       });
     }
   }, [isOpen, form]);
@@ -90,7 +83,7 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <DialogHeader>
               <DialogTitle>Collaborate &amp; Create New Roll</DialogTitle>
               <DialogDescription>
@@ -98,20 +91,20 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
               </DialogDescription>
             </DialogHeader>
             
-            <Separator className="my-4"/>
-            <DialogDescription className="mb-4">
+            <Separator/>
+            <DialogDescription>
                 The following rolls will be consumed: {consumedByValue}
             </DialogDescription>
             
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-2 gap-4">
                <FormField
                   control={form.control}
                   name="receivedSerialNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Received S.No</FormLabel>
+                      <FormLabel>Received S.NO</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter received S/N" {...field} />
+                        <Input placeholder="Enter received S.NO" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -122,9 +115,9 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
                   name="newSerialNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>New S.No</FormLabel>
+                      <FormLabel>New S.NO</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter new S/N" {...field} />
+                        <Input placeholder="Enter new S.NO" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -135,11 +128,11 @@ export function CollaborateSentLaminationDialog({ isOpen, onClose, selectedRolls
             <ScrollArea className="h-[50vh] p-4 border rounded-md">
                 <LoomSheetForm
                     formContext={form}
-                    hideFields={['serialNumber']}
+                    hideFields={['serialNumber', 'status']}
                 />
             </ScrollArea>
 
-            <DialogFooter className="pt-4">
+            <DialogFooter>
                 <Button variant="outline" type="button" onClick={onClose}>Cancel</Button>
                 <Button
                     type="submit"

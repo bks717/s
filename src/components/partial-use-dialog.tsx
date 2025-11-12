@@ -11,13 +11,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { LoomSheetData, loomSheetSchema, BagProductionData } from '@/lib/schemas';
+import { LoomSheetData, loomSheetSchema, BagProductionData, laminationTypes, fabricTypes, colors } from '@/lib/schemas';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
-import { Switch } from './ui/switch';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 interface PartialUseDialogProps {
   isOpen: boolean;
@@ -27,47 +29,59 @@ interface PartialUseDialogProps {
   activeView: 'rolls' | 'bags';
 }
 
-const partialUseSchema = loomSheetSchema.omit({id: true, productionDate: true}).extend({
+const partialUseSchema = loomSheetSchema.omit({id: true, productionDate: true, serialNumber: true}).extend({
     consumedBy: z.string().min(1, 'Consumer name is required'),
 });
 
-type PartialUseFormData = Omit<LoomSheetData, 'id' | 'productionDate'> & { consumedBy: string };
+type PartialUseFormData = z.infer<typeof partialUseSchema>;
 
 export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, activeView }: PartialUseDialogProps) {
   const form = useForm<PartialUseFormData>({
     resolver: zodResolver(partialUseSchema),
-    defaultValues: {
-      ...originalRoll,
-      mtrs: 0,
-      gw: 0,
-      cw: 0,
-      nw: 0,
-      average: 0,
-      variance: 0,
-      consumedBy: '',
-      noOfBags: 0,
-      avgBagWeight: 0,
-      bagSize: '',
-    },
+    defaultValues: {},
   });
+
+  const mtrs = form.watch('mtrs');
+  const gw = form.watch('gw');
+  const cw = form.watch('cw');
+  const gram = form.watch('gram');
 
   useEffect(() => {
     if (isOpen) {
       form.reset({
         ...originalRoll,
+        consumedBy: '',
         mtrs: 0,
         gw: 0,
         cw: 0,
         nw: 0,
         average: 0,
         variance: 0,
-        consumedBy: '',
         noOfBags: 0,
         avgBagWeight: 0,
         bagSize: '',
       });
     }
   }, [isOpen, originalRoll, form]);
+
+  useEffect(() => {
+    const net = (gw || 0) - (cw || 0);
+    form.setValue('nw', net > 0 ? parseFloat(net.toFixed(2)) : 0);
+
+    if (net > 0 && mtrs > 0) {
+      const avg = (net * 1000) / mtrs;
+      form.setValue('average', parseFloat(avg.toFixed(2)));
+
+      if (gram > 0) {
+        const variance = avg - gram;
+        form.setValue('variance', parseFloat(variance.toFixed(2)));
+      }
+    } else {
+      form.setValue('average', 0);
+       form.setValue('variance', 0);
+    }
+  }, [mtrs, gw, cw, gram, form]);
+
 
   const onSubmit = (data: PartialUseFormData) => {
     const { consumedBy, noOfBags, avgBagWeight, bagSize, ...consumedPart } = data;
@@ -80,19 +94,17 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
         form.setError('gw', { type: 'manual', message: `Cannot consume more than available (${originalRoll.gw}).` });
         return;
     }
-     if(consumedPart.cw > originalRoll.cw) {
+    if(consumedPart.cw > originalRoll.cw) {
         form.setError('cw', { type: 'manual', message: `Cannot consume more than available (${originalRoll.cw}).` });
         return;
     }
-    if(consumedPart.nw > originalRoll.nw) {
-        form.setError('nw', { type: 'manual', message: `Cannot consume more than available (${originalRoll.nw}).` });
-        return;
-    }
+
+    const finalConsumedPart = { ...consumedPart, serialNumber: originalRoll.serialNumber };
 
     if (activeView === 'bags') {
-        onConfirm(consumedPart, consumedBy, { noOfBags, avgBagWeight, bagSize });
+        onConfirm(finalConsumedPart, consumedBy, { noOfBags, avgBagWeight, bagSize });
     } else {
-        onConfirm(consumedPart, consumedBy);
+        onConfirm(finalConsumedPart, consumedBy);
     }
   };
   
@@ -100,9 +112,9 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Partial Use of Roll No: {originalRoll.rollNo}</DialogTitle>
+          <DialogTitle>Partial Use of S.NO: {originalRoll.serialNumber}</DialogTitle>
           <DialogDescription>
-            Enter the values for the portion of the roll being consumed. The original roll will be updated with the remaining values.
+            Enter the values for the portion of the roll being consumed. The original roll will be updated.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -123,32 +135,8 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
                         </FormItem>
                         )}
                     />
-                    <FormField
-                      control={form.control}
-                      name="lamination"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">
-                              Lamination
-                            </FormLabel>
-                            <FormMessage />
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Label>False</Label>
-                            <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                                disabled
-                              />
-                            </FormControl>
-                            <Label>True</Label>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
                  </div>
+                 
                  {activeView === 'bags' && (
                     <>
                         <Separator />
@@ -198,15 +186,16 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
                         </div>
                     </>
                  )}
+
                  <Separator />
                  <h3 className="text-lg font-medium text-foreground">Measurements of Consumed Part</h3>
-                 <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-8">
+                 <div className="grid md:grid-cols-3 gap-8">
                     <FormField
                         control={form.control}
                         name="mtrs"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Meters (Mtrs)</FormLabel>
+                            <FormLabel>Meters</FormLabel>
                             <FormControl>
                             <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
                             </FormControl>
@@ -219,7 +208,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
                         name="gw"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Gross Weight (G.W.)</FormLabel>
+                            <FormLabel>Gross Weight</FormLabel>
                             <FormControl>
                             <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
                             </FormControl>
@@ -232,46 +221,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
                         name="cw"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Calc. Weight (C.W.)</FormLabel>
-                            <FormControl>
-                            <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="nw"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Net Weight (N.W.)</FormLabel>
-                            <FormControl>
-                            <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                     <FormField
-                        control={form.control}
-                        name="average"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Average</FormLabel>
-                            <FormControl>
-                            <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                     <FormField
-                        control={form.control}
-                        name="variance"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Variance</FormLabel>
+                            <FormLabel>Core Weight</FormLabel>
                             <FormControl>
                             <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
                             </FormControl>
@@ -280,33 +230,40 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
                         )}
                     />
                 </div>
+                <div className="grid md:grid-cols-3 gap-8 p-4 rounded-md bg-muted/50">
+                     <FormItem>
+                        <FormLabel>Net Weight</FormLabel>
+                        <FormControl><Input readOnly value={form.watch('nw') || 0} /></FormControl>
+                    </FormItem>
+                     <FormItem>
+                        <FormLabel>Average</FormLabel>
+                        <FormControl><Input readOnly value={form.watch('average') || 0} /></FormControl>
+                    </FormItem>
+                     <FormItem>
+                        <FormLabel>Variance</FormLabel>
+                        <FormControl><Input readOnly value={form.watch('variance') || 0} className={cn(Math.abs(form.watch('variance') || 0) > 3 ? "text-destructive" : "")} /></FormControl>
+                    </FormItem>
+                </div>
+
 
                 <Separator />
                 <h3 className="text-lg font-medium text-foreground">Original Roll Details (Read-only)</h3>
-                 <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-8">
+                 <div className="grid md:grid-cols-4 gap-8">
                      <FormItem>
                         <FormLabel>Original Meters</FormLabel>
-                        <FormControl>
-                            <Input readOnly value={originalRoll.mtrs} />
-                        </FormControl>
+                        <FormControl><Input readOnly value={originalRoll.mtrs} /></FormControl>
                     </FormItem>
                      <FormItem>
-                        <FormLabel>Original G.W.</FormLabel>
-                        <FormControl>
-                            <Input readOnly value={originalRoll.gw} />
-                        </FormControl>
+                        <FormLabel>Original Gross</FormLabel>
+                        <FormControl><Input readOnly value={originalRoll.gw} /></FormControl>
                     </FormItem>
                      <FormItem>
-                        <FormLabel>Original C.W.</FormLabel>
-                        <FormControl>
-                            <Input readOnly value={originalRoll.cw} />
-                        </FormControl>
+                        <FormLabel>Original Core</FormLabel>
+                        <FormControl><Input readOnly value={originalRoll.cw} /></FormControl>
                     </FormItem>
                      <FormItem>
-                        <FormLabel>Original N.W.</FormLabel>
-                        <FormControl>
-                            <Input readOnly value={originalRoll.nw} />
-                        </FormControl>
+                        <FormLabel>Original Net</FormLabel>
+                        <FormControl><Input readOnly value={originalRoll.nw} /></FormControl>
                     </FormItem>
                 </div>
               </div>

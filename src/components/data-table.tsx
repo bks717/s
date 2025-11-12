@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Table,
   TableHeader,
@@ -32,26 +32,23 @@ type SortConfig = {
 export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCheckboxes = false, view = 'remaining' }: DataTableProps) {
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'productionDate', direction: 'descending' });
 
-  const baseColumns: { key: keyof LoomSheetData | 'select', label: string }[] = [
-    // The 'select' column is conditionally added later
+  const baseColumns: { key: keyof LoomSheetData | 'select', label: string, className?: string }[] = [
     { key: 'productionDate', label: 'Prod. Date' },
-    { key: 'serialNumber', label: 'Serial Number' },
+    { key: 'serialNumber', label: 'S.NO' },
     { key: 'operatorName', label: 'Operator' },
-    { key: 'rollNo', label: 'Roll No.' },
     { key: 'loomNo', label: 'Loom No.' },
     { key: 'width', label: 'Width' },
-    { key: 'number1', label: 'Num 1' },
-    { key: 'number2', label: 'Num 2' },
-    { key: 'grSut', label: 'Gr/Sut' },
+    { key: 'gram', label: 'Gram' },
+    { key: 'fabricType', label: 'Fabric' },
     { key: 'color', label: 'Color' },
     { key: 'lamination', label: 'Lamination' },
     { key: 'status', label: 'Status' },
-    { key: 'mtrs', label: 'Mtrs' },
-    { key: 'gw', label: 'G.W.' },
-    { key: 'cw', label: 'C.W.' },
-    { key: 'nw', label: 'N.W.' },
+    { key: 'mtrs', label: 'Meters' },
+    { key: 'gw', label: 'Gross' },
+    { key: 'cw', label: 'Core' },
+    { key: 'nw', label: 'Net' },
     { key: 'average', label: 'Average' },
-    { key: 'variance', label: 'Variance' },
+    { key: 'variance', label: 'Variance', className: 'w-20' },
     { key: 'consumedBy', label: 'Consumed By'},
     { key: 'receivedSerialNumber', label: 'Received S.No'},
   ];
@@ -61,7 +58,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
   if (view === 'consumed') {
     columns.push({ key: 'noOfBags', label: 'No. of Bags'});
     columns.push({ key: 'avgBagWeight', label: 'Avg. Bag Wt.'});
-    columns.push({ key: 'bagSize', label: 'Bag Size'});
+    columnspush({ key: 'bagSize', label: 'Bag Size'});
   }
 
   if (showCheckboxes) {
@@ -126,7 +123,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
         <TableHeader>
           <TableRow>
             {columns.map(col => (
-                <TableHead key={col.key} className="p-0">
+                <TableHead key={col.key} className={cn("p-0", col.className)}>
                     {col.key === 'select' ? (
                         <div className="flex items-center justify-center h-8 w-12">
                           <Checkbox
@@ -151,17 +148,19 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
               <TableRow key={item.id} data-state={selectedRowIds.includes(item.id!) && "selected"}>
                 {columns.map(col => (
                     <TableCell key={`${item.id}-${col.key}`} className={cn("p-1 text-[10px] whitespace-nowrap", {
-                      "whitespace-pre-line": col.key === 'consumedBy'
+                      "whitespace-pre-line": col.key === 'consumedBy',
+                      "font-bold": ['nw', 'average', 'variance'].includes(col.key),
+                      "text-destructive": col.key === 'variance' && item.variance && Math.abs(item.variance) > 3,
                     })}>
                         {col.key === 'select' ? (
                           <div className="flex items-center justify-center">
                             <Checkbox
                               checked={selectedRowIds.includes(item.id!)}
                               onCheckedChange={(checked) => handleSelectRow(item.id!, !!checked)}
-                              aria-label={`Select row ${item.rollNo}`}
+                              aria-label={`Select row ${item.serialNumber}`}
                             />
                           </div>
-                        ) : col.key === 'productionDate' && item[col.key] ? format(new Date(item[col.key] as Date), 'PP') : col.key === 'lamination' ? String(item[col.key]) : String(item[col.key as keyof LoomSheetData] ?? '')}
+                        ) : col.key === 'productionDate' && item[col.key] ? format(new Date(item[col.key] as Date), 'PP') : String(item[col.key as keyof LoomSheetData] ?? '')}
                     </TableCell>
                 ))}
               </TableRow>

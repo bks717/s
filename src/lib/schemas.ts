@@ -1,32 +1,46 @@
 import { z } from 'zod';
 
 export const statuses = ['Active Stock', 'Partially Consumed', 'Ready for Lamination', 'Sent for Lamination', 'Received from Lamination', 'Consumed'] as const;
+export const fabricTypes = ['Slit', 'Tube'] as const;
+export const laminationTypes = ['Lam active', 'Unlammed'] as const;
+export const colors = ['Natural', 'Red', 'Blue', 'Green', 'Yellow', 'Orange', 'Black', 'White'] as const;
 
 export const loomSheetSchema = z.object({
   id: z.string().optional(),
-  serialNumber: z.string().min(1, 'Serial Number is required'),
+  serialNumber: z.string().min(1, 'S.NO is required'),
   operatorName: z.string().min(1, 'Operator Name is required'),
-  rollNo: z.coerce.number().optional(),
-  width: z.coerce.number().optional(),
-  number1: z.coerce.number().optional(),
-  number2: z.coerce.number().optional(),
-  grSut: z.string().optional(),
-  color: z.string().optional(),
-  lamination: z.boolean().default(false),
-  status: z.enum(statuses),
-  mtrs: z.coerce.number().optional(),
-  gw: z.coerce.number().optional(),
-  cw: z.coerce.number().optional(),
-  nw: z.coerce.number().optional(),
-  average: z.coerce.number().optional(),
   loomNo: z.string().optional(),
+  
+  // Width Specs
+  width: z.coerce.number().positive('Width must be positive').optional(),
+  gram: z.coerce.number().positive('Gram must be positive').optional(),
+  fabricType: z.enum(fabricTypes),
+  
+  color: z.enum(colors),
+  lamination: z.enum(laminationTypes),
+
+  // Measurements
+  mtrs: z.coerce.number().positive('Meters must be positive'),
+  gw: z.coerce.number().positive('Gross Weight must be positive'),
+  cw: z.coerce.number().positive('Core Weight must be positive'),
+  nw: z.coerce.number().optional(), // Auto-calculated
+  average: z.coerce.number().optional(), // Auto-calculated
+  variance: z.coerce.number().optional(), // Auto-calculated
+
+  // System and Status fields
   productionDate: z.date(),
-  variance: z.coerce.number().optional(),
+  status: z.enum(statuses),
   consumedBy: z.string().optional(),
   noOfBags: z.coerce.number().optional(),
   avgBagWeight: z.coerce.number().optional(),
   bagSize: z.string().optional(),
   receivedSerialNumber: z.string().optional(),
+  
+  // Deprecated fields from old schema
+  rollNo: z.coerce.number().optional(),
+  number1: z.coerce.number().optional(),
+  number2: z.coerce.number().optional(),
+  grSut: z.string().optional(),
 });
 
 export type LoomSheetData = z.infer<typeof loomSheetSchema>;

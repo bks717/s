@@ -3,8 +3,9 @@
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
+import React, { useEffect } from "react";
 
-import { loomSheetSchema, type LoomSheetData, statuses } from "@/lib/schemas";
+import { loomSheetSchema, type LoomSheetData, statuses, fabricTypes, laminationTypes, colors } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,12 +25,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import React from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "./ui/separator";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Label } from "./ui/label";
-import { Switch } from "./ui/switch";
 
 type HiddenField = keyof LoomSheetData;
 
@@ -37,7 +36,7 @@ interface LoomSheetFormProps {
   onFormSubmit?: (data: Omit<LoomSheetData, 'id' | 'productionDate'>) => void;
   defaultValues?: Partial<Omit<LoomSheetData, 'id' | 'productionDate'>>;
   hideFields?: HiddenField[];
-  formContext?: UseFormReturn<any>; // Allow any form context
+  formContext?: UseFormReturn<any>;
 }
 
 export default function LoomSheetForm({ 
@@ -53,33 +52,53 @@ export default function LoomSheetForm({
     defaultValues: {
       serialNumber: "",
       operatorName: "",
-      rollNo: undefined,
+      loomNo: "",
       width: undefined,
-      number1: undefined,
-      number2: undefined,
-      grSut: "",
-      color: "",
-      lamination: false,
-      status: "Active Stock",
+      gram: undefined,
+      fabricType: "Slit",
+      color: "Natural",
+      lamination: "Unlammed",
       mtrs: undefined,
       gw: undefined,
       cw: undefined,
-      nw: undefined,
-      average: undefined,
-      loomNo: "",
-      variance: undefined,
+      status: "Active Stock",
       ...defaultValues,
     },
   });
 
   const form = formContext || internalForm;
 
+  const mtrs = form.watch('mtrs');
+  const gw = form.watch('gw');
+  const cw = form.watch('cw');
+  const gram = form.watch('gram');
+
+  useEffect(() => {
+    const net = (gw || 0) - (cw || 0);
+    form.setValue('nw', net > 0 ? parseFloat(net.toFixed(2)) : 0);
+
+    if (net > 0 && mtrs > 0) {
+      const avg = (net * 1000) / mtrs;
+      form.setValue('average', parseFloat(avg.toFixed(2)));
+      
+      if(gram > 0) {
+        const variance = avg - gram;
+        form.setValue('variance', parseFloat(variance.toFixed(2)));
+      }
+
+    } else {
+      form.setValue('average', 0);
+      form.setValue('variance', 0);
+    }
+  }, [mtrs, gw, cw, gram, form]);
+
+
   const handleLocalSubmit = async (data: Omit<LoomSheetData, 'id' | 'productionDate'>) => {
     if (onFormSubmit) {
       onFormSubmit(data);
     }
 
-    if (!formContext) { // Only show toast and reset for top-level forms
+    if (!formContext) { 
       await new Promise(resolve => setTimeout(resolve, 1000));
       toast({
         title: "Success!",
@@ -95,14 +114,15 @@ export default function LoomSheetForm({
 
   const FormFields = (
     <div className="space-y-8">
-      <div className="grid md:grid-cols-2 gap-8">
+      {/* Top Fields */}
+      <div className="grid md:grid-cols-3 gap-8">
         {shouldShow('serialNumber') && (
           <FormField
             control={form.control}
             name="serialNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Serial Number</FormLabel>
+                <FormLabel>S.NO</FormLabel>
                 <FormControl>
                   <Input placeholder="e.g., A-001" {...field} />
                 </FormControl>
@@ -134,24 +154,6 @@ export default function LoomSheetForm({
             )}
           />
         )}
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-8">
-        {shouldShow('rollNo') && (
-          <FormField
-            control={form.control}
-            name="rollNo"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Roll No.</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
         {shouldShow('loomNo') && (
           <FormField
             control={form.control}
@@ -171,8 +173,9 @@ export default function LoomSheetForm({
       
       <Separator />
       
-      <h3 className="text-lg font-medium text-foreground">Width & Specification Details</h3>
-      <div className="grid md:grid-cols-3 gap-8">
+      {/* Width Specs */}
+      <h3 className="text-lg font-medium text-foreground">Width Specs</h3>
+      <div className="grid md:grid-cols-3 gap-8 items-start">
          {shouldShow('width') && (
            <FormField
             control={form.control}
@@ -188,13 +191,13 @@ export default function LoomSheetForm({
             )}
           />
          )}
-        {shouldShow('number1') && (
+        {shouldShow('gram') && (
           <FormField
             control={form.control}
-            name="number1"
+            name="gram"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Number 1</FormLabel>
+                <FormLabel>Gram</FormLabel>
                 <FormControl>
                   <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
                 </FormControl>
@@ -203,45 +206,28 @@ export default function LoomSheetForm({
             )}
           />
         )}
-        {shouldShow('number2') && (
+        {shouldShow('fabricType') && (
           <FormField
             control={form.control}
-            name="number2"
+            name="fabricType"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Number 2</FormLabel>
+              <FormItem className="space-y-3">
+                <FormLabel>Fabric Type</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-        {shouldShow('grSut') && (
-          <FormField
-            control={form.control}
-            name="grSut"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Gr/Sut</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., 120 GSM" {...field} value={field.value ?? ''}/>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-        {shouldShow('color') && (
-          <FormField
-            control={form.control}
-            name="color"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Color</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., Royal Blue" {...field} value={field.value ?? ''}/>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex items-center space-x-4"
+                  >
+                    {fabricTypes.map((type) => (
+                      <FormItem key={type} className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value={type} id={`radio-fabric-${type}`} />
+                        </FormControl>
+                        <Label htmlFor={`radio-fabric-${type}`} className="font-normal cursor-pointer">{type}</Label>
+                      </FormItem>
+                    ))}
+                  </RadioGroup>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -249,35 +235,144 @@ export default function LoomSheetForm({
           />
         )}
       </div>
+
+      {/* Color and Lamination */}
       <div className="grid md:grid-cols-2 gap-8 items-center">
+        {shouldShow('color') && (
+          <FormField
+            control={form.control}
+            name="color"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Color</FormLabel>
+                 <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a color" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {colors.map(color => (
+                        <SelectItem key={color} value={color}>{color}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         {shouldShow('lamination') && (
           <FormField
             control={form.control}
             name="lamination"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">
-                    Lamination
-                  </FormLabel>
-                  <FormMessage />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Label>False</Label>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      disabled={defaultValues?.lamination}
-                    />
-                  </FormControl>
-                  <Label>True</Label>
-                </div>
+              <FormItem className="space-y-3">
+                <FormLabel>Lamination</FormLabel>
+                 <FormControl>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex items-center space-x-4"
+                  >
+                    {laminationTypes.map((type) => (
+                      <FormItem key={type} className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value={type} id={`radio-lamination-${type}`} />
+                        </FormControl>
+                        <Label htmlFor={`radio-lamination-${type}`} className="font-normal cursor-pointer">{type}</Label>
+                      </FormItem>
+                    ))}
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
         )}
-        {shouldShow('status') && (
+      </div>
+      
+      <Separator />
+      
+      {/* Measurements */}
+      <h3 className="text-lg font-medium text-foreground">Measurements</h3>
+      <div className="grid md:grid-cols-3 lg:grid-cols-3 gap-8">
+          {shouldShow('mtrs') && (
+            <FormField
+                control={form.control}
+                name="mtrs"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Meters</FormLabel>
+                    <FormControl>
+                    <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+          )}
+          {shouldShow('gw') && (
+            <FormField
+                control={form.control}
+                name="gw"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Gross Weight</FormLabel>
+                    <FormControl>
+                    <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+          )}
+          {shouldShow('cw') && (
+            <FormField
+                control={form.control}
+                name="cw"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Core Weight</FormLabel>
+                    <FormControl>
+                    <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+          )}
+      </div>
+
+      {/* Auto-calculated fields */}
+      <Card className="bg-muted/50">
+        <CardHeader>
+            <CardTitle className="text-xl">Calculated Values</CardTitle>
+            <CardDescription>These values are calculated automatically based on your input.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid md:grid-cols-3 gap-8">
+            <FormItem>
+                <FormLabel>Net Weight</FormLabel>
+                <FormControl>
+                <Input type="number" readOnly value={form.watch('nw') || 0} className="font-bold text-primary bg-background"/>
+                </FormControl>
+            </FormItem>
+            <FormItem>
+                <FormLabel>Average</FormLabel>
+                <FormControl>
+                <Input type="number" readOnly value={form.watch('average') || 0} className="font-bold text-primary bg-background"/>
+                </FormControl>
+            </FormItem>
+            <FormItem>
+                <FormLabel>Variance (+- 3g)</FormLabel>
+                <FormControl>
+                <Input type="number" readOnly value={form.watch('variance') || 0} className={cn("font-bold bg-background", Math.abs(form.watch('variance') || 0) > 3 ? "text-destructive" : "text-primary")} />
+                </FormControl>
+            </FormItem>
+        </CardContent>
+      </Card>
+      
+      {shouldShow('status') && (
           <FormField
             control={form.control}
             name="status"
@@ -293,9 +388,9 @@ export default function LoomSheetForm({
                     {statuses.filter(s => s !== 'Consumed').map((status) => (
                       <FormItem key={status} className="flex items-center space-x-2 space-y-0">
                         <FormControl>
-                          <RadioGroupItem value={status} id={`radio-${status}`} />
+                          <RadioGroupItem value={status} id={`radio-status-${status}`} />
                         </FormControl>
-                        <Label htmlFor={`radio-${status}`} className="font-normal cursor-pointer">{status}</Label>
+                        <Label htmlFor={`radio-status-${status}`} className="font-normal cursor-pointer">{status}</Label>
                       </FormItem>
                     ))}
                   </RadioGroup>
@@ -305,109 +400,12 @@ export default function LoomSheetForm({
             )}
           />
         )}
-      </div>
-      
-      <Separator />
-      
-      <h3 className="text-lg font-medium text-foreground">Measurements</h3>
-      <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {shouldShow('mtrs') && (
-            <FormField
-                control={form.control}
-                name="mtrs"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Meters (Mtrs)</FormLabel>
-                    <FormControl>
-                    <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
-          )}
-          {shouldShow('gw') && (
-            <FormField
-                control={form.control}
-                name="gw"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Gross Weight (G.W.)</FormLabel>
-                    <FormControl>
-                    <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
-          )}
-          {shouldShow('cw') && (
-            <FormField
-                control={form.control}
-                name="cw"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Calc. Weight (C.W.)</FormLabel>
-                    <FormControl>
-                    <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
-          )}
-          {shouldShow('nw') && (
-            <FormField
-                control={form.control}
-                name="nw"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Net Weight (N.W.)</FormLabel>
-                    <FormControl>
-                    <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
-          )}
-          {shouldShow('average') && (
-            <FormField
-                control={form.control}
-                name="average"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Average</FormLabel>
-                    <FormControl>
-                    <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
-          )}
-           {shouldShow('variance') && (
-             <FormField
-                control={form.control}
-                name="variance"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Variance</FormLabel>
-                    <FormControl>
-                    <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))} value={field.value ?? ''} />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
-           )}
-      </div>
     </div>
   );
 
   const mainForm = (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleLocalSubmit)}>
+      <form onSubmit={form.handleSubmit(handleLocalSubmit)} className="space-y-8">
         {FormFields}
         {!formContext && (
           <div className="flex justify-end pt-4 space-x-2">

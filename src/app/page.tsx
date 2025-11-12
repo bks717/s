@@ -90,6 +90,7 @@ export default function Home() {
             serialNumber: newSerialNumber,
             receivedSerialNumber: receivedSerialNumber,
             productionDate: new Date(),
+            lamination: 'Lam active',
             status: 'Received from Lamination'
         };
 
@@ -119,23 +120,21 @@ export default function Home() {
   const handleReturnToStock = (selectedIds: string[]) => {
     setAllData(prevData => prevData.map(item => {
       if (selectedIds.includes(item.id!)) {
-        return { ...item, status: 'Active Stock', lamination: true };
+        return { ...item, status: 'Active Stock' };
       }
       return item;
     }));
   };
 
   const handleCollaborateAndCreate = (selectedIds: string[], newRollData: LoomSheetData) => {
-    const consumedByValue = allData
-      .filter(item => selectedIds.includes(item.id!))
-      .map(r => r.serialNumber)
-      .join(', ');
+    const consumedRolls = allData.filter(item => selectedIds.includes(item.id!));
+    const consumedByValue = consumedRolls.map(r => r.serialNumber).join(', ');
 
     const newRoll: LoomSheetData = {
       ...newRollData,
       id: (Date.now()).toString(),
       productionDate: new Date(),
-      lamination: true,
+      lamination: 'Lam active',
       status: newRollData.status || 'Active Stock',
     };
     
@@ -150,7 +149,6 @@ export default function Home() {
     });
   };
   
-  const remainingData = allData.filter(d => d.status !== 'Consumed');
   const consumedData = allData.filter(d => d.status === 'Consumed');
   const bagsProducedData = consumedData.filter(d => d.noOfBags && d.noOfBags > 0);
 

@@ -20,7 +20,7 @@ interface BagsProducedProps {
 export default function BagsProduced({ data }: BagsProducedProps) {
   const columns = [
     { key: 'productionDate', label: 'Consumption Date' },
-    { key: 'rollNo', label: 'Source Roll No.' },
+    { key: 'serialNumber', label: 'Source S.NO' },
     { key: 'consumedBy', label: 'Consumed By' },
     { key: 'noOfBags', label: 'No. of Bags' },
     { key: 'avgBagWeight', label: 'Avg. Bag Wt.' },

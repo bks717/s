@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -121,7 +122,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
   
   const visibleColumns = columns.filter(col => {
     if (view === 'consumed') {
-        const consumedHidden: (keyof LoomSheetData | 'select')[] = ['status'];
+        const consumedHidden: (keyof LoomSheetData | 'select')[] = [];
         if (data.every(d => !d.callOut)) consumedHidden.push('callOut');
         
         if (activeView === 'rolls') {
@@ -210,3 +211,5 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
     </div>
   );
 }
+
+    

@@ -63,8 +63,8 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [laminationFilter, setLaminationFilter] = useState<'all' | 'true' | 'false'>('all');
   
-  const remainingData = allData.filter(d => d.status !== 'Consumed');
-  const consumedData = allData.filter(d => d.status === 'Consumed');
+  const remainingData = allData.filter(d => !d.consumedBy);
+  const consumedData = allData.filter(d => !!d.consumedBy);
   
   const onSetSelectedRowIds = useCallback((ids: string[]) => {
     setSelectedRowIds(ids);
@@ -549,3 +549,5 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     </>
   );
 }
+
+    

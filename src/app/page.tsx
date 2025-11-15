@@ -62,9 +62,9 @@ export default function Home() {
           }
           
           if (remainingAverage > 0 && item.width && item.gram) {
-            const widthGram = item.width * item.gram;
-            const ub = remainingAverage + widthGram;
-            const lb = remainingAverage - widthGram;
+            const idealWeight = item.width * item.gram;
+            const ub = idealWeight + (idealWeight * 0.05);
+            const lb = idealWeight - (idealWeight * 0.05);
             remainingVariance = `UB: ${ub.toFixed(2)} / LB: ${lb.toFixed(2)}`;
           }
 

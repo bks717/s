@@ -78,9 +78,9 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
       form.setValue('average', parseFloat(avg.toFixed(2)));
 
       if (gram > 0 && width > 0) {
-        const widthGram = width * gram;
-        const ub = avg + widthGram;
-        const lb = avg - widthGram;
+        const idealWeight = width * gram;
+        const ub = idealWeight + (idealWeight * 0.05);
+        const lb = idealWeight - (idealWeight * 0.05);
         form.setValue('variance', `UB: ${ub.toFixed(2)} / LB: ${lb.toFixed(2)}`);
       } else {
         form.setValue('variance', 'N/A');

@@ -235,8 +235,8 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
       head: [tableColumns],
       body: tableRows,
       theme: 'grid',
-      styles: { fontSize: 8, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.1 },
-      headStyles: { fillColor: false, textColor: [0, 0, 0], fontStyle: 'bold' },
+      styles: { fontSize: 8, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.1, halign: 'center' },
+      headStyles: { fillColor: false, textColor: [0, 0, 0], fontStyle: 'bold', halign: 'center' },
     });
 
     doc.save(`lamination-dispatch-${new Date().toISOString().split('T')[0]}.pdf`);
@@ -550,6 +550,8 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     </>
   );
 }
+
+    
 
     
 

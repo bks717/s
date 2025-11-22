@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { z } from 'zod';
 import {
@@ -38,6 +39,7 @@ const partialUseSchema = loomSheetSchema.omit({id: true, productionDate: true, s
 type PartialUseFormData = z.infer<typeof partialUseSchema>;
 
 export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, activeView }: PartialUseDialogProps) {
+  const [isAverageOutOfRange, setIsAverageOutOfRange] = useState(false);
   const form = useForm<PartialUseFormData>({
     resolver: zodResolver(partialUseSchema),
     defaultValues: {},
@@ -66,6 +68,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
         avgBagWeight: 0,
         bagSize: '',
       });
+      setIsAverageOutOfRange(false);
     }
   }, [isOpen, originalRoll, form]);
 
@@ -82,12 +85,15 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
         const ub = idealWeight + (idealWeight * 0.05);
         const lb = idealWeight - (idealWeight * 0.05);
         form.setValue('variance', `UB: ${ub.toFixed(2)} / LB: ${lb.toFixed(2)}`);
+        setIsAverageOutOfRange(avg < lb || avg > ub);
       } else {
         form.setValue('variance', 'N/A');
+        setIsAverageOutOfRange(false);
       }
     } else {
       form.setValue('average', 0);
        form.setValue('variance', 'N/A');
+       setIsAverageOutOfRange(false);
     }
   }, [mtrs, gw, cw, gram, width, form]);
 
@@ -265,7 +271,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
                         )}
                     />
                 </div>
-                <div className="grid md:grid-cols-3 gap-8 p-4 rounded-md bg-muted/50">
+                <div className={cn("grid md:grid-cols-3 gap-8 p-4 rounded-md bg-muted/50", { "bg-destructive/20": isAverageOutOfRange })}>
                      <FormItem>
                         <FormLabel>Net Weight</FormLabel>
                         <FormControl><Input readOnly value={form.watch('nw') || 0} /></FormControl>
@@ -276,7 +282,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
                     </FormItem>
                      <FormItem>
                         <FormLabel>Variance (UB/LB)</FormLabel>
-                        <FormControl><Input readOnly value={form.watch('variance') || 'N/A'} /></FormControl>
+                        <FormControl><Input readOnly value={form.watch('variance') || 'N/A'} className={cn({"text-destructive font-bold": isAverageOutOfRange})}/></FormControl>
                     </FormItem>
                 </div>
 

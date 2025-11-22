@@ -122,7 +122,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
   
   const visibleColumns = columns.filter(col => {
     if (view === 'consumed') {
-        const consumedHidden: (keyof LoomSheetData | 'select')[] = [];
+        const consumedHidden: (keyof LoomSheetData | 'select')[] = ['status'];
         if (data.every(d => !d.callOut)) consumedHidden.push('callOut');
         
         if (activeView === 'rolls') {
@@ -148,6 +148,15 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
     return true;
   })
 
+  const isAverageOutOfRange = (item: LoomSheetData) => {
+    if (item.gram && item.width && item.average) {
+      const idealWeight = item.width * item.gram;
+      const ub = idealWeight + (idealWeight * 0.05);
+      const lb = idealWeight - (idealWeight * 0.05);
+      return item.average < lb || item.average > ub;
+    }
+    return false;
+  }
 
   return (
     <div className="rounded-md border overflow-x-auto">
@@ -180,8 +189,9 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
               <TableRow key={item.id} data-state={selectedRowIds.includes(item.id!) && "selected"}>
                 {visibleColumns.map(col => (
                     <TableCell key={`${item.id}-${col.key}`} className={cn("p-1 text-[10px] whitespace-nowrap", {
-                      "whitespace-pre-line": ['consumedBy', 'callOut', 'variance'].includes(col.key),
+                      "whitespace-pre-line": ['consumedBy', 'callOut'].includes(col.key),
                       "font-bold": ['nw', 'average'].includes(col.key),
+                      "bg-destructive/20": col.key === 'variance' && isAverageOutOfRange(item)
                     })}>
                         {col.key === 'select' ? (
                           <div className="flex items-center justify-center">
@@ -211,5 +221,3 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
     </div>
   );
 }
-
-    

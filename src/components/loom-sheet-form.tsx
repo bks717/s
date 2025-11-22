@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 import { loomSheetSchema, type LoomSheetData, fabricTypes, laminationTypes, colors } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
@@ -46,6 +47,7 @@ export default function LoomSheetForm({
   formContext,
 }: LoomSheetFormProps) {
   const { toast } = useToast();
+  const [isAverageOutOfRange, setIsAverageOutOfRange] = useState(false);
 
   const internalForm = useForm<Omit<LoomSheetData, 'id' | 'productionDate'>>({
     resolver: zodResolver(loomSheetSchema.omit({ id: true, productionDate: true })),
@@ -87,13 +89,16 @@ export default function LoomSheetForm({
         const ub = idealWeight + (idealWeight * 0.05);
         const lb = idealWeight - (idealWeight * 0.05);
         form.setValue('variance', `UB: ${ub.toFixed(2)} / LB: ${lb.toFixed(2)}`);
+        setIsAverageOutOfRange(avg < lb || avg > ub);
       } else {
         form.setValue('variance', 'N/A');
+        setIsAverageOutOfRange(false);
       }
 
     } else {
       form.setValue('average', 0);
       form.setValue('variance', 'N/A');
+      setIsAverageOutOfRange(false);
     }
   }, [mtrs, gw, cw, gram, width, form]);
 
@@ -343,7 +348,7 @@ export default function LoomSheetForm({
             <FormItem>
                 <FormLabel>Variance (UB/LB)</FormLabel>
                 <FormControl>
-                <Input readOnly value={form.watch('variance') || 'N/A'} className={cn("font-bold bg-background text-primary")} />
+                <Input readOnly value={form.watch('variance') || 'N/A'} className={cn("font-bold bg-background", isAverageOutOfRange ? "text-destructive" : "text-primary")} />
                 </FormControl>
             </FormItem>
         </CardContent>

@@ -7,12 +7,8 @@ import AdminSection from '@/components/admin-section';
 import { LoomSheetData, BagProductionData, ConsumedByData } from '@/lib/schemas';
 import { loomDataStore as initialData } from '@/lib/data';
 import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-
-type View = 'rolls' | 'bags';
 
 export default function Home() {
-  const [activeView, setActiveView] = useState<View>('rolls');
   const [allData, setAllData] = useState<LoomSheetData[]>(initialData);
 
   const handleAddData = (newData: LoomSheetData) => {
@@ -24,17 +20,17 @@ export default function Home() {
     setAllData(prevData => [...prevData, ...newLoomData]);
   };
   
-  const handleMarkAsConsumed = (selectedIds: string[], consumptionData: ConsumedByData, bagData?: BagProductionData) => {
+  const handleMarkAsConsumed = (selectedIds: string[], consumptionData: ConsumedByData) => {
     setAllData(prevData =>
       prevData.map(item =>
         selectedIds.includes(item.id!)
-          ? { ...item, status: 'Consumed', ...consumptionData, ...(bagData || {}) }
+          ? { ...item, status: 'Consumed', ...consumptionData }
           : item
       )
     );
   };
 
-  const handlePartialConsume = (originalId: string, consumedPartData: Omit<LoomSheetData, 'id' | 'productionDate'>, bagData?: BagProductionData) => {
+  const handlePartialConsume = (originalId: string, consumedPartData: Omit<LoomSheetData, 'id' | 'productionDate'>) => {
     const originalRoll = allData.find(item => item.id === originalId);
     if (!originalRoll) return;
 
@@ -43,7 +39,6 @@ export default function Home() {
       id: (Date.now() + Math.random()).toString(),
       productionDate: new Date(),
       status: 'Consumed',
-      ...(bagData || {})
     };
     
     setAllData(prevData => {
@@ -171,85 +166,31 @@ export default function Home() {
     });
   };
   
-  const consumedData = allData.filter(d => d.status === 'Consumed');
-  const bagsProducedData = consumedData.filter(d => d.noOfBags && d.noOfBags > 0);
-
   return (
     <main className="container mx-auto p-4 md:p-8">
-      <div className="flex justify-center gap-4 mb-8">
-        <Button 
-          variant={activeView === 'bags' ? 'default' : 'outline'} 
-          onClick={() => setActiveView('bags')}
-          className="px-8 py-2 text-lg"
-        >
-          Bags
-        </Button>
-        <Button 
-          variant={activeView === 'rolls' ? 'default' : 'outline'} 
-          onClick={() => setActiveView('rolls')}
-          className="px-8 py-2 text-lg"
-        >
-          Rolls
-        </Button>
+      <div className="flex flex-col items-center text-center mb-8">
+        <h1 className="text-4xl font-bold tracking-tight text-primary font-headline">
+          LoomSheet
+        </h1>
+        <p className="mt-2 text-lg text-muted-foreground max-w-2xl">
+          Efficiently track and analyze your loom production data. Fill out the form below to log a new roll.
+        </p>
       </div>
 
-      {activeView === 'rolls' && (
-        <>
-          <div className="flex flex-col items-center text-center mb-8">
-            <h1 className="text-4xl font-bold tracking-tight text-primary font-headline">
-              LoomSheet - Rolls
-            </h1>
-            <p className="mt-2 text-lg text-muted-foreground max-w-2xl">
-              Efficiently track and analyze your loom production data. Fill out the form below to log a new roll.
-            </p>
-          </div>
+      <LoomSheetForm onFormSubmit={handleAddData} />
 
-          <LoomSheetForm onFormSubmit={handleAddData} />
+      <Separator className="my-12" />
 
-          <Separator className="my-12" />
-
-          <AdminSection 
-            activeView={activeView}
-            allData={allData}
-            onImport={handleImportData}
-            onMarkAsConsumed={handleMarkAsConsumed}
-            onPartialConsume={handlePartialConsume}
-            onSendForLamination={handleSendForLamination}
-            onMarkAsReceived={handleMarkAsReceived}
-            onMarkAsLaminated={handleMarkAsLaminated}
-            onCollaborateAndCreate={handleCollaborateAndCreate}
-            bagsProducedData={bagsProducedData}
-          />
-        </>
-      )}
-
-      {activeView === 'bags' && (
-        <>
-          <div className="flex flex-col items-center text-center mb-8">
-            <h1 className="text-4xl font-bold tracking-tight text-primary font-headline">
-              LoomSheet - Bags
-            </h1>
-            <p className="mt-2 text-lg text-muted-foreground max-w-2xl">
-              View remaining rolls and manage bag production.
-            </p>
-          </div>
-          
-          <Separator className="my-12" />
-
-          <AdminSection 
-            activeView={activeView}
-            allData={allData}
-            onImport={handleImportData}
-            onMarkAsConsumed={handleMarkAsConsumed}
-            onPartialConsume={handlePartialConsume}
-            onSendForLamination={handleSendForLamination}
-            onMarkAsReceived={handleMarkAsReceived}
-            onMarkAsLaminated={handleMarkAsLaminated}
-            onCollaborateAndCreate={handleCollaborateAndCreate}
-            bagsProducedData={bagsProducedData}
-          />
-        </>
-      )}
+      <AdminSection 
+        allData={allData}
+        onImport={handleImportData}
+        onMarkAsConsumed={handleMarkAsConsumed}
+        onPartialConsume={handlePartialConsume}
+        onSendForLamination={handleSendForLamination}
+        onMarkAsReceived={handleMarkAsReceived}
+        onMarkAsLaminated={handleMarkAsLaminated}
+        onCollaborateAndCreate={handleCollaborateAndCreate}
+      />
     </main>
   );
 }

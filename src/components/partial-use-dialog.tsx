@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { LoomSheetData, loomSheetSchema, BagProductionData, laminationTypes, fabricTypes, colors } from '@/lib/schemas';
+import { LoomSheetData, loomSheetSchema, laminationTypes, fabricTypes, colors } from '@/lib/schemas';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
@@ -25,9 +25,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 interface PartialUseDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, bagData?: BagProductionData) => void;
+  onConfirm: (consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>) => void;
   originalRoll: LoomSheetData;
-  activeView: 'rolls' | 'bags';
 }
 
 const partialUseSchema = loomSheetSchema.omit({id: true, productionDate: true, serialNumber: true}).extend({
@@ -38,7 +37,7 @@ const partialUseSchema = loomSheetSchema.omit({id: true, productionDate: true, s
 
 type PartialUseFormData = z.infer<typeof partialUseSchema>;
 
-export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, activeView }: PartialUseDialogProps) {
+export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: PartialUseDialogProps) {
   const [isAverageOutOfRange, setIsAverageOutOfRange] = useState(false);
   const form = useForm<PartialUseFormData>({
     resolver: zodResolver(partialUseSchema),
@@ -116,11 +115,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
 
     const finalConsumedPart = { ...consumedPart, serialNumber: originalRoll.serialNumber };
 
-    if (activeView === 'bags') {
-        onConfirm(finalConsumedPart, { noOfBags, avgBagWeight, bagSize });
-    } else {
-        onConfirm(finalConsumedPart);
-    }
+    onConfirm(finalConsumedPart);
   };
   
   return (
@@ -177,56 +172,6 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll, act
                         )}
                     />
                  </div>
-                 
-                 {activeView === 'bags' && (
-                    <>
-                        <Separator />
-                        <DialogDescription>
-                            Optionally, enter bag production details.
-                        </DialogDescription>
-                        <div className="grid md:grid-cols-3 gap-8">
-                             <FormField
-                                control={form.control}
-                                name="noOfBags"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>No. of Bags</FormLabel>
-                                    <FormControl>
-                                    <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : 0)} value={field.value ?? ''} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-                             <FormField
-                                control={form.control}
-                                name="avgBagWeight"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Avg. Bag Weight</FormLabel>
-                                    <FormControl>
-                                    <Input type="number" placeholder="0" {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)} value={field.value ?? ''}/>
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-                             <FormField
-                                control={form.control}
-                                name="bagSize"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Bag Size</FormLabel>
-                                    <FormControl>
-                                    <Input placeholder="e.g., 24x36" {...field} value={field.value ?? ''} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-                        </div>
-                    </>
-                 )}
 
                  <Separator />
                  <h3 className="text-lg font-medium text-foreground">Measurements of Consumed Part</h3>

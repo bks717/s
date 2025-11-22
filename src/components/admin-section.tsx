@@ -5,14 +5,13 @@ import React, { useRef, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { LoomSheetData, loomSheetSchema, BagProductionData, statuses, ConsumedByData } from '@/lib/schemas';
+import { LoomSheetData, loomSheetSchema, statuses, ConsumedByData } from '@/lib/schemas';
 import { DataTable } from '@/components/data-table';
 import { Upload, Download, CheckSquare, SplitSquareHorizontal, Send, RefreshCw } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { z } from 'zod';
 import { ConsumedByDialog } from './consumed-by-dialog';
 import { PartialUseDialog } from './partial-use-dialog';
-import BagsProduced from './bags-produced';
 import { Separator } from './ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
@@ -26,14 +25,12 @@ import 'jspdf-autotable';
 interface AdminSectionProps {
   allData: LoomSheetData[];
   onImport: (data: LoomSheetData[]) => void;
-  onMarkAsConsumed: (selectedIds: string[], consumptionData: ConsumedByData, bagData?: BagProductionData) => void;
-  onPartialConsume: (originalId: string, consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, bagData?: BagProductionData) => void;
-  activeView: 'rolls' | 'bags';
+  onMarkAsConsumed: (selectedIds: string[], consumptionData: ConsumedByData) => void;
+  onPartialConsume: (originalId: string, consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>) => void;
   onSendForLamination: (rollsToUpdate: { id: string; callOut: string }[]) => void;
   onMarkAsReceived: (selectedIds: string[], newSerialNumber?: string, receivedSerialNumber?: string) => void;
   onMarkAsLaminated: (selectedIds: string[]) => void;
   onCollaborateAndCreate: (selectedIds: string[], newRollData: LoomSheetData) => void;
-  bagsProducedData: LoomSheetData[];
 }
 
 type View = 'remaining' | 'consumed' | 'laminate';
@@ -45,7 +42,7 @@ declare global {
   }
 }
 
-export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPartialConsume, activeView, onSendForLamination, onMarkAsReceived, onMarkAsLaminated, onCollaborateAndCreate, bagsProducedData }: AdminSectionProps) {
+export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPartialConsume, onSendForLamination, onMarkAsReceived, onMarkAsLaminated, onCollaborateAndCreate }: AdminSectionProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentView, setCurrentView] = useState<View>('remaining');
@@ -173,8 +170,8 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     setIsConsumedDialogVisible(true);
   };
 
-  const handleConfirmConsumed = (consumptionData: ConsumedByData, bagData?: BagProductionData) => {
-    onMarkAsConsumed(selectedRowIds, consumptionData, bagData);
+  const handleConfirmConsumed = (consumptionData: ConsumedByData) => {
+    onMarkAsConsumed(selectedRowIds, consumptionData);
     toast({
       title: 'Success',
       description: `${selectedRowIds.length} rows marked as consumed by ${consumptionData.consumedBy}.`,
@@ -195,9 +192,9 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     setIsPartialUseDialogVisible(true);
   };
 
-  const handleConfirmPartialUse = (consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>, bagData?: BagProductionData) => {
+  const handleConfirmPartialUse = (consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>) => {
     const originalId = selectedRowIds[0];
-    onPartialConsume(originalId, consumedPart, bagData);
+    onPartialConsume(originalId, consumedPart);
      toast({
       title: 'Success',
       description: `Roll partially consumed by ${consumedPart.consumedBy}. Remaining roll updated.`,
@@ -349,7 +346,6 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
         onClose={() => setIsConsumedDialogVisible(false)}
         onConfirm={handleConfirmConsumed}
         selectedCount={selectedRowIds.length}
-        activeView={activeView}
       />
       {selectedRollForPartialUse && (
         <PartialUseDialog
@@ -357,7 +353,6 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
             onClose={() => setIsPartialUseDialogVisible(false)}
             onConfirm={handleConfirmPartialUse}
             originalRoll={selectedRollForPartialUse}
-            activeView={activeView}
         />
       )}
       <ReceiveSentLaminationDialog
@@ -394,11 +389,11 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                   <Button variant={(currentView === 'remaining' && statusFilter === 'all') ? 'default' : 'outline'} onClick={() => { setCurrentView('remaining'); setStatusFilter('all')}}>
                     Inventory ({remainingData.length})
                   </Button>
-                  {activeView === 'rolls' && (
-                    <Button variant={currentView === 'laminate' ? 'default' : 'outline'} onClick={() => setCurrentView('laminate')}>
-                      Laminate
-                    </Button>
-                  )}
+                  
+                  <Button variant={currentView === 'laminate' ? 'default' : 'outline'} onClick={() => setCurrentView('laminate')}>
+                    Laminate
+                  </Button>
+                  
                   <Button variant={currentView === 'consumed' ? 'default' : 'outline'} onClick={() => setCurrentView('consumed')}>
                     Consumed ({consumedData.length})
                   </Button>
@@ -445,7 +440,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
               </div>
             )}
             <Separator className='my-12'/>
-            {currentView === 'laminate' && activeView === 'rolls' ? (
+            {currentView === 'laminate' ? (
                <div className='space-y-8'>
                   <Card className="shadow-lg">
                     <CardHeader className="flex flex-row justify-between items-center">
@@ -532,27 +527,12 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                     onSelectedRowIdsChange={onSetSelectedRowIds}
                     showCheckboxes={currentView === 'remaining'}
                     view={currentView}
-                    activeView={activeView}
                   />
                 </CardContent>
               </Card>
             )}
-
-            {activeView === 'bags' && (
-              <>
-                <Separator className="my-12" />
-                <BagsProduced data={bagsProducedData} />
-              </>
-            )}
-
         </div>
       </section>
     </>
   );
 }
-
-    
-
-    
-
-    

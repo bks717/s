@@ -11,6 +11,7 @@ import { WorkOrderDialog } from '@/components/work-order-dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function WorkOrderPage() {
   const [allData, setAllData] = useState<LoomSheetData[]>([]);
@@ -70,10 +71,9 @@ export default function WorkOrderPage() {
   const handleWorkOrderSubmit = async (formData: Omit<WorkOrderData, 'id' | 'createdAt'>) => {
     const consumedRollIds = formData.childPids.map(child => child.rollId);
     
-    // Add serial number to child pids for display purposes
     const childPidsWithRolls = formData.childPids.map(child => {
         const roll = allData.find(r => r.id === child.rollId);
-        return { ...child, rollSerialNumber: roll?.serialNumber || 'N/A' };
+        return { ...child, rollSerialNumber: roll?.serialNumber || 'N/A', completed: false };
     });
 
     const workOrderPayload: WorkOrderData = {
@@ -84,7 +84,6 @@ export default function WorkOrderPage() {
     };
 
     try {
-      // 1. Save the new work order
       const woResponse = await fetch('/api/work-orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -92,7 +91,6 @@ export default function WorkOrderPage() {
       });
       if (!woResponse.ok) throw new Error('Failed to save work order.');
 
-      // 2. Mark rolls as consumed
       const updatedData = allData.map(item =>
         consumedRollIds.includes(item.id!)
           ? { ...item, status: 'Consumed' as const, consumedBy: `WO: ${formData.parentPid}` }
@@ -111,7 +109,6 @@ export default function WorkOrderPage() {
         description: `Work order ${formData.parentPid} has been created and rolls have been consumed.`,
       });
 
-      // 3. Refresh all data
       await fetchData();
       
     } catch (error) {
@@ -124,6 +121,46 @@ export default function WorkOrderPage() {
     } finally {
         setIsWorkOrderDialogVisible(false);
         setSelectedRowIds([]);
+    }
+  };
+
+  const handleToggleChildPidCompletion = async (workOrderId: string, childPid: string) => {
+    const updatedWorkOrders = workOrders.map(wo => {
+      if (wo.id === workOrderId) {
+        return {
+          ...wo,
+          childPids: wo.childPids.map(child => 
+            child.pid === childPid ? { ...child, completed: !child.completed } : child
+          ),
+        };
+      }
+      return wo;
+    });
+
+    setWorkOrders(updatedWorkOrders);
+
+    try {
+      const response = await fetch('/api/work-orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedWorkOrders, null, 2),
+      });
+      if (!response.ok) throw new Error('Failed to update work order status.');
+      
+      toast({
+        title: 'Status Updated',
+        description: `Child PID ${childPid} status has been toggled.`,
+      });
+
+    } catch (error) {
+       console.error('Work order update error:', error);
+       toast({
+         variant: 'destructive',
+         title: 'Update Failed',
+         description: 'Could not save the updated status. Please try again.',
+       });
+       // Revert optimistic update on failure
+       fetchData();
     }
   };
   
@@ -214,6 +251,7 @@ export default function WorkOrderPage() {
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
+                                                    <TableHead className='w-16'>Completed</TableHead>
                                                     <TableHead>Child PID</TableHead>
                                                     <TableHead>Consumed Roll No.</TableHead>
                                                 </TableRow>
@@ -221,6 +259,12 @@ export default function WorkOrderPage() {
                                             <TableBody>
                                                 {wo.childPids.map((child, index) => (
                                                     <TableRow key={index}>
+                                                        <TableCell>
+                                                          <Checkbox
+                                                            checked={child.completed}
+                                                            onCheckedChange={() => handleToggleChildPidCompletion(wo.id!, child.pid)}
+                                                          />
+                                                        </TableCell>
                                                         <TableCell>{child.pid}</TableCell>
                                                         <TableCell>{child.rollSerialNumber}</TableCell>
                                                     </TableRow>

@@ -1,3 +1,4 @@
+
 [
   {
     "customerName": "Example Customer A",
@@ -6,12 +7,14 @@
       {
         "pid": "C-001",
         "rollId": "2",
-        "rollSerialNumber": "1146"
+        "rollSerialNumber": "1146",
+        "completed": false
       },
       {
         "pid": "C-002",
         "rollId": "3",
-        "rollSerialNumber": "1149"
+        "rollSerialNumber": "1149",
+        "completed": true
       }
     ],
     "id": "wo-1765000154207",
@@ -24,12 +27,11 @@
       {
         "pid": "C-003",
         "rollId": "10",
-        "rollSerialNumber": "1156"
+        "rollSerialNumber": "1156",
+        "completed": false
       }
     ],
     "id": "wo-1765000154208",
     "createdAt": "2025-12-05T10:30:00.000Z"
   }
 ]
-
-    

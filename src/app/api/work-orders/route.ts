@@ -33,11 +33,21 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const newWorkOrder = await request.json();
-    const allWorkOrders = await readData();
-    allWorkOrders.push(newWorkOrder);
-    await writeData(allWorkOrders);
-    return NextResponse.json({ message: 'Work order saved successfully' });
+    const newData = await request.json();
+    const isArray = Array.isArray(newData);
+    
+    if (isArray) {
+      // This is for updating the whole array (e.g., toggling completion)
+      await writeData(newData);
+      return NextResponse.json({ message: 'Work orders updated successfully' });
+    } else {
+      // This is for adding a single new work order
+      const allWorkOrders = await readData();
+      allWorkOrders.push(newData);
+      await writeData(allWorkOrders);
+      return NextResponse.json({ message: 'Work order saved successfully' });
+    }
+
   } catch (error) {
     console.error('Failed to write work order data:', error);
     return NextResponse.json({ message: 'Failed to write work order data' }, { status: 500 });

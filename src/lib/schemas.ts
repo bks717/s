@@ -70,6 +70,7 @@ const childPidSchema = z.object({
   pid: z.string().min(1, "Child PID is required."),
   rollId: z.string().min(1, "Please select a roll."),
   rollSerialNumber: z.string().optional(), // Not in form, added for display
+  completed: z.boolean().default(false),
 });
 
 export const workOrderSchema = z.object({

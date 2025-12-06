@@ -84,10 +84,9 @@ export default function LoomSheetForm({
       const avg = (net * 1000) / mtrs;
       form.setValue('average', parseFloat(avg.toFixed(2)));
       
-       if(gram > 0 && width > 0) {
-        const idealWeight = width * gram;
-        const ub = idealWeight + (idealWeight * 0.05);
-        const lb = idealWeight - (idealWeight * 0.05);
+       if(gram > 0) {
+        const ub = gram + 3;
+        const lb = gram - 3;
         form.setValue('variance', `UB: ${ub.toFixed(2)} / LB: ${lb.toFixed(2)}`);
         setIsAverageOutOfRange(avg < lb || avg > ub);
       } else {

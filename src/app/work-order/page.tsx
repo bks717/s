@@ -170,7 +170,7 @@ export default function WorkOrderPage() {
   const handleConsumptionSubmit = (
     workOrderToUpdate: WorkOrderData,
     consumptionStates: { [rollId: string]: 'full' | { partialData: Omit<LoomSheetData, 'id' | 'productionDate'> } },
-    bagData?: { kgProduced?: number, bagCount?: number }
+    consumptionDetails: { soNumber?: string, poNumber?: string, kgProduced?: number, bagCount?: number }
   ) => {
     let updatedLoomData = [...allData];
     const consumedBy = `WO: ${workOrderToUpdate.parentPid}`;
@@ -181,8 +181,10 @@ export default function WorkOrderPage() {
 
       const consumptionInfo: Partial<LoomSheetData> = {
           consumedBy,
-          ...(bagData?.kgProduced && { kgProduced: bagData.kgProduced }),
-          ...(bagData?.bagCount && { bagCount: bagData.bagCount }),
+          soNumber: consumptionDetails.soNumber,
+          poNumber: consumptionDetails.poNumber,
+          ...(consumptionDetails.kgProduced && { kgProduced: consumptionDetails.kgProduced }),
+          ...(consumptionDetails.bagCount && { bagCount: consumptionDetails.bagCount }),
       };
 
       if (state === 'full') {
@@ -405,3 +407,5 @@ export default function WorkOrderPage() {
     </>
   );
 }
+
+    

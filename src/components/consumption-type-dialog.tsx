@@ -28,7 +28,7 @@ interface ConsumptionTypeDialogProps {
   onSubmit: (
     workOrderToUpdate: WorkOrderData,
     consumptionStates: { [rollId: string]: 'full' | { partialData: Omit<LoomSheetData, 'id' | 'productionDate'> } },
-    bagData?: { kgProduced?: number, bagCount?: number }
+    consumptionDetails: { soNumber?: string, poNumber?: string, kgProduced?: number, bagCount?: number }
   ) => void;
 }
 
@@ -37,6 +37,8 @@ export function ConsumptionTypeDialog({ isOpen, onClose, workOrder, allRolls, on
   const [partialUseDialogState, setPartialUseDialogState] = useState<{ isOpen: boolean; roll: LoomSheetData | null }>({ isOpen: false, roll: null });
   const [kgProduced, setKgProduced] = useState<number | undefined>();
   const [bagCount, setBagCount] = useState<number | undefined>();
+  const [soNumber, setSoNumber] = useState<string | undefined>();
+  const [poNumber, setPoNumber] = useState<string | undefined>();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -49,6 +51,8 @@ export function ConsumptionTypeDialog({ isOpen, onClose, workOrder, allRolls, on
       setConsumptionStates(initialStates);
       setKgProduced(undefined);
       setBagCount(undefined);
+      setSoNumber(undefined);
+      setPoNumber(undefined);
     }
   }, [isOpen, workOrder]);
 
@@ -75,8 +79,13 @@ export function ConsumptionTypeDialog({ isOpen, onClose, workOrder, allRolls, on
   };
   
   const handleSubmit = () => {
-    const bagData = workOrder.workOrderType === 'Bags' ? { kgProduced, bagCount } : undefined;
-    onSubmit(workOrder, consumptionStates, bagData);
+    const consumptionDetails = { 
+      soNumber, 
+      poNumber, 
+      kgProduced, 
+      bagCount 
+    };
+    onSubmit(workOrder, consumptionStates, consumptionDetails);
   }
 
   const getPartialButtonLabel = (rollId: string) => {
@@ -107,6 +116,32 @@ export function ConsumptionTypeDialog({ isOpen, onClose, workOrder, allRolls, on
           </DialogHeader>
           <ScrollArea className="h-[60vh] p-4">
             <div className="space-y-6">
+               <div className='p-4 border rounded-md bg-muted/50'>
+                    <h4 className="font-semibold mb-4 text-primary">Order Details</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <Label htmlFor="so-number">S/O Number</Label>
+                            <Input 
+                                id="so-number" 
+                                type="text" 
+                                placeholder="Enter S/O Number"
+                                value={soNumber || ''}
+                                onChange={(e) => setSoNumber(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="po-number">P/O Number</Label>
+                            <Input 
+                                id="po-number" 
+                                type="text" 
+                                placeholder="Enter P/O Number"
+                                value={poNumber || ''}
+                                onChange={(e) => setPoNumber(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                </div>
+
               {workOrder.workOrderType === 'Bags' && (
                 <div className='p-4 border rounded-md bg-muted/50'>
                     <h4 className="font-semibold mb-4 text-primary">Bag Production Details</h4>
@@ -168,3 +203,5 @@ export function ConsumptionTypeDialog({ isOpen, onClose, workOrder, allRolls, on
     </>
   );
 }
+
+    

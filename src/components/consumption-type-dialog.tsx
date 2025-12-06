@@ -120,17 +120,6 @@ export function ConsumptionTypeDialog({ isOpen, onClose, workOrder, allRolls, on
                       <Label htmlFor={`partial-${roll.id}`}>Partially Consumed</Label>
                     </div>
                   </RadioGroup>
-                  {typeof consumptionStates[roll.id!] !== 'full' && (
-                    <div className='mt-2'>
-                        <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleStateChange(roll.id!, 'partial')}
-                        >
-                           {getPartialButtonLabel(roll.id!)}
-                        </Button>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>

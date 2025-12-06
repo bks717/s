@@ -220,7 +220,7 @@ export default function Home() {
   
   if (isLoading) {
     return (
-      <main className="container mx-auto p-4 md:p-8 flex items-center justify-center h-screen">
+      <main className="flex items-center justify-center h-screen">
         <div className="text-center">
           <h1 className="text-4xl font-bold tracking-tight text-primary font-headline">
             Loading LoomSheet Data...
@@ -234,7 +234,7 @@ export default function Home() {
   }
 
   return (
-    <main className="container mx-auto p-4 md:p-8">
+    <>
       <div className="flex flex-col items-center text-center mb-8">
         <h1 className="text-4xl font-bold tracking-tight text-primary font-headline">
           LoomSheet
@@ -258,6 +258,6 @@ export default function Home() {
         onMarkAsLaminated={handleMarkAsLaminated}
         onCollaborateAndCreate={handleCollaborateAndCreate}
       />
-    </main>
+    </>
   );
 }

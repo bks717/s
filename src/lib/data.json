@@ -144,7 +144,7 @@
   },
   {
     "id": "8",
-    "productionDate": null,
+    "productionDate": "1970-01-01T00:00:00.000Z",
     "serialNumber": "1124",
     "width": 26,
     "gram": 3.2,
@@ -221,5 +221,24 @@
     "status": "Ready for Lamination",
     "id": "1764400350464",
     "productionDate": "2025-11-29T07:12:30.464Z"
+  },
+  {
+    "serialNumber": "111",
+    "operatorName": "b",
+    "loomNo": "12",
+    "width": 11,
+    "gram": 1,
+    "fabricType": "Tube",
+    "color": "Orange",
+    "lamination": "Unlammed",
+    "mtrs": 11,
+    "gw": 13,
+    "cw": 1,
+    "nw": 12,
+    "average": 1090.91,
+    "variance": "UB: 11.55 / LB: 10.45",
+    "status": "Ready for Lamination",
+    "id": "1764401668980",
+    "productionDate": "2025-11-29T07:34:28.980Z"
   }
 ]

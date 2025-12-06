@@ -1,3 +1,4 @@
+
 [
   {
     "id": "1",
@@ -33,7 +34,8 @@
     "nw": 137.4,
     "average": 65,
     "lamination": "Unlammed",
-    "status": "For Work Order",
+    "status": "Consumed",
+    "consumedBy": "WO: P-001-A",
     "callOut": "6+6 Normal Lam",
     "operatorName": "b",
     "loomNo": "L-02",
@@ -53,7 +55,8 @@
     "nw": 158.6,
     "average": 85,
     "lamination": "Unlammed",
-    "status": "For Work Order",
+    "status": "Consumed",
+    "consumedBy": "WO: P-001-A",
     "callOut": "6+6 Normal Lam",
     "operatorName": "a",
     "loomNo": "L-03",
@@ -159,6 +162,8 @@
     "status": "Consumed",
     "callOut": "Jewel Single Side BOPP, Back side Unlam",
     "consumedBy": "Internal Use",
+    "soNumber": "SO-Internal",
+    "poNumber": "PO-Internal",
     "operatorName": "b",
     "loomNo": "L-08",
     "variance": "UB: 87.36 / LB: 79.04"
@@ -197,7 +202,8 @@
     "nw": 147.7,
     "average": 78,
     "lamination": "Unlammed",
-    "status": "Ready for Lamination",
+    "status": "Consumed",
+    "consumedBy": "WO: P-002-B",
     "callOut": "Jewel Single Side BOPP, Back side Unlam",
     "operatorName": "b",
     "loomNo": "L-10",
@@ -244,5 +250,3 @@
     "consumedBy": "WO: 131313"
   }
 ]
-
-    

@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +20,7 @@ import { CollaborateSentLaminationDialog } from './collaborate-sent-lamination-d
 import { SendForLaminationDialog } from './send-for-lamination-dialog';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 
 
 interface AdminSectionProps {
@@ -61,8 +62,20 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [laminationFilter, setLaminationFilter] = useState<'all' | 'true' | 'false'>('all');
   
-  const remainingData = allData.filter(d => !d.consumedBy && d.status !== 'For Work Order');
-  const consumedData = allData.filter(d => !!d.consumedBy);
+  const remainingData = allData.filter(d => d.status !== 'Consumed' && d.status !== 'For Work Order');
+  const consumedData = allData.filter(d => d.status === 'Consumed');
+
+  const groupedConsumedData = useMemo(() => {
+    const groups: Record<string, LoomSheetData[]> = {};
+    consumedData.forEach(roll => {
+        const key = roll.soNumber || roll.consumedBy || 'Uncategorized';
+        if (!groups[key]) {
+            groups[key] = [];
+        }
+        groups[key].push(roll);
+    });
+    return Object.entries(groups).sort(([, a], [, b]) => b.length - a.length);
+  }, [consumedData]);
   
   const onSetSelectedRowIds = useCallback((ids: string[]) => {
     setSelectedRowIds(ids);
@@ -504,9 +517,14 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                         <CardTitle>Laminated Rolls</CardTitle>
                         <CardDescription>Process rolls that have been received from lamination.</CardDescription>
                       </div>
-                      <Button onClick={handleMarkAsLaminatedClick} disabled={selectedLaminatedIds.length === 0}>
-                        <RefreshCw className="mr-2 h-4 w-4" /> Mark as Laminated
-                      </Button>
+                       <div className="flex gap-2">
+                        <Button onClick={handleSendForWorkOrderClick} disabled={selectedLaminatedIds.length === 0}>
+                            <FileText className="mr-2 h-4 w-4" /> Work Order
+                        </Button>
+                        <Button onClick={handleOpenConsumedDialog} disabled={selectedLaminatedIds.length === 0}>
+                            <CheckSquare className="mr-2 h-4 w-4" /> Mark Consumed
+                        </Button>
+                      </div>
                     </CardHeader>
                     <CardContent>
                       <DataTable 
@@ -518,29 +536,62 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                     </CardContent>
                   </Card>
                </div>
+            ) : currentView === 'consumed' ? (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Consumed Rolls</CardTitle>
+                        <CardDescription>A log of all consumed rolls, grouped by S/O number or consumer.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {groupedConsumedData.length > 0 ? (
+                             <Accordion type="single" collapsible className="w-full">
+                                {groupedConsumedData.map(([groupName, rolls]) => (
+                                    <AccordionItem value={groupName} key={groupName}>
+                                        <AccordionTrigger>
+                                            <div className="flex justify-between w-full pr-4 items-center">
+                                                <span className='font-bold text-lg text-primary'>{groupName}</span>
+                                                <span className='text-md text-muted-foreground'>{rolls.length} roll(s)</span>
+                                            </div>
+                                        </AccordionTrigger>
+                                        <AccordionContent>
+                                            <DataTable 
+                                                data={rolls} 
+                                                view="consumed" 
+                                                selectedRowIds={[]}
+                                                onSelectedRowIdsChange={() => {}} 
+                                            />
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                            </Accordion>
+                        ) : (
+                            <div className="text-center text-muted-foreground py-12">
+                                <p className="text-lg">No rolls have been marked as consumed.</p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
             ) : (
               <Card className="shadow-lg">
                 <CardHeader className="flex flex-row justify-between items-center">
                   <div>
                     <CardTitle>
-                      {currentView === 'remaining' ? 'Inventory' : 'Consumed Rolls'}
+                      Inventory
                     </CardTitle>
-                    <CardDescription>A log of all {currentView === 'remaining' ? 'inventory' : 'consumed'} rolls. You can sort by clicking on column headers.</CardDescription>
+                    <CardDescription>A log of all inventory rolls. You can sort by clicking on column headers.</CardDescription>
                   </div>
-                  {currentView === 'remaining' && (
-                     <div className="flex gap-2">
-                        <Button onClick={handleSendForWorkOrderClick} disabled={selectedRowIds.length === 0}>
-                          <FileText className="mr-2 h-4 w-4" /> Work Order
-                        </Button>
-                     </div>
-                  )}
+                  <div className="flex gap-2">
+                    <Button onClick={handleSendForWorkOrderClick} disabled={selectedRowIds.length === 0}>
+                      <FileText className="mr-2 h-4 w-4" /> Work Order
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <DataTable 
-                    data={currentView === 'remaining' ? filteredRemainingData : consumedData}
+                    data={filteredRemainingData}
                     selectedRowIds={selectedRowIds}
                     onSelectedRowIdsChange={onSetSelectedRowIds}
-                    showCheckboxes={currentView === 'remaining'}
+                    showCheckboxes={true}
                     view={currentView}
                   />
                 </CardContent>
@@ -551,5 +602,3 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     </>
   );
 }
-
-    

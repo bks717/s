@@ -62,7 +62,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [laminationFilter, setLaminationFilter] = useState<'all' | 'true' | 'false'>('all');
   
-  const remainingData = allData.filter(d => d.status !== 'Consumed' && d.status !== 'For Work Order');
+  const remainingData = allData.filter(d => d.status !== 'Consumed' && d.status !== 'For Work Order' && d.status !== 'In Progress');
   const consumedData = allData.filter(d => d.status === 'Consumed');
 
   const groupedConsumedData = useMemo(() => {
@@ -321,7 +321,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     return statusMatch && laminationMatch;
   });
 
-  const availableFilters = statuses.filter(s => s !== 'Consumed');
+  const availableFilters = statuses.filter(s => s !== 'Consumed' && s !== 'For Work Order' && s !== 'In Progress');
 
   return (
     <>

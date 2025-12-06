@@ -179,7 +179,7 @@ export default function WorkOrderPage() {
       
       const updatedRollsData = allData.map(item =>
         consumedRollIds.includes(item.id!)
-          ? { ...item, status: 'Consumed' as const, consumedBy: `WO: ${formData.parentPid}`, productionDate: new Date() }
+          ? { ...item, status: 'In Progress' as const, consumedBy: `WO: ${formData.parentPid}`, productionDate: new Date() }
           : item
       );
       await updateData(updatedRollsData);
@@ -292,18 +292,13 @@ export default function WorkOrderPage() {
   const selectedRollForPartialUse = selectedRowIds.length === 1 ? allData.find(d => d.id === selectedRowIds[0]) : undefined;
 
   const workOrdersWithRolls = useMemo(() => {
-    const consumedRollIdsInWo = new Set(workOrders.flatMap(wo => wo.childPids.map(p => p.rollId)));
-    
     return workOrders.map(wo => {
-      const rolls = wo.childPids.map(child => {
-        const roll = allData.find(r => r.id === child.rollId);
-        // If roll is not found, it might have been fully consumed and its status changed
-        if (roll) return roll;
-        // Let's find it in the consumed data
-        const consumedRoll = allData.find(r => r.id === child.rollId && r.status === 'Consumed');
-        return consumedRoll;
-      }).filter((roll): roll is LoomSheetData => !!roll);
-      return { ...wo, rolls };
+        const rolls = wo.childPids.map(child => {
+            const roll = allData.find(r => r.id === child.rollId);
+            return roll ? { ...roll, completed: child.completed, childPid: child.pid } : null;
+        }).filter((roll): roll is (LoomSheetData & { completed: boolean; childPid: string }) => !!roll);
+        
+        return { ...wo, rolls };
     }).sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
   }, [workOrders, allData]);
 
@@ -413,12 +408,45 @@ export default function WorkOrderPage() {
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent>
-                                      <DataTable 
-                                        data={wo.rolls} 
-                                        onSelectedRowIdsChange={onSetSelectedRowIds}
-                                        selectedRowIds={selectedRowIds}
-                                        showCheckboxes={true}
-                                      />
+                                      <Table>
+                                        <TableHeader>
+                                          <TableRow>
+                                            <TableHead className='w-10'></TableHead>
+                                            <TableHead>Child PID</TableHead>
+                                            <TableHead>Roll No</TableHead>
+                                            <TableHead>Meters</TableHead>
+                                            <TableHead>Net Weight</TableHead>
+                                            <TableHead>Completed</TableHead>
+                                          </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                          {wo.rolls.map(roll => (
+                                            <TableRow key={roll.id}>
+                                              <TableCell>
+                                                <Checkbox
+                                                  checked={selectedRowIds.includes(roll.id!)}
+                                                  onCheckedChange={(checked) => {
+                                                    const newSelectedIds = checked
+                                                      ? [...selectedRowIds, roll.id!]
+                                                      : selectedRowIds.filter(id => id !== roll.id!);
+                                                    setSelectedRowIds(newSelectedIds);
+                                                  }}
+                                                />
+                                              </TableCell>
+                                              <TableCell>{roll.childPid}</TableCell>
+                                              <TableCell>{roll.serialNumber}</TableCell>
+                                              <TableCell>{roll.mtrs}</TableCell>
+                                              <TableCell>{roll.nw}</TableCell>
+                                              <TableCell>
+                                                <Checkbox
+                                                  checked={roll.completed}
+                                                  onCheckedChange={() => handleToggleChildPidCompletion(wo.id!, roll.childPid)}
+                                                />
+                                              </TableCell>
+                                            </TableRow>
+                                          ))}
+                                        </TableBody>
+                                      </Table>
                                     </AccordionContent>
                                 </AccordionItem>
                             ))}
@@ -436,5 +464,3 @@ export default function WorkOrderPage() {
     </>
   );
 }
-
-    

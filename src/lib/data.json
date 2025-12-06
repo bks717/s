@@ -35,7 +35,9 @@
     "average": 65,
     "lamination": "Unlammed",
     "status": "Consumed",
-    "consumedBy": "WO: P-001-A",
+    "consumedBy": "Customer XYZ",
+    "soNumber": "SO-456",
+    "poNumber": "PO-789",
     "callOut": "6+6 Normal Lam",
     "operatorName": "b",
     "loomNo": "L-02",
@@ -55,7 +57,7 @@
     "nw": 158.6,
     "average": 85,
     "lamination": "Unlammed",
-    "status": "Consumed",
+    "status": "In Progress",
     "consumedBy": "WO: P-001-A",
     "callOut": "6+6 Normal Lam",
     "operatorName": "a",
@@ -116,7 +118,7 @@
     "nw": 185.2,
     "average": 80,
     "lamination": "Lam active",
-    "status": "Laminated",
+    "status": "Partially Consumed",
     "callOut": "Jewel Single Side BOPP, Back side Unlam",
     "operatorName": "b",
     "loomNo": "L-06",
@@ -182,7 +184,8 @@
     "nw": 200.6,
     "average": 80,
     "lamination": "Unlammed",
-    "status": "Ready for Lamination",
+    "status": "In Progress",
+    "consumedBy": "WO: P-001-A",
     "callOut": "Jewel Single Side BOPP, Back side Unlam",
     "operatorName": "a",
     "loomNo": "L-09",
@@ -227,7 +230,8 @@
     "status": "Consumed",
     "id": "1764400350464",
     "productionDate": "2025-11-29T07:12:30.464Z",
-    "consumedBy": "WO: 131313"
+    "consumedBy": "Customer ABC",
+    "soNumber": "SO-123"
   },
   {
     "serialNumber": "111",
@@ -247,6 +251,7 @@
     "status": "Consumed",
     "id": "1764401668980",
     "productionDate": "2025-11-29T07:34:28.980Z",
-    "consumedBy": "WO: 131313"
+    "consumedBy": "Customer XYZ",
+    "soNumber": "SO-456"
   }
 ]

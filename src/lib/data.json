@@ -14,7 +14,7 @@
     "nw": 151.8,
     "average": 103,
     "lamination": "Unlammed",
-    "status": "For Work Order",
+    "status": "Ready for Lamination",
     "callOut": "7+7 Natural Lam",
     "operatorName": "a",
     "loomNo": "L-01",
@@ -182,7 +182,7 @@
     "nw": 200.6,
     "average": 80,
     "lamination": "Unlammed",
-    "status": "For Work Order",
+    "status": "Ready for Lamination",
     "callOut": "Jewel Single Side BOPP, Back side Unlam",
     "operatorName": "a",
     "loomNo": "L-09",
@@ -202,7 +202,7 @@
     "nw": 147.7,
     "average": 78,
     "lamination": "Unlammed",
-    "status": "For Work Order",
+    "status": "In Progress",
     "consumedBy": "WO: P-002-B",
     "callOut": "Jewel Single Side BOPP, Back side Unlam",
     "operatorName": "b",
@@ -250,5 +250,3 @@
     "consumedBy": "WO: 131313"
   }
 ]
-
-  

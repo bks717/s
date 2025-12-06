@@ -1,4 +1,3 @@
-
 [
   {
     "customerName": "Example Customer A",
@@ -8,18 +7,16 @@
         "pid": "C-001",
         "rollId": "10",
         "rollSerialNumber": "1156",
-        "completed": true
+        "completed": false
       },
       {
         "pid": "C-002",
         "rollId": "9",
         "rollSerialNumber": "1131",
-        "completed": false
+        "completed": true
       }
     ],
     "id": "wo-1765000154207",
     "createdAt": "2025-12-06T05:49:14.207Z"
   }
 ]
-
-  

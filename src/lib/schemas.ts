@@ -65,3 +65,19 @@ export const consumedBySchema = z.object({
 });
 
 export type ConsumedByData = z.infer<typeof consumedBySchema>;
+
+const childPidSchema = z.object({
+  pid: z.string().min(1, "Child PID is required."),
+  rollId: z.string().min(1, "Please select a roll."),
+  rollSerialNumber: z.string().optional(), // Not in form, added for display
+});
+
+export const workOrderSchema = z.object({
+  id: z.string().optional(),
+  createdAt: z.date().optional(),
+  customerName: z.string().min(1, 'Customer name is required.'),
+  parentPid: z.string().min(1, 'Parent PID is required.'),
+  childPids: z.array(childPidSchema).min(1, "At least one Child PID is required."),
+});
+
+export type WorkOrderData = z.infer<typeof workOrderSchema>;

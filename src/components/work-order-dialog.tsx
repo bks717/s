@@ -4,7 +4,6 @@
 import React, { useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import {
   Dialog,
@@ -18,33 +17,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { LoomSheetData } from '@/lib/schemas';
+import { LoomSheetData, workOrderSchema, WorkOrderData } from '@/lib/schemas';
 import { ScrollArea } from './ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 
 interface WorkOrderDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  workOrderRolls: LoomSheetData[];
   selectedRolls: LoomSheetData[];
-  onSubmit: (data: any) => void;
+  onSubmit: (data: Omit<WorkOrderData, 'id' | 'createdAt'>) => void;
 }
 
-const childPidSchema = z.object({
-  pid: z.string().min(1, "Child PID is required."),
-  rollId: z.string().min(1, "Please select a roll."),
-});
+type WorkOrderFormData = Omit<WorkOrderData, 'id' | 'createdAt'>;
 
-const workOrderSchema = z.object({
-  customerName: z.string().min(1, 'Customer name is required.'),
-  parentPid: z.string().min(1, 'Parent PID is required.'),
-  childPids: z.array(childPidSchema).min(1, "At least one Child PID is required."),
-});
-
-type WorkOrderFormData = z.infer<typeof workOrderSchema>;
-
-export function WorkOrderDialog({ isOpen, onClose, workOrderRolls, selectedRolls, onSubmit }: WorkOrderDialogProps) {
+export function WorkOrderDialog({ isOpen, onClose, selectedRolls, onSubmit }: WorkOrderDialogProps) {
+  const { toast } = useToast();
   const form = useForm<WorkOrderFormData>({
-    resolver: zodResolver(workOrderSchema),
+    resolver: zodResolver(workOrderSchema.omit({ id: true, createdAt: true })),
     defaultValues: {
       customerName: '',
       parentPid: '',
@@ -56,6 +45,8 @@ export function WorkOrderDialog({ isOpen, onClose, workOrderRolls, selectedRolls
     control: form.control,
     name: 'childPids',
   });
+  
+  const watchedChildPids = form.watch('childPids');
 
   useEffect(() => {
     if (isOpen) {
@@ -66,20 +57,35 @@ export function WorkOrderDialog({ isOpen, onClose, workOrderRolls, selectedRolls
       });
     }
   }, [isOpen, form]);
+  
+  const handleFormSubmit = (data: WorkOrderFormData) => {
+    const selectedRollIds = new Set(data.childPids.map(p => p.rollId));
+    if (selectedRollIds.size !== data.childPids.length) {
+        toast({
+            variant: 'destructive',
+            title: 'Duplicate Roll Selection',
+            description: 'The same roll cannot be used for multiple Child PIDs. Please select a unique roll for each entry.'
+        });
+        return;
+    }
+    onSubmit(data);
+  };
 
-  const availableRolls = workOrderRolls.filter(roll => selectedRolls.some(selected => selected.id === roll.id));
-
+  const availableRolls = selectedRolls.filter(
+    roll => !watchedChildPids.some(p => p.rollId === roll.id)
+  );
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Process Work Order</DialogTitle>
           <DialogDescription>
-            Enter the details for the work order. Selected rolls will be processed.
+            Enter the details for the work order. Selected rolls will be consumed.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={form.handleSubmit(handleFormSubmit)}>
             <ScrollArea className="h-[60vh] p-4">
               <div className="space-y-6">
                 <FormField
@@ -112,54 +118,59 @@ export function WorkOrderDialog({ isOpen, onClose, workOrderRolls, selectedRolls
                 <div>
                   <FormLabel>Child PIDs</FormLabel>
                   <div className="space-y-4 mt-2">
-                    {fields.map((field, index) => (
-                      <div key={field.id} className="flex items-center gap-2">
-                        <FormField
-                          control={form.control}
-                          name={`childPids.${index}.pid`}
-                          render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormControl>
-                                <Input placeholder={`Child PID #${index + 1}`} {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name={`childPids.${index}.rollId`}
-                          render={({ field }) => (
-                            <FormItem className="flex-1">
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select a Roll No." />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {availableRolls.map(roll => (
-                                            <SelectItem key={roll.id} value={roll.id!}>
-                                                {roll.serialNumber}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => remove(index)}
-                          disabled={fields.length <= 1}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    ))}
+                    {fields.map((field, index) => {
+                      const currentRollId = watchedChildPids[index]?.rollId;
+                      const currentRoll = selectedRolls.find(r => r.id === currentRollId);
+                      return (
+                          <div key={field.id} className="flex items-center gap-2">
+                            <FormField
+                              control={form.control}
+                              name={`childPids.${index}.pid`}
+                              render={({ field }) => (
+                                <FormItem className="flex-1">
+                                  <FormControl>
+                                    <Input placeholder={`Child PID #${index + 1}`} {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name={`childPids.${index}.rollId`}
+                              render={({ field }) => (
+                                <FormItem className="flex-1">
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a Roll No." />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {currentRoll && <SelectItem value={currentRoll.id!}>{currentRoll.serialNumber}</SelectItem>}
+                                            {availableRolls.map(roll => (
+                                                <SelectItem key={roll.id} value={roll.id!}>
+                                                    {roll.serialNumber}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => remove(index)}
+                              disabled={fields.length <= 1}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                      );
+                    })}
                   </div>
                   <Button
                     type="button"
@@ -167,6 +178,7 @@ export function WorkOrderDialog({ isOpen, onClose, workOrderRolls, selectedRolls
                     size="sm"
                     className="mt-2"
                     onClick={() => append({ pid: '', rollId: '' })}
+                    disabled={fields.length >= selectedRolls.length}
                   >
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add Child PID

@@ -169,7 +169,8 @@ export default function WorkOrderPage() {
 
   const handleConsumptionSubmit = (
     workOrderToUpdate: WorkOrderData,
-    consumptionStates: { [rollId: string]: 'full' | { partialData: Omit<LoomSheetData, 'id' | 'productionDate'> } }
+    consumptionStates: { [rollId: string]: 'full' | { partialData: Omit<LoomSheetData, 'id' | 'productionDate'> } },
+    bagData?: { kgProduced?: number, bagCount?: number }
   ) => {
     let updatedLoomData = [...allData];
     const consumedBy = `WO: ${workOrderToUpdate.parentPid}`;
@@ -178,10 +179,16 @@ export default function WorkOrderPage() {
       const originalRoll = allData.find(r => r.id === rollId);
       if (!originalRoll) return;
 
+      const consumptionInfo: Partial<LoomSheetData> = {
+          consumedBy,
+          ...(bagData?.kgProduced && { kgProduced: bagData.kgProduced }),
+          ...(bagData?.bagCount && { bagCount: bagData.bagCount }),
+      };
+
       if (state === 'full') {
         updatedLoomData = updatedLoomData.map(roll =>
           roll.id === rollId
-            ? { ...roll, status: 'Consumed', productionDate: new Date(), consumedBy }
+            ? { ...roll, status: 'Consumed', productionDate: new Date(), ...consumptionInfo }
             : roll
         );
       } else if (typeof state === 'object' && state.partialData) {
@@ -191,8 +198,8 @@ export default function WorkOrderPage() {
           id: (Date.now() + Math.random()).toString(),
           productionDate: new Date(),
           status: 'Consumed',
-          consumedBy,
           serialNumber: originalRoll.serialNumber, // Keep original serial number for consumed part
+          ...consumptionInfo
         };
 
         updatedLoomData = updatedLoomData.map(item => {
@@ -283,7 +290,7 @@ export default function WorkOrderPage() {
          <ConsumptionTypeDialog
             isOpen={consumptionDialogState.isOpen}
             onClose={() => setConsumptionDialogState({isOpen: false, workOrder: null})}
-            workOrder={consumptionDialogState.workOrder}
+            workOrder={consumptionDialogState.workOrder as any}
             allRolls={allData}
             onSubmit={handleConsumptionSubmit}
          />

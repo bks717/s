@@ -35,6 +35,11 @@ export const loomSheetSchema = z.object({
   consumedBy: z.string().optional(),
   soNumber: z.string().optional(),
   poNumber: z.string().optional(),
+  
+  // Bag production fields
+  kgProduced: z.coerce.number().optional(),
+  bagCount: z.coerce.number().optional(),
+
   noOfBags: z.coerce.number().optional(),
   avgBagWeight: z.coerce.number().optional(),
   bagSize: z.string().optional(),

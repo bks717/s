@@ -17,6 +17,8 @@ import { LoomSheetData, WorkOrderData } from '@/lib/schemas';
 import { ScrollArea } from './ui/scroll-area';
 import { PartialUseDialog } from './partial-use-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Input } from './ui/input';
+import { Separator } from './ui/separator';
 
 interface ConsumptionTypeDialogProps {
   isOpen: boolean;
@@ -25,13 +27,16 @@ interface ConsumptionTypeDialogProps {
   allRolls: LoomSheetData[];
   onSubmit: (
     workOrderToUpdate: WorkOrderData,
-    consumptionStates: { [rollId: string]: 'full' | { partialData: Omit<LoomSheetData, 'id' | 'productionDate'> } }
+    consumptionStates: { [rollId: string]: 'full' | { partialData: Omit<LoomSheetData, 'id' | 'productionDate'> } },
+    bagData?: { kgProduced?: number, bagCount?: number }
   ) => void;
 }
 
 export function ConsumptionTypeDialog({ isOpen, onClose, workOrder, allRolls, onSubmit }: ConsumptionTypeDialogProps) {
   const [consumptionStates, setConsumptionStates] = useState<{ [rollId: string]: 'full' | { partialData: Omit<LoomSheetData, 'id' | 'productionDate'> } }>({});
   const [partialUseDialogState, setPartialUseDialogState] = useState<{ isOpen: boolean; roll: LoomSheetData | null }>({ isOpen: false, roll: null });
+  const [kgProduced, setKgProduced] = useState<number | undefined>();
+  const [bagCount, setBagCount] = useState<number | undefined>();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -42,6 +47,8 @@ export function ConsumptionTypeDialog({ isOpen, onClose, workOrder, allRolls, on
         return acc;
       }, {} as { [rollId: string]: 'full' });
       setConsumptionStates(initialStates);
+      setKgProduced(undefined);
+      setBagCount(undefined);
     }
   }, [isOpen, workOrder]);
 
@@ -49,7 +56,6 @@ export function ConsumptionTypeDialog({ isOpen, onClose, workOrder, allRolls, on
     if (value === 'full') {
       setConsumptionStates(prev => ({ ...prev, [rollId]: 'full' }));
     } else {
-      // Defer partial data entry, just mark it for now
       const rollToEdit = workOrder.rolls.find(r => r.id === rollId);
       if (rollToEdit) {
         setPartialUseDialogState({ isOpen: true, roll: rollToEdit });
@@ -69,7 +75,8 @@ export function ConsumptionTypeDialog({ isOpen, onClose, workOrder, allRolls, on
   };
   
   const handleSubmit = () => {
-    onSubmit(workOrder, consumptionStates);
+    const bagData = workOrder.workOrderType === 'Bags' ? { kgProduced, bagCount } : undefined;
+    onSubmit(workOrder, consumptionStates, bagData);
   }
 
   const getPartialButtonLabel = (rollId: string) => {
@@ -100,6 +107,34 @@ export function ConsumptionTypeDialog({ isOpen, onClose, workOrder, allRolls, on
           </DialogHeader>
           <ScrollArea className="h-[60vh] p-4">
             <div className="space-y-6">
+              {workOrder.workOrderType === 'Bags' && (
+                <div className='p-4 border rounded-md bg-muted/50'>
+                    <h4 className="font-semibold mb-4 text-primary">Bag Production Details</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <Label htmlFor="kg-produced">KG Produced</Label>
+                            <Input 
+                                id="kg-produced" 
+                                type="number" 
+                                placeholder="Enter total KG produced"
+                                value={kgProduced || ''}
+                                onChange={(e) => setKgProduced(parseFloat(e.target.value))}
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="bag-count">Bag Count</Label>
+                            <Input 
+                                id="bag-count" 
+                                type="number" 
+                                placeholder="Enter total number of bags"
+                                value={bagCount || ''}
+                                onChange={(e) => setBagCount(parseInt(e.target.value))}
+                            />
+                        </div>
+                    </div>
+                </div>
+              )}
+              <Separator />
               {workOrder.rolls.map(roll => (
                 <div key={roll.id} className="p-4 border rounded-md">
                   <h4 className="font-semibold">{roll.serialNumber} (PID: {roll.childPid})</h4>

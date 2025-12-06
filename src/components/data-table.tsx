@@ -34,7 +34,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'productionDate', direction: 'descending' });
 
   const baseColumns: { key: keyof LoomSheetData | 'select', label: string, className?: string }[] = [
-    { key: 'productionDate', label: 'Prod. Date' },
+    { key: 'productionDate', label: 'Date' },
     { key: 'serialNumber', label: 'Roll No' },
     { key: 'operatorName', label: 'Operator' },
     { key: 'loomNo', label: 'Loom No.' },

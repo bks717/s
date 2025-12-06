@@ -93,7 +93,7 @@ export default function WorkOrderPage() {
 
       const updatedData = allData.map(item =>
         consumedRollIds.includes(item.id!)
-          ? { ...item, status: 'Consumed' as const, consumedBy: `WO: ${formData.parentPid}` }
+          ? { ...item, status: 'Consumed' as const, productionDate: new Date(), consumedBy: `WO: ${formData.parentPid}` }
           : item
       );
 

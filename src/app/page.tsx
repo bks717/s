@@ -76,7 +76,7 @@ export default function Home() {
   const handleMarkAsConsumed = (selectedIds: string[], consumptionData: ConsumedByData) => {
     const updatedData = allData.map(item =>
       selectedIds.includes(item.id!)
-        ? { ...item, status: 'Consumed' as const, ...consumptionData }
+        ? { ...item, status: 'Consumed' as const, productionDate: new Date(), ...consumptionData }
         : item
     );
     updateData(updatedData);
@@ -124,11 +124,12 @@ export default function Home() {
           nw: remainingNw,
           average: remainingAverage,
           variance: remainingVariance,
-          status: 'Partially Consumed'
+          status: 'Partially Consumed',
+          productionDate: new Date(),
         };
         
         if (updatedRemainingRoll.mtrs <= 0 && updatedRemainingRoll.gw <= 0) {
-           return { ...updatedRemainingRoll, status: 'Consumed' as const, mtrs: 0, gw: 0, cw: 0, nw: 0, average: 0, variance: 'N/A' };
+           return { ...updatedRemainingRoll, status: 'Consumed' as const, productionDate: new Date(), mtrs: 0, gw: 0, cw: 0, nw: 0, average: 0, variance: 'N/A' };
         }
         return updatedRemainingRoll;
       }
@@ -143,7 +144,7 @@ export default function Home() {
     const updatedData = allData.map(item => {
       const updateInfo = rollsToUpdate.find(update => update.id === item.id);
       if (updateInfo) {
-        return { ...item, status: 'Sent for Lamination' as const, callOut: updateInfo.callOut };
+        return { ...item, status: 'Sent for Lamination' as const, productionDate: new Date(), callOut: updateInfo.callOut };
       }
       return item;
     });
@@ -171,7 +172,8 @@ export default function Home() {
             if (item.id === oldRollId) {
                 return { 
                     ...item, 
-                    status: 'Consumed' as const, 
+                    status: 'Consumed' as const,
+                    productionDate: new Date(),
                     consumedBy: `Lam:\nNew Roll No. ${newSerialNumber}\nReceived Roll No: ${receivedSerialNumber}` 
                 };
             }
@@ -181,7 +183,7 @@ export default function Home() {
      } else {
         updatedData = allData.map(item => {
           if (selectedIds.includes(item.id!)) {
-            return { ...item, status: 'Laminated' as const };
+            return { ...item, status: 'Laminated' as const, productionDate: new Date() };
           }
           return item;
         });
@@ -192,7 +194,7 @@ export default function Home() {
   const handleMarkAsLaminated = (selectedIds: string[]) => {
     const updatedData = allData.map(item => {
       if (selectedIds.includes(item.id!)) {
-        return { ...item, status: 'Laminated' as const };
+        return { ...item, status: 'Laminated' as const, productionDate: new Date() };
       }
       return item;
     });
@@ -210,7 +212,7 @@ export default function Home() {
     
     let updatedData = allData.map(item => {
       if (selectedIds.includes(item.id!)) {
-        return { ...item, status: 'Consumed' as const, consumedBy: `Collaborated into ${newRollData.serialNumber}` };
+        return { ...item, status: 'Consumed' as const, productionDate: new Date(), consumedBy: `Collaborated into ${newRollData.serialNumber}` };
       }
       return item;
     });
@@ -221,7 +223,7 @@ export default function Home() {
   const handleSendForWorkOrder = (selectedIds: string[]) => {
     const updatedData = allData.map(item =>
       selectedIds.includes(item.id!)
-        ? { ...item, status: 'For Work Order' as const }
+        ? { ...item, status: 'For Work Order' as const, productionDate: new Date() }
         : item
     );
     updateData(updatedData);

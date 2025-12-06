@@ -84,6 +84,8 @@ export default function WorkOrderPage() {
         throw new Error('Failed to save data');
       }
       setAllData(updatedData);
+      // After updating data, we should refetch to ensure consistency
+      await fetchData();
     } catch (error) {
       console.error(error);
       toast({
@@ -105,56 +107,43 @@ export default function WorkOrderPage() {
       status: 'Consumed',
     };
     
-    let finalData = allData;
-
-    const updatedData = finalData.map(item => {
+    const updatedData = allData.map(item => {
       if (item.id === originalId) {
         const remainingMtrs = (item.mtrs || 0) - (consumedPartData.mtrs || 0);
         const remainingGw = (item.gw || 0) - (consumedPartData.gw || 0);
-        const remainingCw = item.cw || 0;
-        const remainingNw = remainingGw - remainingCw;
+        
+        const remainingNw = remainingGw - (item.cw || 0);
         
         let remainingAverage = 0;
-        let remainingVariance = 'N/A';
-
         if (remainingNw > 0 && remainingMtrs > 0) {
           remainingAverage = parseFloat(((remainingNw * 1000) / remainingMtrs).toFixed(2));
         }
         
-        if (remainingAverage > 0 && item.width && item.gram) {
-          const idealWeight = item.width * item.gram;
-          const ub = idealWeight + (idealWeight * 0.05);
-          const lb = idealWeight - (idealWeight * 0.05);
-          remainingVariance = `UB: ${ub.toFixed(2)} / LB: ${lb.toFixed(2)}`;
-        }
-
         const updatedRemainingRoll: LoomSheetData = {
           ...item,
           mtrs: remainingMtrs,
           gw: remainingGw,
-          cw: remainingCw,
           nw: remainingNw,
           average: remainingAverage,
-          variance: remainingVariance,
           status: 'Partially Consumed',
           productionDate: new Date(),
         };
         
         if (updatedRemainingRoll.mtrs <= 0 && updatedRemainingRoll.gw <= 0) {
-           return { ...updatedRemainingRoll, status: 'Consumed' as const, productionDate: new Date(), mtrs: 0, gw: 0, cw: 0, nw: 0, average: 0, variance: 'N/A' };
+           return { ...updatedRemainingRoll, status: 'Consumed' as const, productionDate: new Date(), mtrs: 0, gw: 0, cw: 0, nw: 0, average: 0 };
         }
         return updatedRemainingRoll;
       }
       return item;
     });
 
-    finalData = [...updatedData, newConsumedRoll];
+    const finalData = [...updatedData, newConsumedRoll];
     updateData(finalData);
   };
   
-  const handleMarkAsConsumed = (selectedIds: string[], consumptionData: ConsumedByData) => {
+  const handleMarkAsConsumed = (ids: string[], consumptionData: ConsumedByData) => {
     const updatedData = allData.map(item =>
-      selectedIds.includes(item.id!)
+      ids.includes(item.id!)
         ? { ...item, status: 'Consumed' as const, productionDate: new Date(), ...consumptionData }
         : item
     );
@@ -178,17 +167,19 @@ export default function WorkOrderPage() {
     };
 
     try {
+      const currentWorkOrders = await (await fetch('/api/work-orders')).json();
+      const updatedWorkOrders = [...currentWorkOrders, workOrderPayload];
+
       const woResponse = await fetch('/api/work-orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(workOrderPayload),
+        body: JSON.stringify(updatedWorkOrders),
       });
       if (!woResponse.ok) throw new Error('Failed to save work order.');
-
-      // Instead of consuming, we just update the status of the rolls to 'For Work Order' or similar
+      
       const updatedRollsData = allData.map(item =>
         consumedRollIds.includes(item.id!)
-          ? { ...item, status: 'For Work Order' as const, productionDate: new Date() }
+          ? { ...item, status: 'Consumed' as const, consumedBy: `WO: ${formData.parentPid}`, productionDate: new Date() }
           : item
       );
       await updateData(updatedRollsData);
@@ -197,8 +188,6 @@ export default function WorkOrderPage() {
         title: 'Work Order Created',
         description: `Work order ${formData.parentPid} has been created and is now in progress.`,
       });
-
-      await fetchData();
       
     } catch (error) {
       console.error('Work order submission error:', error);
@@ -303,10 +292,17 @@ export default function WorkOrderPage() {
   const selectedRollForPartialUse = selectedRowIds.length === 1 ? allData.find(d => d.id === selectedRowIds[0]) : undefined;
 
   const workOrdersWithRolls = useMemo(() => {
+    const consumedRollIdsInWo = new Set(workOrders.flatMap(wo => wo.childPids.map(p => p.rollId)));
+    
     return workOrders.map(wo => {
-      const rolls = wo.childPids
-        .map(child => allData.find(roll => roll.id === child.rollId))
-        .filter((roll): roll is LoomSheetData => !!roll);
+      const rolls = wo.childPids.map(child => {
+        const roll = allData.find(r => r.id === child.rollId);
+        // If roll is not found, it might have been fully consumed and its status changed
+        if (roll) return roll;
+        // Let's find it in the consumed data
+        const consumedRoll = allData.find(r => r.id === child.rollId && r.status === 'Consumed');
+        return consumedRoll;
+      }).filter((roll): roll is LoomSheetData => !!roll);
       return { ...wo, rolls };
     }).sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
   }, [workOrders, allData]);
@@ -385,15 +381,25 @@ export default function WorkOrderPage() {
         <Separator />
 
         <div className="space-y-4">
-            <div className="text-center">
-                <h2 className="text-3xl font-bold tracking-tight text-primary font-headline">
-                    In Progress
-                </h2>
-                <p className="mt-1 text-md text-muted-foreground">
-                    A log of all work orders currently in progress.
-                </p>
-            </div>
             <Card>
+                <CardHeader className="flex flex-row justify-between items-center">
+                    <div>
+                        <h2 className="text-3xl font-bold tracking-tight text-primary font-headline">
+                            In Progress
+                        </h2>
+                        <p className="mt-1 text-md text-muted-foreground">
+                            A log of all work orders currently in progress. Select rolls to consume them.
+                        </p>
+                    </div>
+                     <div className="flex gap-2">
+                        <Button onClick={handleOpenPartialUseDialog} variant="outline" size="sm" disabled={selectedRowIds.length !== 1}>
+                            <SplitSquareHorizontal className="mr-2 h-4 w-4" /> Partial Use
+                        </Button>
+                        <Button onClick={handleOpenConsumedDialog} variant="outline" size="sm" disabled={selectedRowIds.length === 0}>
+                            <CheckSquare className="mr-2 h-4 w-4" /> Mark Consumed
+                        </Button>
+                    </div>
+                </CardHeader>
                 <CardContent className="p-6">
                     {workOrdersWithRolls.length > 0 ? (
                         <Accordion type="single" collapsible className="w-full">
@@ -407,22 +413,12 @@ export default function WorkOrderPage() {
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent>
-                                      <div className='space-y-4'>
-                                        <div className="flex justify-end gap-2">
-                                          <Button onClick={handleOpenPartialUseDialog} variant="outline" size="sm" disabled={selectedRowIds.filter(id => wo.rolls.some(r => r.id === id)).length !== 1}>
-                                              <SplitSquareHorizontal className="mr-2 h-4 w-4" /> Partial Use
-                                          </Button>
-                                          <Button onClick={handleOpenConsumedDialog} variant="outline" size="sm" disabled={selectedRowIds.filter(id => wo.rolls.some(r => r.id === id)).length === 0}>
-                                              <CheckSquare className="mr-2 h-4 w-4" /> Mark Consumed
-                                          </Button>
-                                        </div>
-                                        <DataTable 
-                                            data={wo.rolls} 
-                                            onSelectedRowIdsChange={onSetSelectedRowIds}
-                                            selectedRowIds={selectedRowIds}
-                                            showCheckboxes={true}
-                                        />
-                                      </div>
+                                      <DataTable 
+                                        data={wo.rolls} 
+                                        onSelectedRowIdsChange={onSetSelectedRowIds}
+                                        selectedRowIds={selectedRowIds}
+                                        showCheckboxes={true}
+                                      />
                                     </AccordionContent>
                                 </AccordionItem>
                             ))}
@@ -430,7 +426,7 @@ export default function WorkOrderPage() {
                     ) : (
                         <div className="text-center text-muted-foreground py-12">
                             <p className="text-lg">No work orders are currently in progress.</p>
-                            <p className="text-sm">Select rolls and click "Working" to create a new one.</p>
+                            <p className="text-sm">Select rolls from the top table and click "Working" to create one.</p>
                         </div>
                     )}
                 </CardContent>
@@ -441,4 +437,4 @@ export default function WorkOrderPage() {
   );
 }
 
-  
+    

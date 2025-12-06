@@ -41,12 +41,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <SidebarMenu className="flex-1">
             {navItems.map((item) => (
               <SidebarMenuItem key={item.href}>
-                <Link href={item.href} passHref>
+                <Link href={item.href} legacyBehavior passHref>
                   <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.label}>
-                    <>
+                    <a>
                       <item.icon className="h-5 w-5" />
                       <span>{item.label}</span>
-                    </>
+                    </a>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>

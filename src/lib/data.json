@@ -1,8 +1,7 @@
-
 [
   {
     "id": "1",
-    "productionDate": "2025-11-29T13:28:07.472Z",
+    "productionDate": "2025-12-06T10:51:57.550Z",
     "serialNumber": "1145",
     "width": 22,
     "gram": 4.5,
@@ -14,7 +13,7 @@
     "nw": 151.8,
     "average": 103,
     "lamination": "Unlammed",
-    "status": "Ready for Lamination",
+    "status": "For Work Order",
     "callOut": "7+7 Natural Lam",
     "operatorName": "a",
     "loomNo": "L-01",

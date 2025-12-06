@@ -33,7 +33,7 @@
     "nw": 137.4,
     "average": 65,
     "lamination": "Unlammed",
-    "status": "Ready for Lamination",
+    "status": "For Work Order",
     "callOut": "6+6 Normal Lam",
     "operatorName": "b",
     "loomNo": "L-02",
@@ -53,7 +53,7 @@
     "nw": 158.6,
     "average": 85,
     "lamination": "Unlammed",
-    "status": "Sent for Lamination",
+    "status": "For Work Order",
     "callOut": "6+6 Normal Lam",
     "operatorName": "a",
     "loomNo": "L-03",
@@ -244,3 +244,5 @@
     "consumedBy": "WO: 131313"
   }
 ]
+
+    

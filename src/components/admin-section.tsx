@@ -532,12 +532,6 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                         <Button onClick={handleSendForWorkOrderClick} disabled={selectedRowIds.length === 0}>
                           <FileText className="mr-2 h-4 w-4" /> Work Order
                         </Button>
-                        <Button onClick={handleOpenPartialUseDialog} disabled={selectedRowIds.length !== 1}>
-                          <SplitSquareHorizontal className="mr-2 h-4 w-4" /> Partial Use
-                        </Button>
-                        <Button onClick={handleOpenConsumedDialog} disabled={selectedRowIds.length === 0}>
-                          <CheckSquare className="mr-2 h-4 w-4" /> Submit Consumed
-                        </Button>
                      </div>
                   )}
                 </CardHeader>
@@ -557,3 +551,5 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     </>
   );
 }
+
+    

@@ -1,7 +1,7 @@
 
 import { z } from 'zod';
 
-export const statuses = ['Ready for Lamination', 'Sent for Lamination', 'Laminated', 'Partially Consumed', 'Consumed'] as const;
+export const statuses = ['Ready for Lamination', 'Sent for Lamination', 'Laminated', 'Partially Consumed', 'Consumed', 'For Work Order'] as const;
 export const fabricTypes = ['Slit', 'Tube'] as const;
 export const laminationTypes = ['Lam active', 'Unlammed'] as const;
 export const colors = ['Natural', 'Red', 'Blue', 'Green', 'Yellow', 'Orange', 'Black', 'White'] as const;

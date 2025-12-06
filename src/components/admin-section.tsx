@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { LoomSheetData, loomSheetSchema, statuses, ConsumedByData } from '@/lib/schemas';
 import { DataTable } from '@/components/data-table';
-import { Upload, Download, CheckSquare, SplitSquareHorizontal, Send, RefreshCw } from 'lucide-react';
+import { Upload, Download, CheckSquare, SplitSquareHorizontal, Send, RefreshCw, FileText } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { z } from 'zod';
 import { ConsumedByDialog } from './consumed-by-dialog';
@@ -31,6 +31,7 @@ interface AdminSectionProps {
   onMarkAsReceived: (selectedIds: string[], newSerialNumber?: string, receivedSerialNumber?: string) => void;
   onMarkAsLaminated: (selectedIds: string[]) => void;
   onCollaborateAndCreate: (selectedIds: string[], newRollData: LoomSheetData) => void;
+  onSendForWorkOrder: (selectedIds: string[]) => void;
 }
 
 type View = 'remaining' | 'consumed' | 'laminate';
@@ -42,7 +43,7 @@ declare global {
   }
 }
 
-export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPartialConsume, onSendForLamination, onMarkAsReceived, onMarkAsLaminated, onCollaborateAndCreate }: AdminSectionProps) {
+export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPartialConsume, onSendForLamination, onMarkAsReceived, onMarkAsLaminated, onCollaborateAndCreate, onSendForWorkOrder }: AdminSectionProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentView, setCurrentView] = useState<View>('remaining');
@@ -60,7 +61,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [laminationFilter, setLaminationFilter] = useState<'all' | 'true' | 'false'>('all');
   
-  const remainingData = allData.filter(d => !d.consumedBy);
+  const remainingData = allData.filter(d => !d.consumedBy && d.status !== 'For Work Order');
   const consumedData = allData.filter(d => !!d.consumedBy);
   
   const onSetSelectedRowIds = useCallback((ids: string[]) => {
@@ -318,6 +319,23 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     setSelectedLaminatedIds([]);
   };
 
+  const handleSendForWorkOrderClick = () => {
+    if (selectedRowIds.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No Rows Selected',
+        description: 'Please select rows to send for work order.',
+      });
+      return;
+    }
+    onSendForWorkOrder(selectedRowIds);
+    toast({
+      title: 'Success',
+      description: `${selectedRowIds.length} rows sent for work order.`,
+    });
+    setSelectedRowIds([]);
+  };
+
   const selectedRollForPartialUse = selectedRowIds.length === 1 ? allData.find(d => d.id === selectedRowIds[0]) : undefined;
   
   const readyForLaminationData = allData.filter(d => d.status === 'Ready for Lamination');
@@ -511,6 +529,9 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                   </div>
                   {currentView === 'remaining' && (
                      <div className="flex gap-2">
+                        <Button onClick={handleSendForWorkOrderClick} disabled={selectedRowIds.length === 0}>
+                          <FileText className="mr-2 h-4 w-4" /> Work Order
+                        </Button>
                         <Button onClick={handleOpenPartialUseDialog} disabled={selectedRowIds.length !== 1}>
                           <SplitSquareHorizontal className="mr-2 h-4 w-4" /> Partial Use
                         </Button>

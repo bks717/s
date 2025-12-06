@@ -217,6 +217,15 @@ export default function Home() {
     updatedData.push(newRoll);
     updateData(updatedData);
   };
+
+  const handleSendForWorkOrder = (selectedIds: string[]) => {
+    const updatedData = allData.map(item =>
+      selectedIds.includes(item.id!)
+        ? { ...item, status: 'For Work Order' as const }
+        : item
+    );
+    updateData(updatedData);
+  };
   
   if (isLoading) {
     return (
@@ -257,6 +266,7 @@ export default function Home() {
         onMarkAsReceived={handleMarkAsReceived}
         onMarkAsLaminated={handleMarkAsLaminated}
         onCollaborateAndCreate={handleCollaborateAndCreate}
+        onSendForWorkOrder={handleSendForWorkOrder}
       />
     </>
   );

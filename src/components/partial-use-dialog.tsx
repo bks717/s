@@ -29,7 +29,6 @@ interface PartialUseDialogProps {
 const partialUseSchema = loomSheetSchema.omit({
     id: true, 
     productionDate: true, 
-    serialNumber: true,
     consumedBy: true,
     soNumber: true,
     poNumber: true,
@@ -51,9 +50,10 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
   const width = form.watch('width');
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && originalRoll) {
       form.reset({
         ...originalRoll,
+        serialNumber: originalRoll.serialNumber,
         mtrs: 0,
         gw: 0,
         cw: 0,
@@ -111,6 +111,8 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
     onConfirm(finalConsumedPart);
   };
   
+  if (!originalRoll) return null;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl">
@@ -215,5 +217,3 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
     </Dialog>
   );
 }
-
-    

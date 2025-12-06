@@ -82,12 +82,14 @@ export function ConsumptionTypeDialog({ isOpen, onClose, workOrder, allRolls, on
 
   return (
     <>
-      <PartialUseDialog
-        isOpen={partialUseDialogState.isOpen}
-        onClose={() => setPartialUseDialogState({ isOpen: false, roll: null })}
-        onConfirm={handlePartialUseConfirm}
-        originalRoll={partialUseDialogState.roll!}
-      />
+      {partialUseDialogState.roll && (
+        <PartialUseDialog
+          isOpen={partialUseDialogState.isOpen}
+          onClose={() => setPartialUseDialogState({ isOpen: false, roll: null })}
+          onConfirm={handlePartialUseConfirm}
+          originalRoll={partialUseDialogState.roll}
+        />
+      )}
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
@@ -118,7 +120,7 @@ export function ConsumptionTypeDialog({ isOpen, onClose, workOrder, allRolls, on
                       <Label htmlFor={`partial-${roll.id}`}>Partially Consumed</Label>
                     </div>
                   </RadioGroup>
-                  {typeof consumptionStates[roll.id!] === 'object' && (
+                  {typeof consumptionStates[roll.id!] !== 'full' && (
                     <div className='mt-2'>
                         <Button 
                             variant="outline" 
@@ -142,5 +144,3 @@ export function ConsumptionTypeDialog({ isOpen, onClose, workOrder, allRolls, on
     </>
   );
 }
-
-    

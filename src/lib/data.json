@@ -218,9 +218,10 @@
     "nw": 41,
     "average": 41000,
     "variance": "UB: 1.05 / LB: 0.95",
-    "status": "For Work Order",
+    "status": "Consumed",
     "id": "1764400350464",
-    "productionDate": "2025-11-29T07:12:30.464Z"
+    "productionDate": "2025-11-29T07:12:30.464Z",
+    "consumedBy": "WO: 131313"
   },
   {
     "serialNumber": "111",
@@ -237,8 +238,9 @@
     "nw": 12,
     "average": 1090.91,
     "variance": "UB: 11.55 / LB: 10.45",
-    "status": "For Work Order",
+    "status": "Consumed",
     "id": "1764401668980",
-    "productionDate": "2025-11-29T07:34:28.980Z"
+    "productionDate": "2025-11-29T07:34:28.980Z",
+    "consumedBy": "WO: 131313"
   }
 ]

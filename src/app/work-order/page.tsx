@@ -204,9 +204,9 @@ export default function WorkOrderPage() {
                             {sortedWorkOrders.map(wo => (
                                 <AccordionItem value={wo.id!} key={wo.id}>
                                     <AccordionTrigger>
-                                        <div className="flex justify-between w-full pr-4">
-                                            <span className='font-bold text-primary'>Parent PID: {wo.parentPid}</span>
-                                            <span className='text-muted-foreground'>Customer: {wo.customerName}</span>
+                                        <div className="flex justify-between w-full pr-4 items-center">
+                                            <span className='font-bold text-lg text-primary'>Parent PID: {wo.parentPid}</span>
+                                            <span className='text-md text-muted-foreground'>Customer: {wo.customerName}</span>
                                             <span className='text-sm text-muted-foreground'>{new Date(wo.createdAt!).toLocaleDateString()}</span>
                                         </div>
                                     </AccordionTrigger>
@@ -232,7 +232,10 @@ export default function WorkOrderPage() {
                             ))}
                         </Accordion>
                     ) : (
-                        <p className="text-center text-muted-foreground py-8">No work orders are currently in progress.</p>
+                        <div className="text-center text-muted-foreground py-12">
+                            <p className="text-lg">No work orders are currently in progress.</p>
+                            <p className="text-sm">Select rolls and click "Working" to create a new one.</p>
+                        </div>
                     )}
                 </CardContent>
             </Card>

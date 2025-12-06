@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { LoomSheetData, loomSheetSchema, statuses, ConsumedByData } from '@/lib/schemas';
 import { DataTable } from '@/components/data-table';
-import { Upload, Download, CheckSquare, SplitSquareHorizontal, Send, RefreshCw, FileText } from 'lucide-react';
+import { Upload, Download, CheckSquare, SplitSquareHorizontal, Send, RefreshCw, FileText, RotateCcw } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { z } from 'zod';
 import { ConsumedByDialog } from './consumed-by-dialog';
@@ -21,6 +21,7 @@ import { SendForLaminationDialog } from './send-for-lamination-dialog';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
+import { UndoConfirmationDialog } from './undo-confirmation-dialog';
 
 
 interface AdminSectionProps {
@@ -33,6 +34,8 @@ interface AdminSectionProps {
   onMarkAsLaminated: (selectedIds: string[]) => void;
   onCollaborateAndCreate: (selectedIds: string[], newRollData: LoomSheetData) => void;
   onSendForWorkOrder: (selectedIds: string[]) => void;
+  onUndo: () => void;
+  canUndo: boolean;
 }
 
 type View = 'remaining' | 'consumed' | 'laminate';
@@ -44,7 +47,7 @@ declare global {
   }
 }
 
-export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPartialConsume, onSendForLamination, onMarkAsReceived, onMarkAsLaminated, onCollaborateAndCreate, onSendForWorkOrder }: AdminSectionProps) {
+export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPartialConsume, onSendForLamination, onMarkAsReceived, onMarkAsLaminated, onCollaborateAndCreate, onSendForWorkOrder, onUndo, canUndo }: AdminSectionProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentView, setCurrentView] = useState<View>('remaining');
@@ -58,6 +61,7 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   const [isReceiveSentDialogVisible, setIsReceiveSentDialogVisible] = useState(false);
   const [isCollaborateSentDialogVisible, setIsCollaborateSentDialogVisible] = useState(false);
   const [isSendForLaminationDialogVisible, setIsSendForLaminationDialogVisible] = useState(false);
+  const [isUndoDialogVisible, setIsUndoDialogVisible] = useState(false);
   
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [laminationFilter, setLaminationFilter] = useState<'all' | 'true' | 'false'>('all');
@@ -325,6 +329,11 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
 
   return (
     <>
+      <UndoConfirmationDialog
+        isOpen={isUndoDialogVisible}
+        onClose={() => setIsUndoDialogVisible(false)}
+        onConfirm={onUndo}
+      />
       <ReceiveSentLaminationDialog
         isOpen={isReceiveSentDialogVisible}
         onClose={() => setIsReceiveSentDialogVisible(false)}
@@ -375,6 +384,9 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                     <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".xlsx, .xls" />
                     <Button variant="outline" onClick={handleExport}>
                         <Download className="mr-2 h-4 w-4"/> Export Excel
+                    </Button>
+                    <Button variant="destructive" onClick={() => setIsUndoDialogVisible(true)} disabled={!canUndo}>
+                        <RotateCcw className="mr-2 h-4 w-4"/> Undo
                     </Button>
                 </div>
             </div>

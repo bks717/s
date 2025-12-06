@@ -22,6 +22,11 @@ export default function WorkOrderPage() {
   const [isWorkOrderDialogVisible, setIsWorkOrderDialogVisible] = useState(false);
   const [consumptionDialogState, setConsumptionDialogState] = useState<{isOpen: boolean, workOrder: WorkOrderData | null}>({isOpen: false, workOrder: null});
   const { toast } = useToast();
+  
+  // State for history tracking
+  const [dataHistory, setDataHistory] = useState<LoomSheetData[][]>([]);
+  const [workOrderHistory, setWorkOrderHistory] = useState<WorkOrderData[][]>([]);
+
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -50,6 +55,9 @@ export default function WorkOrderPage() {
       setAllData(typedRollsData);
       setWorkOrders(typedWoData);
 
+      setDataHistory([typedRollsData]);
+      setWorkOrderHistory([typedWoData]);
+
     } catch (error) {
       console.error(error);
       toast({
@@ -70,18 +78,27 @@ export default function WorkOrderPage() {
     setSelectedRowIds(ids);
   }, []);
 
-  const updateAllLoomData = async (updatedData: LoomSheetData[]) => {
+  const updateAllData = async (updatedLoomData: LoomSheetData[], updatedWorkOrders: WorkOrderData[]) => {
     try {
-      const response = await fetch('/api/loom-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedData, null, 2),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to save data');
-      }
-      setAllData(updatedData);
-      await fetchData(); // Refetch all data to ensure consistency
+        setDataHistory(prev => [...prev, allData]);
+        setWorkOrderHistory(prev => [...prev, workOrders]);
+
+        await Promise.all([
+            fetch('/api/loom-data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedLoomData, null, 2),
+            }),
+            fetch('/api/work-orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedWorkOrders, null, 2),
+            })
+        ]);
+        
+        setAllData(updatedLoomData);
+        setWorkOrders(updatedWorkOrders);
+
     } catch (error) {
       console.error(error);
       toast({
@@ -107,40 +124,22 @@ export default function WorkOrderPage() {
       childPids: childPidsWithRolls,
     };
 
-    try {
-      const currentWorkOrders = await (await fetch('/api/work-orders')).json();
-      const updatedWorkOrders = [...currentWorkOrders, workOrderPayload];
+    const updatedWorkOrders = [...workOrders, workOrderPayload];
+    const updatedRollsData = allData.map(item =>
+      consumedRollIds.includes(item.id!)
+        ? { ...item, status: 'In Progress' as const, consumedBy: `WO: ${formData.parentPid}`, productionDate: new Date() }
+        : item
+    );
 
-      const woResponse = await fetch('/api/work-orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedWorkOrders),
-      });
-      if (!woResponse.ok) throw new Error('Failed to save work order.');
+    await updateAllData(updatedRollsData, updatedWorkOrders);
+    
+    toast({
+      title: 'Work Order Created',
+      description: `Work order ${formData.parentPid} has been created and is now in progress.`,
+    });
       
-      const updatedRollsData = allData.map(item =>
-        consumedRollIds.includes(item.id!)
-          ? { ...item, status: 'In Progress' as const, consumedBy: `WO: ${formData.parentPid}`, productionDate: new Date() }
-          : item
-      );
-      await updateAllLoomData(updatedRollsData);
-      
-      toast({
-        title: 'Work Order Created',
-        description: `Work order ${formData.parentPid} has been created and is now in progress.`,
-      });
-      
-    } catch (error) {
-      console.error('Work order submission error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Submission Failed',
-        description: (error as Error).message || 'An unexpected error occurred.',
-      });
-    } finally {
-        setIsWorkOrderDialogVisible(false);
-        setSelectedRowIds([]);
-    }
+    setIsWorkOrderDialogVisible(false);
+    setSelectedRowIds([]);
   };
 
   const handleToggleChildPidCompletion = async (workOrderId: string, childPid: string) => {
@@ -156,30 +155,12 @@ export default function WorkOrderPage() {
       return wo;
     });
 
-    setWorkOrders(updatedWorkOrders);
-
-    try {
-      const response = await fetch('/api/work-orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedWorkOrders, null, 2),
-      });
-      if (!response.ok) throw new Error('Failed to update work order status.');
+    await updateAllData(allData, updatedWorkOrders);
       
-      toast({
-        title: 'Status Updated',
-        description: `Child PID ${childPid} status has been toggled.`,
-      });
-
-    } catch (error) {
-       console.error('Work order update error:', error);
-       toast({
-         variant: 'destructive',
-         title: 'Update Failed',
-         description: 'Could not save the updated status. Please try again.',
-       });
-       fetchData();
-    }
+    toast({
+      title: 'Status Updated',
+      description: `Child PID ${childPid} status has been toggled.`,
+    });
   };
 
   const handleConsumptionSubmit = (
@@ -235,29 +216,10 @@ export default function WorkOrderPage() {
     });
 
     const updatedWorkOrders = workOrders.filter(wo => wo.id !== workOrderToUpdate.id);
-    // Optionally move the completed work order to a different log, for now, we remove it from 'in-progress'
     
-    // Batch update both loom data and work orders
-    Promise.all([
-        fetch('/api/loom-data', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updatedLoomData, null, 2),
-        }),
-        fetch('/api/work-orders', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updatedWorkOrders, null, 2),
-        })
-    ]).then(async ([loomRes, woRes]) => {
-        if (!loomRes.ok || !woRes.ok) {
-            throw new Error('Failed to save one or more updates.');
-        }
+    updateAllData(updatedLoomData, updatedWorkOrders).then(() => {
         toast({ title: 'Success', description: `Work Order ${workOrderToUpdate.parentPid} has been processed.` });
         fetchData(); // Refresh all data
-    }).catch(error => {
-        console.error("Consumption submit error:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not process consumption.' });
     });
 
     setConsumptionDialogState({isOpen: false, workOrder: null});
@@ -275,7 +237,6 @@ export default function WorkOrderPage() {
                 return roll ? { ...roll, completed: child.completed, childPid: child.pid } : null;
             }).filter((roll): roll is (LoomSheetData & { completed: boolean; childPid: string }) => !!roll && inProgressRollIds.has(roll.id!));
             
-            // Only include work orders that have at least one 'In Progress' roll
             return rolls.length > 0 ? { ...wo, rolls } : null;
         })
         .filter((wo): wo is (WorkOrderData & { rolls: (LoomSheetData & { completed: boolean; childPid: string })[] }) => !!wo)

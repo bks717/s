@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import LoomSheetForm from '@/components/loom-sheet-form';
 import AdminSection from '@/components/admin-section';
 import { LoomSheetData, ConsumedByData } from '@/lib/schemas';
@@ -10,35 +10,38 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function Home() {
   const [allData, setAllData] = useState<LoomSheetData[]>([]);
+  const [history, setHistory] = useState<LoomSheetData[][]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('/api/loom-data');
-        if (!response.ok) {
-          throw new Error('Failed to fetch data');
-        }
-        const data = await response.json();
-        const typedData = data.map((d: any) => ({
-          ...d,
-          productionDate: new Date(d.productionDate),
-        }));
-        setAllData(typedData);
-      } catch (error) {
-        console.error(error);
-        toast({
-          variant: 'destructive',
-          title: 'Error fetching data',
-          description: 'Could not load data from local storage.',
-        });
-      } finally {
-        setIsLoading(false);
+  const fetchData = useCallback(async () => {
+    try {
+      const response = await fetch('/api/loom-data');
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
       }
-    };
-    fetchData();
+      const data = await response.json();
+      const typedData = data.map((d: any) => ({
+        ...d,
+        productionDate: new Date(d.productionDate),
+      }));
+      setAllData(typedData);
+      setHistory([typedData]); // Initialize history
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Error fetching data',
+        description: 'Could not load data from local storage.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }, [toast]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const updateData = async (updatedData: LoomSheetData[]) => {
     try {
@@ -50,6 +53,8 @@ export default function Home() {
       if (!response.ok) {
         throw new Error('Failed to save data');
       }
+      // Add current state to history before updating
+      setHistory(prevHistory => [...prevHistory, allData]);
       setAllData(updatedData);
     } catch (error) {
       console.error(error);
@@ -57,6 +62,40 @@ export default function Home() {
         variant: 'destructive',
         title: 'Error saving data',
         description: 'Could not save data to local storage.',
+      });
+    }
+  };
+
+  const handleUndo = () => {
+    if (history.length > 1) {
+      const previousState = history[history.length - 1];
+      updateData(previousState); // This will save the "undone" state but also push the current state to history again. Let's fix that.
+      
+      const lastState = history[history.length - 1];
+      const newHistory = history.slice(0, history.length - 1);
+
+      fetch('/api/loom-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(lastState, null, 2),
+      }).then(res => {
+        if(res.ok) {
+            setAllData(lastState);
+            setHistory(newHistory);
+            toast({
+              title: 'Undo Successful',
+              description: 'The last action has been reverted.',
+            });
+        } else {
+            throw new Error('Failed to save undone data');
+        }
+      }).catch(error => {
+         console.error(error);
+          toast({
+            variant: 'destructive',
+            title: 'Undo Failed',
+            description: 'Could not revert the last action.',
+          });
       });
     }
   };
@@ -269,6 +308,8 @@ export default function Home() {
         onMarkAsLaminated={handleMarkAsLaminated}
         onCollaborateAndCreate={handleCollaborateAndCreate}
         onSendForWorkOrder={handleSendForWorkOrder}
+        onUndo={handleUndo}
+        canUndo={history.length > 1}
       />
     </>
   );

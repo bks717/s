@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LoomSheetData, WorkOrderData, ConsumedByData } from '@/lib/schemas';
@@ -185,16 +185,17 @@ export default function WorkOrderPage() {
       });
       if (!woResponse.ok) throw new Error('Failed to save work order.');
 
+      // Instead of consuming, we just update the status of the rolls to 'For Work Order' or similar
       const updatedRollsData = allData.map(item =>
         consumedRollIds.includes(item.id!)
-          ? { ...item, status: 'Consumed' as const, productionDate: new Date(), consumedBy: `WO: ${formData.parentPid}` }
+          ? { ...item, status: 'For Work Order' as const, productionDate: new Date() }
           : item
       );
       await updateData(updatedRollsData);
       
       toast({
-        title: 'Work Order Processed',
-        description: `Work order ${formData.parentPid} has been created and rolls have been consumed.`,
+        title: 'Work Order Created',
+        description: `Work order ${formData.parentPid} has been created and is now in progress.`,
       });
 
       await fetchData();
@@ -256,8 +257,8 @@ export default function WorkOrderPage() {
     if (selectedRowIds.length === 0) {
       toast({
         variant: 'destructive',
-        title: 'No Rows Selected',
-        description: 'Please select rows to mark as consumed.',
+        title: 'No Rolls Selected',
+        description: 'Please select rolls from a work order to mark as consumed.',
       });
       return;
     }
@@ -268,7 +269,7 @@ export default function WorkOrderPage() {
     handleMarkAsConsumed(selectedRowIds, consumptionData);
     toast({
       title: 'Success',
-      description: `${selectedRowIds.length} rows marked as consumed.`,
+      description: `${selectedRowIds.length} rolls marked as consumed.`,
     });
     setSelectedRowIds([]);
     setIsConsumedDialogVisible(false);
@@ -279,7 +280,7 @@ export default function WorkOrderPage() {
       toast({
         variant: 'destructive',
         title: 'Invalid Selection',
-        description: 'Please select exactly one row for partial use.',
+        description: 'Please select exactly one roll from a work order for partial use.',
       });
       return;
     }
@@ -298,9 +299,17 @@ export default function WorkOrderPage() {
   };
   
   const workOrderRolls = allData.filter((d: LoomSheetData) => d.status === 'For Work Order');
-  const selectedRolls = workOrderRolls.filter(d => selectedRowIds.includes(d.id!));
+  const selectedRollsForWoCreation = workOrderRolls.filter(d => selectedRowIds.includes(d.id!));
   const selectedRollForPartialUse = selectedRowIds.length === 1 ? allData.find(d => d.id === selectedRowIds[0]) : undefined;
-  const sortedWorkOrders = workOrders.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+
+  const workOrdersWithRolls = useMemo(() => {
+    return workOrders.map(wo => {
+      const rolls = wo.childPids
+        .map(child => allData.find(roll => roll.id === child.rollId))
+        .filter((roll): roll is LoomSheetData => !!roll);
+      return { ...wo, rolls };
+    }).sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+  }, [workOrders, allData]);
 
 
   if (isLoading) {
@@ -323,7 +332,7 @@ export default function WorkOrderPage() {
       <WorkOrderDialog
         isOpen={isWorkOrderDialogVisible}
         onClose={() => setIsWorkOrderDialogVisible(false)}
-        selectedRolls={selectedRolls}
+        selectedRolls={selectedRollsForWoCreation}
         onSubmit={handleWorkOrderSubmit}
       />
       <ConsumedByDialog
@@ -358,12 +367,6 @@ export default function WorkOrderPage() {
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleOpenPartialUseDialog} variant="outline" disabled={selectedRowIds.length !== 1}>
-                  <SplitSquareHorizontal className="mr-2 h-4 w-4" /> Partial Use
-              </Button>
-              <Button onClick={handleOpenConsumedDialog} variant="outline" disabled={selectedRowIds.length === 0}>
-                  <CheckSquare className="mr-2 h-4 w-4" /> Mark Consumed
-              </Button>
               <Button onClick={() => setIsWorkOrderDialogVisible(true)} disabled={selectedRowIds.length === 0}>
                   Working
               </Button>
@@ -392,9 +395,9 @@ export default function WorkOrderPage() {
             </div>
             <Card>
                 <CardContent className="p-6">
-                    {sortedWorkOrders.length > 0 ? (
+                    {workOrdersWithRolls.length > 0 ? (
                         <Accordion type="single" collapsible className="w-full">
-                            {sortedWorkOrders.map(wo => (
+                            {workOrdersWithRolls.map(wo => (
                                 <AccordionItem value={wo.id!} key={wo.id}>
                                     <AccordionTrigger>
                                         <div className="flex justify-between w-full pr-4 items-center">
@@ -404,29 +407,22 @@ export default function WorkOrderPage() {
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent>
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead className='w-16'>Completed</TableHead>
-                                                    <TableHead>Child PID</TableHead>
-                                                    <TableHead>Consumed Roll No.</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {wo.childPids.map((child, index) => (
-                                                    <TableRow key={index}>
-                                                        <TableCell>
-                                                          <Checkbox
-                                                            checked={child.completed}
-                                                            onCheckedChange={() => handleToggleChildPidCompletion(wo.id!, child.pid)}
-                                                          />
-                                                        </TableCell>
-                                                        <TableCell>{child.pid}</TableCell>
-                                                        <TableCell>{child.rollSerialNumber}</TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
+                                      <div className='space-y-4'>
+                                        <div className="flex justify-end gap-2">
+                                          <Button onClick={handleOpenPartialUseDialog} variant="outline" size="sm" disabled={selectedRowIds.filter(id => wo.rolls.some(r => r.id === id)).length !== 1}>
+                                              <SplitSquareHorizontal className="mr-2 h-4 w-4" /> Partial Use
+                                          </Button>
+                                          <Button onClick={handleOpenConsumedDialog} variant="outline" size="sm" disabled={selectedRowIds.filter(id => wo.rolls.some(r => r.id === id)).length === 0}>
+                                              <CheckSquare className="mr-2 h-4 w-4" /> Mark Consumed
+                                          </Button>
+                                        </div>
+                                        <DataTable 
+                                            data={wo.rolls} 
+                                            onSelectedRowIdsChange={onSetSelectedRowIds}
+                                            selectedRowIds={selectedRowIds}
+                                            showCheckboxes={true}
+                                        />
+                                      </div>
                                     </AccordionContent>
                                 </AccordionItem>
                             ))}
@@ -444,3 +440,5 @@ export default function WorkOrderPage() {
     </>
   );
 }
+
+  

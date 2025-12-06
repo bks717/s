@@ -13,7 +13,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PartialUseDialog } from '@/components/partial-use-dialog';
-import { ConsumedByDialog } from '@/components/consumed-by-dialog';
 import { SplitSquareHorizontal, CheckSquare } from 'lucide-react';
 
 export default function WorkOrderPage() {
@@ -22,7 +21,6 @@ export default function WorkOrderPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
   const [isWorkOrderDialogVisible, setIsWorkOrderDialogVisible] = useState(false);
-  const [isConsumedDialogVisible, setIsConsumedDialogVisible] = useState(false);
   const [isPartialUseDialogVisible, setIsPartialUseDialogVisible] = useState(false);
   const { toast } = useToast();
 
@@ -84,7 +82,6 @@ export default function WorkOrderPage() {
         throw new Error('Failed to save data');
       }
       setAllData(updatedData);
-      // After updating data, we should refetch to ensure consistency
       await fetchData();
     } catch (error) {
       console.error(error);
@@ -100,11 +97,15 @@ export default function WorkOrderPage() {
     const originalRoll = allData.find(item => item.id === originalId);
     if (!originalRoll) return;
 
+    const workOrder = workOrders.find(wo => wo.childPids.some(child => child.rollId === originalId));
+    const consumedBy = workOrder ? `WO: ${workOrder.parentPid}` : 'Unknown';
+
     const newConsumedRoll: LoomSheetData = {
       ...consumedPartData,
       id: (Date.now() + Math.random()).toString(),
       productionDate: new Date(),
       status: 'Consumed',
+      consumedBy: consumedBy
     };
     
     const updatedData = allData.map(item => {
@@ -141,13 +142,21 @@ export default function WorkOrderPage() {
     updateData(finalData);
   };
   
-  const handleMarkAsConsumed = (ids: string[], consumptionData: ConsumedByData) => {
-    const updatedData = allData.map(item =>
-      ids.includes(item.id!)
-        ? { ...item, status: 'Consumed' as const, productionDate: new Date(), ...consumptionData }
-        : item
-    );
+  const handleMarkAsConsumed = (ids: string[]) => {
+    const updatedData = allData.map(item => {
+      if (ids.includes(item.id!)) {
+        const workOrder = workOrders.find(wo => wo.childPids.some(child => child.rollId === item.id));
+        const consumedBy = workOrder ? `WO: ${workOrder.parentPid}` : 'Unknown';
+        return { ...item, status: 'Consumed' as const, productionDate: new Date(), consumedBy: consumedBy };
+      }
+      return item;
+    });
     updateData(updatedData);
+    toast({
+      title: 'Success',
+      description: `${ids.length} rolls marked as consumed.`,
+    });
+    setSelectedRowIds([]);
   };
 
 
@@ -237,7 +246,6 @@ export default function WorkOrderPage() {
          title: 'Update Failed',
          description: 'Could not save the updated status. Please try again.',
        });
-       // Revert optimistic update on failure
        fetchData();
     }
   };
@@ -251,18 +259,8 @@ export default function WorkOrderPage() {
       });
       return;
     }
-    setIsConsumedDialogVisible(true);
+    handleMarkAsConsumed(selectedRowIds);
   };
-
-  const handleConfirmConsumed = (consumptionData: ConsumedByData) => {
-    handleMarkAsConsumed(selectedRowIds, consumptionData);
-    toast({
-      title: 'Success',
-      description: `${selectedRowIds.length} rolls marked as consumed.`,
-    });
-    setSelectedRowIds([]);
-    setIsConsumedDialogVisible(false);
-  }
 
   const handleOpenPartialUseDialog = () => {
     if (selectedRowIds.length !== 1) {
@@ -281,7 +279,7 @@ export default function WorkOrderPage() {
     handlePartialConsume(originalId, consumedPart);
      toast({
       title: 'Success',
-      description: `Roll partially consumed by ${consumedPart.consumedBy}. Remaining roll updated.`,
+      description: `Roll partially consumed. Remaining roll updated.`,
     });
     setSelectedRowIds([]);
     setIsPartialUseDialogVisible(false);
@@ -325,12 +323,6 @@ export default function WorkOrderPage() {
         onClose={() => setIsWorkOrderDialogVisible(false)}
         selectedRolls={selectedRollsForWoCreation}
         onSubmit={handleWorkOrderSubmit}
-      />
-      <ConsumedByDialog
-        isOpen={isConsumedDialogVisible}
-        onClose={() => setIsConsumedDialogVisible(false)}
-        onConfirm={handleConfirmConsumed}
-        selectedCount={selectedRowIds.length}
       />
       {selectedRollForPartialUse && (
         <PartialUseDialog

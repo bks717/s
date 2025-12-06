@@ -12,15 +12,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { LoomSheetData, loomSheetSchema, laminationTypes, fabricTypes, colors } from '@/lib/schemas';
+import { LoomSheetData, loomSheetSchema } from '@/lib/schemas';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
-import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { cn } from '@/lib/utils';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 interface PartialUseDialogProps {
   isOpen: boolean;
@@ -29,10 +27,13 @@ interface PartialUseDialogProps {
   originalRoll: LoomSheetData;
 }
 
-const partialUseSchema = loomSheetSchema.omit({id: true, productionDate: true, serialNumber: true}).extend({
-    consumedBy: z.string().min(1, 'Consumer name is required'),
-    soNumber: z.string().optional(),
-    poNumber: z.string().optional(),
+const partialUseSchema = loomSheetSchema.omit({
+    id: true, 
+    productionDate: true, 
+    serialNumber: true,
+    consumedBy: true,
+    soNumber: true,
+    poNumber: true,
 });
 
 type PartialUseFormData = z.infer<typeof partialUseSchema>;
@@ -54,9 +55,6 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
     if (isOpen) {
       form.reset({
         ...originalRoll,
-        consumedBy: '',
-        soNumber: '',
-        poNumber: '',
         mtrs: 0,
         gw: 0,
         cw: 0,
@@ -131,48 +129,6 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <ScrollArea className="h-[60vh] p-4">
               <div className="space-y-8">
-                 <div className="grid md:grid-cols-3 gap-8">
-                    <FormField
-                        control={form.control}
-                        name="consumedBy"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Consumed By</FormLabel>
-                            <FormControl>
-                            <Input placeholder="e.g., Customer Name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="soNumber"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>S/O Number</FormLabel>
-                            <FormControl>
-                            <Input placeholder="S/O Number" {...field} value={field.value ?? ''} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="poNumber"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>P/O Number</FormLabel>
-                            <FormControl>
-                            <Input placeholder="P/O Number" {...field} value={field.value ?? ''} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                 </div>
-
                  <Separator />
                  <h3 className="text-lg font-medium text-foreground">Measurements of Consumed Part</h3>
                  <div className="grid md:grid-cols-3 gap-8">

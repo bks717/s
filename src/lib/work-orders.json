@@ -1,7 +1,9 @@
+
 [
   {
     "customerName": "Example Customer A",
     "parentPid": "P-001-A",
+    "workOrderType": "Bags",
     "childPids": [
       {
         "pid": "C-001",
@@ -22,6 +24,7 @@
   {
     "customerName": "Example Customer B",
     "parentPid": "P-002-B",
+    "workOrderType": "Rolls",
     "childPids": [
       {
         "pid": "C-003",

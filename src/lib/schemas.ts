@@ -5,6 +5,7 @@ export const statuses = ['Ready for Lamination', 'Sent for Lamination', 'Laminat
 export const fabricTypes = ['Slit', 'Tube'] as const;
 export const laminationTypes = ['Lam active', 'Unlammed'] as const;
 export const colors = ['Natural', 'Red', 'Blue', 'Green', 'Yellow', 'Orange', 'Black', 'White'] as const;
+export const workOrderTypes = ['Bags', 'Rolls'] as const;
 
 export const loomSheetSchema = z.object({
   id: z.string().optional(),
@@ -78,6 +79,7 @@ export const workOrderSchema = z.object({
   createdAt: z.date().optional(),
   customerName: z.string().min(1, 'Customer name is required.'),
   parentPid: z.string().min(1, 'Parent PID is required.'),
+  workOrderType: z.enum(workOrderTypes),
   childPids: z.array(childPidSchema).min(1, "At least one Child PID is required."),
 });
 

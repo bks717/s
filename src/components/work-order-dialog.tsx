@@ -17,9 +17,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { LoomSheetData, workOrderSchema, WorkOrderData } from '@/lib/schemas';
+import { LoomSheetData, workOrderSchema, WorkOrderData, workOrderTypes } from '@/lib/schemas';
 import { ScrollArea } from './ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { Label } from './ui/label';
 
 interface WorkOrderDialogProps {
   isOpen: boolean;
@@ -37,6 +39,7 @@ export function WorkOrderDialog({ isOpen, onClose, selectedRolls, onSubmit }: Wo
     defaultValues: {
       customerName: '',
       parentPid: '',
+      workOrderType: 'Rolls',
       childPids: [{ pid: '', rollId: '' }],
     },
   });
@@ -53,6 +56,7 @@ export function WorkOrderDialog({ isOpen, onClose, selectedRolls, onSubmit }: Wo
       form.reset({
         customerName: '',
         parentPid: '',
+        workOrderType: 'Rolls',
         childPids: [{ pid: '', rollId: '' }],
       });
     }
@@ -109,6 +113,33 @@ export function WorkOrderDialog({ isOpen, onClose, selectedRolls, onSubmit }: Wo
                       <FormLabel>Parent PID</FormLabel>
                       <FormControl>
                         <Input placeholder="Enter a unique parent PID" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="workOrderType"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Type</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex items-center space-x-4"
+                        >
+                          {workOrderTypes.map((type) => (
+                            <FormItem key={type} className="flex items-center space-x-2 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value={type} id={`radio-wo-type-${type}`} />
+                              </FormControl>
+                              <Label htmlFor={`radio-wo-type-${type}`} className="font-normal cursor-pointer">{type}</Label>
+                            </FormItem>
+                          ))}
+                        </RadioGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LoomSheetData, WorkOrderData, ConsumedByData } from '@/lib/schemas';
@@ -13,6 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ConsumptionTypeDialog } from '@/components/consumption-type-dialog';
+import { PartialUseDialog } from '@/components/partial-use-dialog';
+import { ConsumedByDialog } from '@/components/consumed-by-dialog';
 
 export default function WorkOrderPage() {
   const [allData, setAllData] = useState<LoomSheetData[]>([]);
@@ -21,6 +23,8 @@ export default function WorkOrderPage() {
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
   const [isWorkOrderDialogVisible, setIsWorkOrderDialogVisible] = useState(false);
   const [consumptionDialogState, setConsumptionDialogState] = useState<{isOpen: boolean, workOrder: WorkOrderData | null}>({isOpen: false, workOrder: null});
+  const [isConsumedDialogVisible, setIsConsumedDialogVisible] = useState(false);
+  const [isPartialUseDialogVisible, setIsPartialUseDialogVisible] = useState(false);
   const { toast } = useToast();
   
   // State for history tracking
@@ -127,7 +131,7 @@ export default function WorkOrderPage() {
     const updatedWorkOrders = [...workOrders, workOrderPayload];
     const updatedRollsData = allData.map(item =>
       consumedRollIds.includes(item.id!)
-        ? { ...item, status: 'In Progress' as const, consumedBy: `WO: ${formData.parentPid}`, productionDate: new Date() }
+        ? { ...item, status: 'In Progress' as const, productionDate: new Date() }
         : item
     );
 
@@ -171,6 +175,9 @@ export default function WorkOrderPage() {
     const consumedBy = `WO: ${workOrderToUpdate.parentPid}`;
   
     Object.entries(consumptionStates).forEach(([rollId, state]) => {
+      const originalRoll = allData.find(r => r.id === rollId);
+      if (!originalRoll) return;
+
       if (state === 'full') {
         updatedLoomData = updatedLoomData.map(roll =>
           roll.id === rollId
@@ -178,26 +185,26 @@ export default function WorkOrderPage() {
             : roll
         );
       } else if (typeof state === 'object' && state.partialData) {
-        const originalRoll = allData.find(item => item.id === rollId);
-        if (!originalRoll) return;
-
+        const { partialData } = state;
         const newConsumedRoll: LoomSheetData = {
-          ...state.partialData,
+          ...partialData,
           id: (Date.now() + Math.random()).toString(),
           productionDate: new Date(),
           status: 'Consumed',
           consumedBy,
+          serialNumber: originalRoll.serialNumber, // Keep original serial number for consumed part
         };
 
         updatedLoomData = updatedLoomData.map(item => {
           if (item.id === rollId) {
-            const remainingMtrs = (item.mtrs || 0) - (state.partialData.mtrs || 0);
-            const remainingGw = (item.gw || 0) - (state.partialData.gw || 0);
+            const remainingMtrs = (item.mtrs || 0) - (partialData.mtrs || 0);
+            const remainingGw = (item.gw || 0) - (partialData.gw || 0);
             const remainingNw = remainingGw - (item.cw || 0);
             let remainingAverage = 0;
             if (remainingNw > 0 && remainingMtrs > 0) {
               remainingAverage = parseFloat(((remainingNw * 1000) / remainingMtrs).toFixed(2));
             }
+            
             const updatedRemainingRoll: LoomSheetData = {
               ...item,
               mtrs: remainingMtrs,
@@ -207,6 +214,11 @@ export default function WorkOrderPage() {
               status: remainingMtrs <= 0 ? 'Consumed' : 'Partially Consumed',
               productionDate: new Date(),
             };
+            
+            if (updatedRemainingRoll.mtrs <=0) {
+              return { ...updatedRemainingRoll, status: 'Consumed', consumedBy };
+            }
+            
             return updatedRemainingRoll;
           }
           return item;
@@ -227,7 +239,8 @@ export default function WorkOrderPage() {
   
   const workOrderRolls = allData.filter((d: LoomSheetData) => d.status === 'For Work Order');
   const selectedRollsForWoCreation = workOrderRolls.filter(d => selectedRowIds.includes(d.id!));
-  
+  const selectedRollForPartialUse = allData.find(d => d.id === selectedRowIds[0]);
+
   const inProgressWorkOrders = useMemo(() => {
     const inProgressRollIds = new Set(allData.filter(r => r.status === 'In Progress').map(r => r.id));
     return workOrders
@@ -318,7 +331,7 @@ export default function WorkOrderPage() {
                             In Progress
                         </h2>
                         <p className="mt-1 text-md text-muted-foreground">
-                            A log of all work orders currently in progress. Select rolls to consume them.
+                            A log of all work orders currently in progress.
                         </p>
                     </div>
                 </CardHeader>
@@ -331,6 +344,7 @@ export default function WorkOrderPage() {
                                         <div className="flex justify-between w-full pr-4 items-center">
                                             <span className='font-bold text-lg text-primary'>Parent PID: {wo.parentPid}</span>
                                             <span className='text-md text-muted-foreground'>Customer: {wo.customerName}</span>
+                                            <span className='text-sm font-bold'>{wo.workOrderType}</span>
                                             <span className='text-sm text-muted-foreground'>{new Date(wo.createdAt!).toLocaleDateString()}</span>
                                         </div>
                                     </AccordionTrigger>
@@ -384,5 +398,3 @@ export default function WorkOrderPage() {
     </>
   );
 }
-
-    

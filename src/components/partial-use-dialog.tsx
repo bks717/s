@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { LoomSheetData, loomSheetSchema } from '@/lib/schemas';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -106,11 +105,7 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
         form.setError('gw', { type: 'manual', message: `Cannot consume more than available (${originalRoll.gw}).` });
         return;
     }
-    if(consumedPart.cw > originalRoll.cw) {
-        form.setError('cw', { type: 'manual', message: `Cannot consume more than available (${originalRoll.cw}).` });
-        return;
-    }
-
+    
     const finalConsumedPart = { ...consumedPart, serialNumber: originalRoll.serialNumber };
 
     onConfirm(finalConsumedPart);
@@ -220,3 +215,5 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
     </Dialog>
   );
 }
+
+    

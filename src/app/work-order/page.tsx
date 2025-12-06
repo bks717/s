@@ -12,8 +12,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
-import { PartialUseDialog } from '@/components/partial-use-dialog';
-import { SplitSquareHorizontal, CheckSquare } from 'lucide-react';
+import { ConsumptionTypeDialog } from '@/components/consumption-type-dialog';
 
 export default function WorkOrderPage() {
   const [allData, setAllData] = useState<LoomSheetData[]>([]);
@@ -21,7 +20,7 @@ export default function WorkOrderPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
   const [isWorkOrderDialogVisible, setIsWorkOrderDialogVisible] = useState(false);
-  const [isPartialUseDialogVisible, setIsPartialUseDialogVisible] = useState(false);
+  const [consumptionDialogState, setConsumptionDialogState] = useState<{isOpen: boolean, workOrder: WorkOrderData | null}>({isOpen: false, workOrder: null});
   const { toast } = useToast();
 
   const fetchData = useCallback(async () => {
@@ -71,7 +70,7 @@ export default function WorkOrderPage() {
     setSelectedRowIds(ids);
   }, []);
 
-  const updateData = async (updatedData: LoomSheetData[]) => {
+  const updateAllLoomData = async (updatedData: LoomSheetData[]) => {
     try {
       const response = await fetch('/api/loom-data', {
         method: 'POST',
@@ -82,7 +81,7 @@ export default function WorkOrderPage() {
         throw new Error('Failed to save data');
       }
       setAllData(updatedData);
-      await fetchData();
+      await fetchData(); // Refetch all data to ensure consistency
     } catch (error) {
       console.error(error);
       toast({
@@ -92,73 +91,6 @@ export default function WorkOrderPage() {
       });
     }
   };
-
-  const handlePartialConsume = (originalId: string, consumedPartData: Omit<LoomSheetData, 'id' | 'productionDate'>) => {
-    const originalRoll = allData.find(item => item.id === originalId);
-    if (!originalRoll) return;
-
-    const workOrder = workOrders.find(wo => wo.childPids.some(child => child.rollId === originalId));
-    const consumedBy = workOrder ? `WO: ${workOrder.parentPid}` : 'Unknown';
-
-    const newConsumedRoll: LoomSheetData = {
-      ...consumedPartData,
-      id: (Date.now() + Math.random()).toString(),
-      productionDate: new Date(),
-      status: 'Consumed',
-      consumedBy: consumedBy
-    };
-    
-    const updatedData = allData.map(item => {
-      if (item.id === originalId) {
-        const remainingMtrs = (item.mtrs || 0) - (consumedPartData.mtrs || 0);
-        const remainingGw = (item.gw || 0) - (consumedPartData.gw || 0);
-        
-        const remainingNw = remainingGw - (item.cw || 0);
-        
-        let remainingAverage = 0;
-        if (remainingNw > 0 && remainingMtrs > 0) {
-          remainingAverage = parseFloat(((remainingNw * 1000) / remainingMtrs).toFixed(2));
-        }
-        
-        const updatedRemainingRoll: LoomSheetData = {
-          ...item,
-          mtrs: remainingMtrs,
-          gw: remainingGw,
-          nw: remainingNw,
-          average: remainingAverage,
-          status: 'Partially Consumed',
-          productionDate: new Date(),
-        };
-        
-        if (updatedRemainingRoll.mtrs <= 0 && updatedRemainingRoll.gw <= 0) {
-           return { ...updatedRemainingRoll, status: 'Consumed' as const, productionDate: new Date(), mtrs: 0, gw: 0, cw: 0, nw: 0, average: 0 };
-        }
-        return updatedRemainingRoll;
-      }
-      return item;
-    });
-
-    const finalData = [...updatedData, newConsumedRoll];
-    updateData(finalData);
-  };
-  
-  const handleMarkAsConsumed = (ids: string[]) => {
-    const updatedData = allData.map(item => {
-      if (ids.includes(item.id!)) {
-        const workOrder = workOrders.find(wo => wo.childPids.some(child => child.rollId === item.id));
-        const consumedBy = workOrder ? `WO: ${workOrder.parentPid}` : 'Unknown';
-        return { ...item, status: 'Consumed' as const, productionDate: new Date(), consumedBy: consumedBy };
-      }
-      return item;
-    });
-    updateData(updatedData);
-    toast({
-      title: 'Success',
-      description: `${ids.length} rolls marked as consumed.`,
-    });
-    setSelectedRowIds([]);
-  };
-
 
   const handleWorkOrderSubmit = async (formData: Omit<WorkOrderData, 'id' | 'createdAt'>) => {
     const consumedRollIds = formData.childPids.map(child => child.rollId);
@@ -191,7 +123,7 @@ export default function WorkOrderPage() {
           ? { ...item, status: 'In Progress' as const, consumedBy: `WO: ${formData.parentPid}`, productionDate: new Date() }
           : item
       );
-      await updateData(updatedRollsData);
+      await updateAllLoomData(updatedRollsData);
       
       toast({
         title: 'Work Order Created',
@@ -249,57 +181,106 @@ export default function WorkOrderPage() {
        fetchData();
     }
   };
+
+  const handleConsumptionSubmit = (
+    workOrderToUpdate: WorkOrderData,
+    consumptionStates: { [rollId: string]: 'full' | { partialData: Omit<LoomSheetData, 'id' | 'productionDate'> } }
+  ) => {
+    let updatedLoomData = [...allData];
+    const consumedBy = `WO: ${workOrderToUpdate.parentPid}`;
   
-  const handleOpenConsumedDialog = () => {
-    if (selectedRowIds.length === 0) {
-      toast({
-        variant: 'destructive',
-        title: 'No Rolls Selected',
-        description: 'Please select rolls from a work order to mark as consumed.',
-      });
-      return;
-    }
-    handleMarkAsConsumed(selectedRowIds);
-  };
+    Object.entries(consumptionStates).forEach(([rollId, state]) => {
+      if (state === 'full') {
+        updatedLoomData = updatedLoomData.map(roll =>
+          roll.id === rollId
+            ? { ...roll, status: 'Consumed', productionDate: new Date(), consumedBy }
+            : roll
+        );
+      } else if (typeof state === 'object' && state.partialData) {
+        const originalRoll = allData.find(item => item.id === rollId);
+        if (!originalRoll) return;
 
-  const handleOpenPartialUseDialog = () => {
-    if (selectedRowIds.length !== 1) {
-      toast({
-        variant: 'destructive',
-        title: 'Invalid Selection',
-        description: 'Please select exactly one roll from a work order for partial use.',
-      });
-      return;
-    }
-    setIsPartialUseDialogVisible(true);
-  };
+        const newConsumedRoll: LoomSheetData = {
+          ...state.partialData,
+          id: (Date.now() + Math.random()).toString(),
+          productionDate: new Date(),
+          status: 'Consumed',
+          consumedBy,
+        };
 
-  const handleConfirmPartialUse = (consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>) => {
-    const originalId = selectedRowIds[0];
-    handlePartialConsume(originalId, consumedPart);
-     toast({
-      title: 'Success',
-      description: `Roll partially consumed. Remaining roll updated.`,
+        updatedLoomData = updatedLoomData.map(item => {
+          if (item.id === rollId) {
+            const remainingMtrs = (item.mtrs || 0) - (state.partialData.mtrs || 0);
+            const remainingGw = (item.gw || 0) - (state.partialData.gw || 0);
+            const remainingNw = remainingGw - (item.cw || 0);
+            let remainingAverage = 0;
+            if (remainingNw > 0 && remainingMtrs > 0) {
+              remainingAverage = parseFloat(((remainingNw * 1000) / remainingMtrs).toFixed(2));
+            }
+            const updatedRemainingRoll: LoomSheetData = {
+              ...item,
+              mtrs: remainingMtrs,
+              gw: remainingGw,
+              nw: remainingNw,
+              average: remainingAverage,
+              status: remainingMtrs <= 0 ? 'Consumed' : 'Partially Consumed',
+              productionDate: new Date(),
+            };
+            return updatedRemainingRoll;
+          }
+          return item;
+        });
+        updatedLoomData.push(newConsumedRoll);
+      }
     });
-    setSelectedRowIds([]);
-    setIsPartialUseDialogVisible(false);
+
+    const updatedWorkOrders = workOrders.filter(wo => wo.id !== workOrderToUpdate.id);
+    // Optionally move the completed work order to a different log, for now, we remove it from 'in-progress'
+    
+    // Batch update both loom data and work orders
+    Promise.all([
+        fetch('/api/loom-data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedLoomData, null, 2),
+        }),
+        fetch('/api/work-orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedWorkOrders, null, 2),
+        })
+    ]).then(async ([loomRes, woRes]) => {
+        if (!loomRes.ok || !woRes.ok) {
+            throw new Error('Failed to save one or more updates.');
+        }
+        toast({ title: 'Success', description: `Work Order ${workOrderToUpdate.parentPid} has been processed.` });
+        fetchData(); // Refresh all data
+    }).catch(error => {
+        console.error("Consumption submit error:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not process consumption.' });
+    });
+
+    setConsumptionDialogState({isOpen: false, workOrder: null});
   };
   
   const workOrderRolls = allData.filter((d: LoomSheetData) => d.status === 'For Work Order');
   const selectedRollsForWoCreation = workOrderRolls.filter(d => selectedRowIds.includes(d.id!));
-  const selectedRollForPartialUse = selectedRowIds.length === 1 ? allData.find(d => d.id === selectedRowIds[0]) : undefined;
-
-  const workOrdersWithRolls = useMemo(() => {
-    return workOrders.map(wo => {
-        const rolls = wo.childPids.map(child => {
-            const roll = allData.find(r => r.id === child.rollId);
-            return roll ? { ...roll, completed: child.completed, childPid: child.pid } : null;
-        }).filter((roll): roll is (LoomSheetData & { completed: boolean; childPid: string }) => !!roll);
-        
-        return { ...wo, rolls };
-    }).sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+  
+  const inProgressWorkOrders = useMemo(() => {
+    const inProgressRollIds = new Set(allData.filter(r => r.status === 'In Progress').map(r => r.id));
+    return workOrders
+        .map(wo => {
+            const rolls = wo.childPids.map(child => {
+                const roll = allData.find(r => r.id === child.rollId);
+                return roll ? { ...roll, completed: child.completed, childPid: child.pid } : null;
+            }).filter((roll): roll is (LoomSheetData & { completed: boolean; childPid: string }) => !!roll && inProgressRollIds.has(roll.id!));
+            
+            // Only include work orders that have at least one 'In Progress' roll
+            return rolls.length > 0 ? { ...wo, rolls } : null;
+        })
+        .filter((wo): wo is (WorkOrderData & { rolls: (LoomSheetData & { completed: boolean; childPid: string })[] }) => !!wo)
+        .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
   }, [workOrders, allData]);
-
 
   if (isLoading) {
     return (
@@ -324,13 +305,14 @@ export default function WorkOrderPage() {
         selectedRolls={selectedRollsForWoCreation}
         onSubmit={handleWorkOrderSubmit}
       />
-      {selectedRollForPartialUse && (
-        <PartialUseDialog
-          isOpen={isPartialUseDialogVisible}
-          onClose={() => setIsPartialUseDialogVisible(false)}
-          onConfirm={handleConfirmPartialUse}
-          originalRoll={selectedRollForPartialUse}
-        />
+      {consumptionDialogState.workOrder && (
+         <ConsumptionTypeDialog
+            isOpen={consumptionDialogState.isOpen}
+            onClose={() => setConsumptionDialogState({isOpen: false, workOrder: null})}
+            workOrder={consumptionDialogState.workOrder}
+            allRolls={allData}
+            onSubmit={handleConsumptionSubmit}
+         />
       )}
       <div className="space-y-8">
         <div className="flex flex-col items-center text-center">
@@ -369,7 +351,7 @@ export default function WorkOrderPage() {
 
         <div className="space-y-4">
             <Card>
-                <CardHeader className="flex flex-row justify-between items-center">
+                <CardHeader>
                     <div>
                         <h2 className="text-3xl font-bold tracking-tight text-primary font-headline">
                             In Progress
@@ -378,19 +360,11 @@ export default function WorkOrderPage() {
                             A log of all work orders currently in progress. Select rolls to consume them.
                         </p>
                     </div>
-                     <div className="flex gap-2">
-                        <Button onClick={handleOpenPartialUseDialog} variant="outline" size="sm" disabled={selectedRowIds.length !== 1}>
-                            <SplitSquareHorizontal className="mr-2 h-4 w-4" /> Partial Use
-                        </Button>
-                        <Button onClick={handleOpenConsumedDialog} variant="outline" size="sm" disabled={selectedRowIds.length === 0}>
-                            <CheckSquare className="mr-2 h-4 w-4" /> Mark Consumed
-                        </Button>
-                    </div>
                 </CardHeader>
                 <CardContent className="p-6">
-                    {workOrdersWithRolls.length > 0 ? (
+                    {inProgressWorkOrders.length > 0 ? (
                         <Accordion type="single" collapsible className="w-full">
-                            {workOrdersWithRolls.map(wo => (
+                            {inProgressWorkOrders.map(wo => (
                                 <AccordionItem value={wo.id!} key={wo.id}>
                                     <AccordionTrigger>
                                         <div className="flex justify-between w-full pr-4 items-center">
@@ -400,10 +374,14 @@ export default function WorkOrderPage() {
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent>
+                                      <div className='flex justify-end mb-4'>
+                                        <Button onClick={() => setConsumptionDialogState({isOpen: true, workOrder: wo})}>
+                                            Type of Consumption
+                                        </Button>
+                                      </div>
                                       <Table>
                                         <TableHeader>
                                           <TableRow>
-                                            <TableHead className='w-10'></TableHead>
                                             <TableHead>Child PID</TableHead>
                                             <TableHead>Roll No</TableHead>
                                             <TableHead>Meters</TableHead>
@@ -414,17 +392,6 @@ export default function WorkOrderPage() {
                                         <TableBody>
                                           {wo.rolls.map(roll => (
                                             <TableRow key={roll.id}>
-                                              <TableCell>
-                                                <Checkbox
-                                                  checked={selectedRowIds.includes(roll.id!)}
-                                                  onCheckedChange={(checked) => {
-                                                    const newSelectedIds = checked
-                                                      ? [...selectedRowIds, roll.id!]
-                                                      : selectedRowIds.filter(id => id !== roll.id!);
-                                                    setSelectedRowIds(newSelectedIds);
-                                                  }}
-                                                />
-                                              </TableCell>
                                               <TableCell>{roll.childPid}</TableCell>
                                               <TableCell>{roll.serialNumber}</TableCell>
                                               <TableCell>{roll.mtrs}</TableCell>
@@ -456,3 +423,5 @@ export default function WorkOrderPage() {
     </>
   );
 }
+
+    

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import LoomSheetForm from '@/components/loom-sheet-form';
 import AdminSection from '@/components/admin-section';
 import { LoomSheetData, ConsumedByData } from '@/lib/schemas';
@@ -10,35 +10,38 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function Home() {
   const [allData, setAllData] = useState<LoomSheetData[]>([]);
+  const [history, setHistory] = useState<LoomSheetData[][]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('/api/loom-data');
-        if (!response.ok) {
-          throw new Error('Failed to fetch data');
-        }
-        const data = await response.json();
-        const typedData = data.map((d: any) => ({
-          ...d,
-          productionDate: new Date(d.productionDate),
-        }));
-        setAllData(typedData);
-      } catch (error) {
-        console.error(error);
-        toast({
-          variant: 'destructive',
-          title: 'Error fetching data',
-          description: 'Could not load data from local storage.',
-        });
-      } finally {
-        setIsLoading(false);
+  const fetchData = useCallback(async () => {
+    try {
+      const response = await fetch('/api/loom-data');
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
       }
-    };
-    fetchData();
+      const data = await response.json();
+      const typedData = data.map((d: any) => ({
+        ...d,
+        productionDate: new Date(d.productionDate),
+      }));
+      setAllData(typedData);
+      setHistory([typedData]); // Initialize history
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Error fetching data',
+        description: 'Could not load data from local storage.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }, [toast]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const updateData = async (updatedData: LoomSheetData[]) => {
     try {
@@ -50,6 +53,8 @@ export default function Home() {
       if (!response.ok) {
         throw new Error('Failed to save data');
       }
+      // Add current state to history before updating
+      setHistory(prevHistory => [...prevHistory, allData]);
       setAllData(updatedData);
     } catch (error) {
       console.error(error);
@@ -57,6 +62,40 @@ export default function Home() {
         variant: 'destructive',
         title: 'Error saving data',
         description: 'Could not save data to local storage.',
+      });
+    }
+  };
+
+  const handleUndo = () => {
+    if (history.length > 1) {
+      const previousState = history[history.length - 1];
+      updateData(previousState); // This will save the "undone" state but also push the current state to history again. Let's fix that.
+      
+      const lastState = history[history.length - 1];
+      const newHistory = history.slice(0, history.length - 1);
+
+      fetch('/api/loom-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(lastState, null, 2),
+      }).then(res => {
+        if(res.ok) {
+            setAllData(lastState);
+            setHistory(newHistory);
+            toast({
+              title: 'Undo Successful',
+              description: 'The last action has been reverted.',
+            });
+        } else {
+            throw new Error('Failed to save undone data');
+        }
+      }).catch(error => {
+         console.error(error);
+          toast({
+            variant: 'destructive',
+            title: 'Undo Failed',
+            description: 'Could not revert the last action.',
+          });
       });
     }
   };
@@ -76,7 +115,7 @@ export default function Home() {
   const handleMarkAsConsumed = (selectedIds: string[], consumptionData: ConsumedByData) => {
     const updatedData = allData.map(item =>
       selectedIds.includes(item.id!)
-        ? { ...item, status: 'Consumed' as const, ...consumptionData }
+        ? { ...item, status: 'Consumed' as const, productionDate: new Date(), ...consumptionData }
         : item
     );
     updateData(updatedData);
@@ -124,11 +163,12 @@ export default function Home() {
           nw: remainingNw,
           average: remainingAverage,
           variance: remainingVariance,
-          status: 'Partially Consumed'
+          status: 'Partially Consumed',
+          productionDate: new Date(),
         };
         
         if (updatedRemainingRoll.mtrs <= 0 && updatedRemainingRoll.gw <= 0) {
-           return { ...updatedRemainingRoll, status: 'Consumed' as const, mtrs: 0, gw: 0, cw: 0, nw: 0, average: 0, variance: 'N/A' };
+           return { ...updatedRemainingRoll, status: 'Consumed' as const, productionDate: new Date(), mtrs: 0, gw: 0, cw: 0, nw: 0, average: 0, variance: 'N/A' };
         }
         return updatedRemainingRoll;
       }
@@ -143,7 +183,7 @@ export default function Home() {
     const updatedData = allData.map(item => {
       const updateInfo = rollsToUpdate.find(update => update.id === item.id);
       if (updateInfo) {
-        return { ...item, status: 'Sent for Lamination' as const, callOut: updateInfo.callOut };
+        return { ...item, status: 'Sent for Lamination' as const, productionDate: new Date(), callOut: updateInfo.callOut };
       }
       return item;
     });
@@ -171,7 +211,8 @@ export default function Home() {
             if (item.id === oldRollId) {
                 return { 
                     ...item, 
-                    status: 'Consumed' as const, 
+                    status: 'Consumed' as const,
+                    productionDate: new Date(),
                     consumedBy: `Lam:\nNew Roll No. ${newSerialNumber}\nReceived Roll No: ${receivedSerialNumber}` 
                 };
             }
@@ -181,7 +222,7 @@ export default function Home() {
      } else {
         updatedData = allData.map(item => {
           if (selectedIds.includes(item.id!)) {
-            return { ...item, status: 'Laminated' as const };
+            return { ...item, status: 'Laminated' as const, productionDate: new Date() };
           }
           return item;
         });
@@ -192,7 +233,7 @@ export default function Home() {
   const handleMarkAsLaminated = (selectedIds: string[]) => {
     const updatedData = allData.map(item => {
       if (selectedIds.includes(item.id!)) {
-        return { ...item, status: 'Laminated' as const };
+        return { ...item, status: 'Laminated' as const, productionDate: new Date() };
       }
       return item;
     });
@@ -210,17 +251,26 @@ export default function Home() {
     
     let updatedData = allData.map(item => {
       if (selectedIds.includes(item.id!)) {
-        return { ...item, status: 'Consumed' as const, consumedBy: `Collaborated into ${newRollData.serialNumber}` };
+        return { ...item, status: 'Consumed' as const, productionDate: new Date(), consumedBy: `Collaborated into ${newRollData.serialNumber}` };
       }
       return item;
     });
     updatedData.push(newRoll);
     updateData(updatedData);
   };
+
+  const handleSendForWorkOrder = (selectedIds: string[]) => {
+    const updatedData = allData.map(item =>
+      selectedIds.includes(item.id!)
+        ? { ...item, status: 'For Work Order' as const, productionDate: new Date() }
+        : item
+    );
+    updateData(updatedData);
+  };
   
   if (isLoading) {
     return (
-      <main className="container mx-auto p-4 md:p-8 flex items-center justify-center h-screen">
+      <main className="flex items-center justify-center h-screen">
         <div className="text-center">
           <h1 className="text-4xl font-bold tracking-tight text-primary font-headline">
             Loading LoomSheet Data...
@@ -234,7 +284,7 @@ export default function Home() {
   }
 
   return (
-    <main className="container mx-auto p-4 md:p-8">
+    <>
       <div className="flex flex-col items-center text-center mb-8">
         <h1 className="text-4xl font-bold tracking-tight text-primary font-headline">
           LoomSheet
@@ -257,7 +307,10 @@ export default function Home() {
         onMarkAsReceived={handleMarkAsReceived}
         onMarkAsLaminated={handleMarkAsLaminated}
         onCollaborateAndCreate={handleCollaborateAndCreate}
+        onSendForWorkOrder={handleSendForWorkOrder}
+        onUndo={handleUndo}
+        canUndo={history.length > 1}
       />
-    </main>
+    </>
   );
 }

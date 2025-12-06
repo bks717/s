@@ -1,13 +1,13 @@
 
 "use client";
 
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { LoomSheetData, loomSheetSchema, statuses, ConsumedByData } from '@/lib/schemas';
 import { DataTable } from '@/components/data-table';
-import { Upload, Download, CheckSquare, SplitSquareHorizontal, Send, RefreshCw } from 'lucide-react';
+import { Upload, Download, CheckSquare, SplitSquareHorizontal, Send, RefreshCw, FileText, RotateCcw } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { z } from 'zod';
 import { ConsumedByDialog } from './consumed-by-dialog';
@@ -20,6 +20,8 @@ import { CollaborateSentLaminationDialog } from './collaborate-sent-lamination-d
 import { SendForLaminationDialog } from './send-for-lamination-dialog';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
+import { UndoConfirmationDialog } from './undo-confirmation-dialog';
 
 
 interface AdminSectionProps {
@@ -31,6 +33,9 @@ interface AdminSectionProps {
   onMarkAsReceived: (selectedIds: string[], newSerialNumber?: string, receivedSerialNumber?: string) => void;
   onMarkAsLaminated: (selectedIds: string[]) => void;
   onCollaborateAndCreate: (selectedIds: string[], newRollData: LoomSheetData) => void;
+  onSendForWorkOrder: (selectedIds: string[]) => void;
+  onUndo: () => void;
+  canUndo: boolean;
 }
 
 type View = 'remaining' | 'consumed' | 'laminate';
@@ -42,7 +47,7 @@ declare global {
   }
 }
 
-export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPartialConsume, onSendForLamination, onMarkAsReceived, onMarkAsLaminated, onCollaborateAndCreate }: AdminSectionProps) {
+export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPartialConsume, onSendForLamination, onMarkAsReceived, onMarkAsLaminated, onCollaborateAndCreate, onSendForWorkOrder, onUndo, canUndo }: AdminSectionProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentView, setCurrentView] = useState<View>('remaining');
@@ -56,12 +61,25 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   const [isReceiveSentDialogVisible, setIsReceiveSentDialogVisible] = useState(false);
   const [isCollaborateSentDialogVisible, setIsCollaborateSentDialogVisible] = useState(false);
   const [isSendForLaminationDialogVisible, setIsSendForLaminationDialogVisible] = useState(false);
+  const [isUndoDialogVisible, setIsUndoDialogVisible] = useState(false);
   
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [laminationFilter, setLaminationFilter] = useState<'all' | 'true' | 'false'>('all');
   
-  const remainingData = allData.filter(d => !d.consumedBy);
-  const consumedData = allData.filter(d => !!d.consumedBy);
+  const remainingData = allData.filter(d => d.status !== 'Consumed' && d.status !== 'For Work Order' && d.status !== 'In Progress');
+  const consumedData = allData.filter(d => d.status === 'Consumed');
+
+  const groupedConsumedData = useMemo(() => {
+    const groups: Record<string, LoomSheetData[]> = {};
+    consumedData.forEach(roll => {
+        const key = roll.soNumber || roll.consumedBy || 'Uncategorized';
+        if (!groups[key]) {
+            groups[key] = [];
+        }
+        groups[key].push(roll);
+    });
+    return Object.entries(groups).sort(([, a], [, b]) => b.length - a.length);
+  }, [consumedData]);
   
   const onSetSelectedRowIds = useCallback((ids: string[]) => {
     setSelectedRowIds(ids);
@@ -157,51 +175,6 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
   const handleImportClick = () => {
     fileInputRef.current?.click();
   }
-
-  const handleOpenConsumedDialog = () => {
-    if (selectedRowIds.length === 0) {
-      toast({
-        variant: 'destructive',
-        title: 'No Rows Selected',
-        description: 'Please select rows to mark as consumed.',
-      });
-      return;
-    }
-    setIsConsumedDialogVisible(true);
-  };
-
-  const handleConfirmConsumed = (consumptionData: ConsumedByData) => {
-    onMarkAsConsumed(selectedRowIds, consumptionData);
-    toast({
-      title: 'Success',
-      description: `${selectedRowIds.length} rows marked as consumed by ${consumptionData.consumedBy}.`,
-    });
-    setSelectedRowIds([]);
-    setIsConsumedDialogVisible(false);
-  }
-
-  const handleOpenPartialUseDialog = () => {
-    if (selectedRowIds.length !== 1) {
-      toast({
-        variant: 'destructive',
-        title: 'Invalid Selection',
-        description: 'Please select exactly one row for partial use.',
-      });
-      return;
-    }
-    setIsPartialUseDialogVisible(true);
-  };
-
-  const handleConfirmPartialUse = (consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>) => {
-    const originalId = selectedRowIds[0];
-    onPartialConsume(originalId, consumedPart);
-     toast({
-      title: 'Success',
-      description: `Roll partially consumed by ${consumedPart.consumedBy}. Remaining roll updated.`,
-    });
-    setSelectedRowIds([]);
-    setIsPartialUseDialogVisible(false);
-  };
 
   const generateLaminationPdf = (rollsToUpdate: { id: string; callOut: string }[]) => {
     const selectedRolls = allData.filter(roll => rollsToUpdate.some(update => update.id === roll.id));
@@ -318,8 +291,23 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     setSelectedLaminatedIds([]);
   };
 
-  const selectedRollForPartialUse = selectedRowIds.length === 1 ? allData.find(d => d.id === selectedRowIds[0]) : undefined;
-  
+  const handleSendForWorkOrderClick = () => {
+    if (selectedRowIds.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No Rows Selected',
+        description: 'Please select rows to send for work order.',
+      });
+      return;
+    }
+    onSendForWorkOrder(selectedRowIds);
+    toast({
+      title: 'Success',
+      description: `${selectedRowIds.length} rows sent for work order.`,
+    });
+    setSelectedRowIds([]);
+  };
+
   const readyForLaminationData = allData.filter(d => d.status === 'Ready for Lamination');
   const sentForLaminationData = allData.filter(d => d.status === 'Sent for Lamination');
   const laminatedData = allData.filter(d => d.status === 'Laminated');
@@ -337,24 +325,15 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     return statusMatch && laminationMatch;
   });
 
-  const availableFilters = statuses.filter(s => s !== 'Consumed');
+  const availableFilters = statuses.filter(s => s !== 'Consumed' && s !== 'For Work Order' && s !== 'In Progress');
 
   return (
     <>
-      <ConsumedByDialog 
-        isOpen={isConsumedDialogVisible}
-        onClose={() => setIsConsumedDialogVisible(false)}
-        onConfirm={handleConfirmConsumed}
-        selectedCount={selectedRowIds.length}
+      <UndoConfirmationDialog
+        isOpen={isUndoDialogVisible}
+        onClose={() => setIsUndoDialogVisible(false)}
+        onConfirm={onUndo}
       />
-      {selectedRollForPartialUse && (
-        <PartialUseDialog
-            isOpen={isPartialUseDialogVisible}
-            onClose={() => setIsPartialUseDialogVisible(false)}
-            onConfirm={handleConfirmPartialUse}
-            originalRoll={selectedRollForPartialUse}
-        />
-      )}
       <ReceiveSentLaminationDialog
         isOpen={isReceiveSentDialogVisible}
         onClose={() => setIsReceiveSentDialogVisible(false)}
@@ -405,6 +384,9 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                     <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".xlsx, .xls" />
                     <Button variant="outline" onClick={handleExport}>
                         <Download className="mr-2 h-4 w-4"/> Export Excel
+                    </Button>
+                    <Button variant="destructive" onClick={() => setIsUndoDialogVisible(true)} disabled={!canUndo}>
+                        <RotateCcw className="mr-2 h-4 w-4"/> Undo
                     </Button>
                 </div>
             </div>
@@ -486,9 +468,17 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                         <CardTitle>Laminated Rolls</CardTitle>
                         <CardDescription>Process rolls that have been received from lamination.</CardDescription>
                       </div>
-                      <Button onClick={handleMarkAsLaminatedClick} disabled={selectedLaminatedIds.length === 0}>
-                        <RefreshCw className="mr-2 h-4 w-4" /> Mark as Laminated
-                      </Button>
+                       <div className="flex gap-2">
+                        <Button onClick={handleSendForWorkOrderClick} disabled={selectedLaminatedIds.length === 0}>
+                            <FileText className="mr-2 h-4 w-4" /> Work Order
+                        </Button>
+                        <Button onClick={() => {
+                          setSelectedRowIds(selectedLaminatedIds);
+                          setIsConsumedDialogVisible(true);
+                        }} disabled={selectedLaminatedIds.length === 0}>
+                            <CheckSquare className="mr-2 h-4 w-4" /> Mark Consumed
+                        </Button>
+                      </div>
                     </CardHeader>
                     <CardContent>
                       <DataTable 
@@ -500,32 +490,62 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                     </CardContent>
                   </Card>
                </div>
+            ) : currentView === 'consumed' ? (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Consumed Rolls</CardTitle>
+                        <CardDescription>A log of all consumed rolls, grouped by S/O number or consumer.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {groupedConsumedData.length > 0 ? (
+                             <Accordion type="single" collapsible className="w-full">
+                                {groupedConsumedData.map(([groupName, rolls]) => (
+                                    <AccordionItem value={groupName} key={groupName}>
+                                        <AccordionTrigger>
+                                            <div className="flex justify-between w-full pr-4 items-center">
+                                                <span className='font-bold text-lg text-primary'>{groupName}</span>
+                                                <span className='text-md text-muted-foreground'>{rolls.length} roll(s)</span>
+                                            </div>
+                                        </AccordionTrigger>
+                                        <AccordionContent>
+                                            <DataTable 
+                                                data={rolls} 
+                                                view="consumed" 
+                                                selectedRowIds={[]}
+                                                onSelectedRowIdsChange={() => {}} 
+                                            />
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                            </Accordion>
+                        ) : (
+                            <div className="text-center text-muted-foreground py-12">
+                                <p className="text-lg">No rolls have been marked as consumed.</p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
             ) : (
               <Card className="shadow-lg">
                 <CardHeader className="flex flex-row justify-between items-center">
                   <div>
                     <CardTitle>
-                      {currentView === 'remaining' ? 'Inventory' : 'Consumed Rolls'}
+                      Inventory
                     </CardTitle>
-                    <CardDescription>A log of all {currentView === 'remaining' ? 'inventory' : 'consumed'} rolls. You can sort by clicking on column headers.</CardDescription>
+                    <CardDescription>A log of all inventory rolls. You can sort by clicking on column headers.</CardDescription>
                   </div>
-                  {currentView === 'remaining' && (
-                     <div className="flex gap-2">
-                        <Button onClick={handleOpenPartialUseDialog} disabled={selectedRowIds.length !== 1}>
-                          <SplitSquareHorizontal className="mr-2 h-4 w-4" /> Partial Use
-                        </Button>
-                        <Button onClick={handleOpenConsumedDialog} disabled={selectedRowIds.length === 0}>
-                          <CheckSquare className="mr-2 h-4 w-4" /> Submit Consumed
-                        </Button>
-                     </div>
-                  )}
+                  <div className="flex gap-2">
+                    <Button onClick={handleSendForWorkOrderClick} disabled={selectedRowIds.length === 0}>
+                      <FileText className="mr-2 h-4 w-4" /> Work Order
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <DataTable 
-                    data={currentView === 'remaining' ? filteredRemainingData : consumedData}
+                    data={filteredRemainingData}
                     selectedRowIds={selectedRowIds}
                     onSelectedRowIdsChange={onSetSelectedRowIds}
-                    showCheckboxes={currentView === 'remaining'}
+                    showCheckboxes={true}
                     view={currentView}
                   />
                 </CardContent>

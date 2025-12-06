@@ -11,16 +11,13 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { LoomSheetData, loomSheetSchema, laminationTypes, fabricTypes, colors } from '@/lib/schemas';
+import { LoomSheetData, loomSheetSchema } from '@/lib/schemas';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
-import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { cn } from '@/lib/utils';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 interface PartialUseDialogProps {
   isOpen: boolean;
@@ -29,10 +26,12 @@ interface PartialUseDialogProps {
   originalRoll: LoomSheetData;
 }
 
-const partialUseSchema = loomSheetSchema.omit({id: true, productionDate: true, serialNumber: true}).extend({
-    consumedBy: z.string().min(1, 'Consumer name is required'),
-    soNumber: z.string().optional(),
-    poNumber: z.string().optional(),
+const partialUseSchema = loomSheetSchema.omit({
+    id: true, 
+    productionDate: true, 
+    consumedBy: true,
+    soNumber: true,
+    poNumber: true,
 });
 
 type PartialUseFormData = z.infer<typeof partialUseSchema>;
@@ -51,12 +50,10 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
   const width = form.watch('width');
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && originalRoll) {
       form.reset({
         ...originalRoll,
-        consumedBy: '',
-        soNumber: '',
-        poNumber: '',
+        serialNumber: originalRoll.serialNumber,
         mtrs: 0,
         gw: 0,
         cw: 0,
@@ -79,10 +76,9 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
       const avg = (net * 1000) / mtrs;
       form.setValue('average', parseFloat(avg.toFixed(2)));
 
-      if (gram > 0 && width > 0) {
-        const idealWeight = width * gram;
-        const ub = idealWeight + (idealWeight * 0.05);
-        const lb = idealWeight - (idealWeight * 0.05);
+      if (gram > 0) {
+        const ub = gram + 3;
+        const lb = gram - 3;
         form.setValue('variance', `UB: ${ub.toFixed(2)} / LB: ${lb.toFixed(2)}`);
         setIsAverageOutOfRange(avg < lb || avg > ub);
       } else {
@@ -108,16 +104,14 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
         form.setError('gw', { type: 'manual', message: `Cannot consume more than available (${originalRoll.gw}).` });
         return;
     }
-    if(consumedPart.cw > originalRoll.cw) {
-        form.setError('cw', { type: 'manual', message: `Cannot consume more than available (${originalRoll.cw}).` });
-        return;
-    }
-
+    
     const finalConsumedPart = { ...consumedPart, serialNumber: originalRoll.serialNumber };
 
     onConfirm(finalConsumedPart);
   };
   
+  if (!originalRoll) return null;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl">
@@ -131,48 +125,6 @@ export function PartialUseDialog({ isOpen, onClose, onConfirm, originalRoll }: P
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <ScrollArea className="h-[60vh] p-4">
               <div className="space-y-8">
-                 <div className="grid md:grid-cols-3 gap-8">
-                    <FormField
-                        control={form.control}
-                        name="consumedBy"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Consumed By</FormLabel>
-                            <FormControl>
-                            <Input placeholder="e.g., Customer Name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="soNumber"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>S/O Number</FormLabel>
-                            <FormControl>
-                            <Input placeholder="S/O Number" {...field} value={field.value ?? ''} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="poNumber"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>P/O Number</FormLabel>
-                            <FormControl>
-                            <Input placeholder="P/O Number" {...field} value={field.value ?? ''} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                 </div>
-
                  <Separator />
                  <h3 className="text-lg font-medium text-foreground">Measurements of Consumed Part</h3>
                  <div className="grid md:grid-cols-3 gap-8">

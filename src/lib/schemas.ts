@@ -1,10 +1,11 @@
 
 import { z } from 'zod';
 
-export const statuses = ['Ready for Lamination', 'Sent for Lamination', 'Laminated', 'Partially Consumed', 'Consumed'] as const;
+export const statuses = ['Ready for Lamination', 'Sent for Lamination', 'Laminated', 'Partially Consumed', 'Consumed', 'For Work Order', 'In Progress'] as const;
 export const fabricTypes = ['Slit', 'Tube'] as const;
 export const laminationTypes = ['Lam active', 'Unlammed'] as const;
 export const colors = ['Natural', 'Red', 'Blue', 'Green', 'Yellow', 'Orange', 'Black', 'White'] as const;
+export const workOrderTypes = ['Bags', 'Rolls'] as const;
 
 export const loomSheetSchema = z.object({
   id: z.string().optional(),
@@ -34,6 +35,11 @@ export const loomSheetSchema = z.object({
   consumedBy: z.string().optional(),
   soNumber: z.string().optional(),
   poNumber: z.string().optional(),
+  
+  // Bag production fields
+  kgProduced: z.coerce.number().optional(),
+  bagCount: z.coerce.number().optional(),
+
   noOfBags: z.coerce.number().optional(),
   avgBagWeight: z.coerce.number().optional(),
   bagSize: z.string().optional(),
@@ -65,3 +71,21 @@ export const consumedBySchema = z.object({
 });
 
 export type ConsumedByData = z.infer<typeof consumedBySchema>;
+
+const childPidSchema = z.object({
+  pid: z.string().min(1, "Child PID is required."),
+  rollId: z.string().min(1, "Please select a roll."),
+  rollSerialNumber: z.string().optional(), // Not in form, added for display
+  completed: z.boolean().default(false),
+});
+
+export const workOrderSchema = z.object({
+  id: z.string().optional(),
+  createdAt: z.date().optional(),
+  customerName: z.string().min(1, 'Customer name is required.'),
+  parentPid: z.string().min(1, 'Parent PID is required.'),
+  workOrderType: z.enum(workOrderTypes),
+  childPids: z.array(childPidSchema).min(1, "At least one Child PID is required."),
+});
+
+export type WorkOrderData = z.infer<typeof workOrderSchema>;

@@ -34,7 +34,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'productionDate', direction: 'descending' });
 
   const baseColumns: { key: keyof LoomSheetData | 'select', label: string, className?: string }[] = [
-    { key: 'productionDate', label: 'Prod. Date' },
+    { key: 'productionDate', label: 'Date' },
     { key: 'serialNumber', label: 'Roll No' },
     { key: 'operatorName', label: 'Operator' },
     { key: 'loomNo', label: 'Loom No.' },
@@ -137,10 +137,9 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
   })
 
   const isAverageOutOfRange = (item: LoomSheetData) => {
-    if (item.gram && item.width && item.average) {
-      const idealWeight = item.width * item.gram;
-      const ub = idealWeight + (idealWeight * 0.05);
-      const lb = idealWeight - (idealWeight * 0.05);
+    if (item.gram && item.average) {
+      const ub = item.gram + 3;
+      const lb = item.gram - 3;
       return item.average < lb || item.average > ub;
     }
     return false;
@@ -179,7 +178,7 @@ export function DataTable({ data, selectedRowIds, onSelectedRowIdsChange, showCh
                     <TableCell key={`${item.id}-${col.key}`} className={cn("p-1 text-[10px] whitespace-nowrap", {
                       "whitespace-pre-line": ['consumedBy', 'callOut'].includes(col.key),
                       "font-bold": ['nw', 'average'].includes(col.key),
-                      "bg-destructive/20": col.key === 'variance' && isAverageOutOfRange(item)
+                      "bg-destructive/20": col.key === 'average' && isAverageOutOfRange(item)
                     })}>
                         {col.key === 'select' ? (
                           <div className="flex items-center justify-center">

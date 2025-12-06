@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LoomSheetData, WorkOrderData } from '@/lib/schemas';
+import { LoomSheetData, WorkOrderData, ConsumedByData } from '@/lib/schemas';
 import { DataTable } from '@/components/data-table';
 import { useToast } from '@/hooks/use-toast';
 import { WorkOrderDialog } from '@/components/work-order-dialog';
@@ -12,6 +12,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
+import { PartialUseDialog } from '@/components/partial-use-dialog';
+import { ConsumedByDialog } from '@/components/consumed-by-dialog';
+import { SplitSquareHorizontal, CheckSquare } from 'lucide-react';
 
 export default function WorkOrderPage() {
   const [allData, setAllData] = useState<LoomSheetData[]>([]);
@@ -19,6 +22,8 @@ export default function WorkOrderPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
   const [isWorkOrderDialogVisible, setIsWorkOrderDialogVisible] = useState(false);
+  const [isConsumedDialogVisible, setIsConsumedDialogVisible] = useState(false);
+  const [isPartialUseDialogVisible, setIsPartialUseDialogVisible] = useState(false);
   const { toast } = useToast();
 
   const fetchData = useCallback(async () => {
@@ -68,6 +73,95 @@ export default function WorkOrderPage() {
     setSelectedRowIds(ids);
   }, []);
 
+  const updateData = async (updatedData: LoomSheetData[]) => {
+    try {
+      const response = await fetch('/api/loom-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedData, null, 2),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to save data');
+      }
+      setAllData(updatedData);
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Error saving data',
+        description: 'Could not save data.',
+      });
+    }
+  };
+
+  const handlePartialConsume = (originalId: string, consumedPartData: Omit<LoomSheetData, 'id' | 'productionDate'>) => {
+    const originalRoll = allData.find(item => item.id === originalId);
+    if (!originalRoll) return;
+
+    const newConsumedRoll: LoomSheetData = {
+      ...consumedPartData,
+      id: (Date.now() + Math.random()).toString(),
+      productionDate: new Date(),
+      status: 'Consumed',
+    };
+    
+    let finalData = allData;
+
+    const updatedData = finalData.map(item => {
+      if (item.id === originalId) {
+        const remainingMtrs = (item.mtrs || 0) - (consumedPartData.mtrs || 0);
+        const remainingGw = (item.gw || 0) - (consumedPartData.gw || 0);
+        const remainingCw = item.cw || 0;
+        const remainingNw = remainingGw - remainingCw;
+        
+        let remainingAverage = 0;
+        let remainingVariance = 'N/A';
+
+        if (remainingNw > 0 && remainingMtrs > 0) {
+          remainingAverage = parseFloat(((remainingNw * 1000) / remainingMtrs).toFixed(2));
+        }
+        
+        if (remainingAverage > 0 && item.width && item.gram) {
+          const idealWeight = item.width * item.gram;
+          const ub = idealWeight + (idealWeight * 0.05);
+          const lb = idealWeight - (idealWeight * 0.05);
+          remainingVariance = `UB: ${ub.toFixed(2)} / LB: ${lb.toFixed(2)}`;
+        }
+
+        const updatedRemainingRoll: LoomSheetData = {
+          ...item,
+          mtrs: remainingMtrs,
+          gw: remainingGw,
+          cw: remainingCw,
+          nw: remainingNw,
+          average: remainingAverage,
+          variance: remainingVariance,
+          status: 'Partially Consumed',
+          productionDate: new Date(),
+        };
+        
+        if (updatedRemainingRoll.mtrs <= 0 && updatedRemainingRoll.gw <= 0) {
+           return { ...updatedRemainingRoll, status: 'Consumed' as const, productionDate: new Date(), mtrs: 0, gw: 0, cw: 0, nw: 0, average: 0, variance: 'N/A' };
+        }
+        return updatedRemainingRoll;
+      }
+      return item;
+    });
+
+    finalData = [...updatedData, newConsumedRoll];
+    updateData(finalData);
+  };
+  
+  const handleMarkAsConsumed = (selectedIds: string[], consumptionData: ConsumedByData) => {
+    const updatedData = allData.map(item =>
+      selectedIds.includes(item.id!)
+        ? { ...item, status: 'Consumed' as const, productionDate: new Date(), ...consumptionData }
+        : item
+    );
+    updateData(updatedData);
+  };
+
+
   const handleWorkOrderSubmit = async (formData: Omit<WorkOrderData, 'id' | 'createdAt'>) => {
     const consumedRollIds = formData.childPids.map(child => child.rollId);
     
@@ -91,18 +185,12 @@ export default function WorkOrderPage() {
       });
       if (!woResponse.ok) throw new Error('Failed to save work order.');
 
-      const updatedData = allData.map(item =>
+      const updatedRollsData = allData.map(item =>
         consumedRollIds.includes(item.id!)
           ? { ...item, status: 'Consumed' as const, productionDate: new Date(), consumedBy: `WO: ${formData.parentPid}` }
           : item
       );
-
-      const rollsResponse = await fetch('/api/loom-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedData, null, 2),
-      });
-      if (!rollsResponse.ok) throw new Error('Failed to update rolls status.');
+      await updateData(updatedRollsData);
       
       toast({
         title: 'Work Order Processed',
@@ -164,8 +252,54 @@ export default function WorkOrderPage() {
     }
   };
   
+  const handleOpenConsumedDialog = () => {
+    if (selectedRowIds.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No Rows Selected',
+        description: 'Please select rows to mark as consumed.',
+      });
+      return;
+    }
+    setIsConsumedDialogVisible(true);
+  };
+
+  const handleConfirmConsumed = (consumptionData: ConsumedByData) => {
+    handleMarkAsConsumed(selectedRowIds, consumptionData);
+    toast({
+      title: 'Success',
+      description: `${selectedRowIds.length} rows marked as consumed.`,
+    });
+    setSelectedRowIds([]);
+    setIsConsumedDialogVisible(false);
+  }
+
+  const handleOpenPartialUseDialog = () => {
+    if (selectedRowIds.length !== 1) {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid Selection',
+        description: 'Please select exactly one row for partial use.',
+      });
+      return;
+    }
+    setIsPartialUseDialogVisible(true);
+  };
+
+  const handleConfirmPartialUse = (consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>) => {
+    const originalId = selectedRowIds[0];
+    handlePartialConsume(originalId, consumedPart);
+     toast({
+      title: 'Success',
+      description: `Roll partially consumed by ${consumedPart.consumedBy}. Remaining roll updated.`,
+    });
+    setSelectedRowIds([]);
+    setIsPartialUseDialogVisible(false);
+  };
+  
   const workOrderRolls = allData.filter((d: LoomSheetData) => d.status === 'For Work Order');
   const selectedRolls = workOrderRolls.filter(d => selectedRowIds.includes(d.id!));
+  const selectedRollForPartialUse = selectedRowIds.length === 1 ? allData.find(d => d.id === selectedRowIds[0]) : undefined;
   const sortedWorkOrders = workOrders.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
 
 
@@ -192,6 +326,20 @@ export default function WorkOrderPage() {
         selectedRolls={selectedRolls}
         onSubmit={handleWorkOrderSubmit}
       />
+      <ConsumedByDialog
+        isOpen={isConsumedDialogVisible}
+        onClose={() => setIsConsumedDialogVisible(false)}
+        onConfirm={handleConfirmConsumed}
+        selectedCount={selectedRowIds.length}
+      />
+      {selectedRollForPartialUse && (
+        <PartialUseDialog
+          isOpen={isPartialUseDialogVisible}
+          onClose={() => setIsPartialUseDialogVisible(false)}
+          onConfirm={handleConfirmPartialUse}
+          originalRoll={selectedRollForPartialUse}
+        />
+      )}
       <div className="space-y-8">
         <div className="flex flex-col items-center text-center">
           <h1 className="text-4xl font-bold tracking-tight text-primary font-headline">
@@ -209,9 +357,17 @@ export default function WorkOrderPage() {
                 These rolls are ready for processing. Select rolls to begin.
               </CardDescription>
             </div>
-             <Button onClick={() => setIsWorkOrderDialogVisible(true)} disabled={selectedRowIds.length === 0}>
-                Working
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleOpenPartialUseDialog} variant="outline" disabled={selectedRowIds.length !== 1}>
+                  <SplitSquareHorizontal className="mr-2 h-4 w-4" /> Partial Use
+              </Button>
+              <Button onClick={handleOpenConsumedDialog} variant="outline" disabled={selectedRowIds.length === 0}>
+                  <CheckSquare className="mr-2 h-4 w-4" /> Mark Consumed
+              </Button>
+              <Button onClick={() => setIsWorkOrderDialogVisible(true)} disabled={selectedRowIds.length === 0}>
+                  Working
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <DataTable 

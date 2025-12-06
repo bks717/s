@@ -172,51 +172,6 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     fileInputRef.current?.click();
   }
 
-  const handleOpenConsumedDialog = () => {
-    if (selectedRowIds.length === 0) {
-      toast({
-        variant: 'destructive',
-        title: 'No Rows Selected',
-        description: 'Please select rows to mark as consumed.',
-      });
-      return;
-    }
-    setIsConsumedDialogVisible(true);
-  };
-
-  const handleConfirmConsumed = (consumptionData: ConsumedByData) => {
-    onMarkAsConsumed(selectedRowIds, consumptionData);
-    toast({
-      title: 'Success',
-      description: `${selectedRowIds.length} rows marked as consumed by ${consumptionData.consumedBy}.`,
-    });
-    setSelectedRowIds([]);
-    setIsConsumedDialogVisible(false);
-  }
-
-  const handleOpenPartialUseDialog = () => {
-    if (selectedRowIds.length !== 1) {
-      toast({
-        variant: 'destructive',
-        title: 'Invalid Selection',
-        description: 'Please select exactly one row for partial use.',
-      });
-      return;
-    }
-    setIsPartialUseDialogVisible(true);
-  };
-
-  const handleConfirmPartialUse = (consumedPart: Omit<LoomSheetData, 'id' | 'productionDate'>) => {
-    const originalId = selectedRowIds[0];
-    onPartialConsume(originalId, consumedPart);
-     toast({
-      title: 'Success',
-      description: `Roll partially consumed by ${consumedPart.consumedBy}. Remaining roll updated.`,
-    });
-    setSelectedRowIds([]);
-    setIsPartialUseDialogVisible(false);
-  };
-
   const generateLaminationPdf = (rollsToUpdate: { id: string; callOut: string }[]) => {
     const selectedRolls = allData.filter(roll => rollsToUpdate.some(update => update.id === roll.id));
     
@@ -349,8 +304,6 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
     setSelectedRowIds([]);
   };
 
-  const selectedRollForPartialUse = selectedRowIds.length === 1 ? allData.find(d => d.id === selectedRowIds[0]) : undefined;
-  
   const readyForLaminationData = allData.filter(d => d.status === 'Ready for Lamination');
   const sentForLaminationData = allData.filter(d => d.status === 'Sent for Lamination');
   const laminatedData = allData.filter(d => d.status === 'Laminated');
@@ -372,20 +325,6 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
 
   return (
     <>
-      <ConsumedByDialog 
-        isOpen={isConsumedDialogVisible}
-        onClose={() => setIsConsumedDialogVisible(false)}
-        onConfirm={handleConfirmConsumed}
-        selectedCount={selectedRowIds.length}
-      />
-      {selectedRollForPartialUse && (
-        <PartialUseDialog
-            isOpen={isPartialUseDialogVisible}
-            onClose={() => setIsPartialUseDialogVisible(false)}
-            onConfirm={handleConfirmPartialUse}
-            originalRoll={selectedRollForPartialUse}
-        />
-      )}
       <ReceiveSentLaminationDialog
         isOpen={isReceiveSentDialogVisible}
         onClose={() => setIsReceiveSentDialogVisible(false)}
@@ -521,7 +460,10 @@ export default function AdminSection({ allData, onImport, onMarkAsConsumed, onPa
                         <Button onClick={handleSendForWorkOrderClick} disabled={selectedLaminatedIds.length === 0}>
                             <FileText className="mr-2 h-4 w-4" /> Work Order
                         </Button>
-                        <Button onClick={handleOpenConsumedDialog} disabled={selectedLaminatedIds.length === 0}>
+                        <Button onClick={() => {
+                          setSelectedRowIds(selectedLaminatedIds);
+                          setIsConsumedDialogVisible(true);
+                        }} disabled={selectedLaminatedIds.length === 0}>
                             <CheckSquare className="mr-2 h-4 w-4" /> Mark Consumed
                         </Button>
                       </div>

@@ -2,7 +2,7 @@
 [
   {
     "id": "1",
-    "productionDate": "2025-11-15T00:00:00.000Z",
+    "productionDate": "2025-11-29T13:28:07.472Z",
     "serialNumber": "1145",
     "width": 22,
     "gram": 4.5,
@@ -14,7 +14,7 @@
     "nw": 151.8,
     "average": 103,
     "lamination": "Unlammed",
-    "status": "For Work Order",
+    "status": "Ready for Lamination",
     "callOut": "7+7 Natural Lam",
     "operatorName": "a",
     "loomNo": "L-01",
@@ -22,7 +22,7 @@
   },
   {
     "id": "2",
-    "productionDate": "2025-11-15T00:00:00.000Z",
+    "productionDate": "2025-12-06T05:49:14.207Z",
     "serialNumber": "1146",
     "width": 22,
     "gram": 3,
@@ -43,7 +43,7 @@
   },
   {
     "id": "3",
-    "productionDate": "2025-11-15T00:00:00.000Z",
+    "productionDate": "2025-12-06T05:49:14.207Z",
     "serialNumber": "1149",
     "width": 24,
     "gram": 3.5,
@@ -124,7 +124,7 @@
   },
   {
     "id": "7",
-    "productionDate": "2025-11-15T00:00:00.000Z",
+    "productionDate": "2025-11-29T13:28:07.472Z",
     "serialNumber": "1112",
     "width": 26,
     "gram": 3.2,
@@ -147,7 +147,7 @@
   },
   {
     "id": "8",
-    "productionDate": "1970-01-01T00:00:00.000Z",
+    "productionDate": "2025-11-29T13:28:07.472Z",
     "serialNumber": "1124",
     "width": 26,
     "gram": 3.2,
@@ -170,7 +170,7 @@
   },
   {
     "id": "9",
-    "productionDate": "2025-11-15T00:00:00.000Z",
+    "productionDate": "2025-11-29T13:28:07.472Z",
     "serialNumber": "1131",
     "width": 26,
     "gram": 3.2,
@@ -190,7 +190,7 @@
   },
   {
     "id": "10",
-    "productionDate": "2025-11-15T00:00:00.000Z",
+    "productionDate": "2025-12-05T10:30:00.000Z",
     "serialNumber": "1156",
     "width": 26,
     "gram": 3.2,
@@ -250,3 +250,5 @@
     "consumedBy": "WO: 131313"
   }
 ]
+
+    
